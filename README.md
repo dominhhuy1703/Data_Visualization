@@ -1,2 +1,3 @@
-# Intern_stenciljs
-This is my project using Stencil Js, D3 library during internship at INRIA
+Name: Minh Huy Do
+Intern - WIMMICS (Inria Sophia Antipolis), I3S Laboratory (CNRS)
+Topic: Data Visualization
