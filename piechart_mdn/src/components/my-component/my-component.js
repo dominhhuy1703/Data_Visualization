@@ -1,4 +1,4 @@
-/* my-component.js */
+/* src/components/my-component/my-component.js */
 class MyComponent extends HTMLElement {
   constructor() {
     super();
@@ -15,6 +15,7 @@ class MyComponent extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'data') {
       this.data = JSON.parse(newValue);
+      this.renderTable();
       this.renderChart();
     }
   }
@@ -27,9 +28,29 @@ class MyComponent extends HTMLElement {
   render() {
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="./components/my-component/my-component.css">
-      <div class="container">
-        <svg class="chart"></svg>
+      <header>
+        <h1>Pie Chart Example</h1>
+      </header>
+      <div class="layout">
+        <aside class="info-panel">
+          <h3>Input</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody class="data-list"></tbody>
+          </table>
+        </aside>
+        <main class="container">
+          <svg class="chart"></svg>
+        </main>
       </div>
+      <footer>
+        <p>WIMMICS - Minh Huy Do</p>
+      </footer>
       <div class="popup-overlay">
         <div class="popup-content">
           <h3>Your choice:</h3>
@@ -39,13 +60,24 @@ class MyComponent extends HTMLElement {
       </div>
     `;
     this.shadowRoot.querySelector('.close-btn').addEventListener('click', () => this.closePopup());
+    this.renderTable(); // Gọi hàm để cập nhật danh sách input
+  }
+
+  renderTable() {
+    const tableBody = this.shadowRoot.querySelector('.data-list');
+    tableBody.innerHTML = this.data.map(d => `
+      <tr>
+        <td>${d.tag}</td>
+        <td>${d.value + " %"}</td>
+      </tr>
+    `).join('');
   }
 
   renderChart() {
     const svg = this.shadowRoot.querySelector('.chart');
     if (!svg) return;
   
-    svg.innerHTML = ''; // Xóa nội dung cũ
+    svg.innerHTML = '';
   
     const width = 400;
     const height = 400;
@@ -65,7 +97,7 @@ class MyComponent extends HTMLElement {
       .append("g")
       .attr("transform", `translate(${width / 2}, ${height / 2})`);
   
-    // Vẽ biểu đồ
+    /* Build Chart */
     svgElement.selectAll("path")
       .data(pieDataStructure)
       .join("path")
@@ -74,11 +106,10 @@ class MyComponent extends HTMLElement {
       .attr("stroke", "white")
       .on('click', (event, d) => this.openPopup(d.data.tag));
   
-    // Hiển thị text (tag và value)
     const textGroup = svgElement.append("g")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 14)
-      .attr("font-weight", 800)
+      .attr("font-family", "arial")
+      .attr("font-size", 15)
+      .attr("font-weight", 650)
       .attr("text-anchor", "middle");
   
     textGroup.selectAll("text")
@@ -95,7 +126,7 @@ class MyComponent extends HTMLElement {
       .call(text => text.append("tspan")
         .attr("x", "0")
         .attr("dy", "1.2em")
-        .text(d => d.data.value)
+        .text(d => d.data.value + "%")
       );
   }
   
