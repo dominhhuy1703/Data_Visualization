@@ -37,19 +37,31 @@ class MyComponent extends HTMLElement {
           <table>
             <thead>
               <tr>
-                <th>Tag</th>
-                <th>Value</th>
+                <th>Platform</th>
+                <th>Rate</th>
               </tr>
             </thead>
             <tbody class="data-list"></tbody>
           </table>
         </aside>
         <main class="container">
+
           <svg class="chart"></svg>
         </main>
       </div>
       <footer>
-        <p>WIMMICS - Minh Huy Do</p>
+        <div class="footer-container">
+          <div class="footer-column">
+            <img src="icons/inria.png" alt="INRIA Logo" class="footer-icon">
+          </div>
+          <div class="footer-column">
+            <span>Minh Huy Do</span>
+          </div>
+          <div class="footer-column">
+            <span>Intern - WIMMICS</span>
+            <span>Data Visualization</span>
+          </div>
+        </div>
       </footer>
       <div class="popup-overlay">
         <div class="popup-content">
@@ -60,15 +72,18 @@ class MyComponent extends HTMLElement {
       </div>
     `;
     this.shadowRoot.querySelector('.close-btn').addEventListener('click', () => this.closePopup());
-    this.renderTable(); // Gọi hàm để cập nhật danh sách input
+    this.renderTable(); 
   }
 
   renderTable() {
     const tableBody = this.shadowRoot.querySelector('.data-list');
     tableBody.innerHTML = this.data.map(d => `
       <tr>
-        <td>${d.tag}</td>
-        <td>${d.value + " %"}</td>
+        <td>
+          <img src="${d.icon}" alt="${d.tag}" class="icon">
+          ${d.tag}
+        </td>
+        <td>${d.value} %</td>
       </tr>
     `).join('');
   }
