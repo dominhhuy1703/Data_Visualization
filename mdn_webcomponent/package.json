@@ -1,6 +1,6 @@
 {
-  "name": "piechart_mdn",
-  "version": "1.0.0",
+  "name": "@dominhhuy1703/mdn_webcomponent",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
     "start": "live-server src --port=8080",
