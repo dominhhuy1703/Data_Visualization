@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <link rel="icon" href="data:,">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>MDN Example</title>
+    <script type="module" src="components/my-component/my-component.js"></script>
+    <script src = "components/my-component/window-chart.js"></script>
+    <script src = "components/my-component/pie-chart.js"></script>
+    <script src = "components/my-component/bar-chart.js"></script>
+    <script src = "components/my-component/nodelink-chart.js"></script>
+    <script src = "components/my-component/map-chart.js"></script>
+    <link rel="stylesheet" href="components/my-component/my-component.css">
+  </head>
+  <body>
+    <my-component data='[
+    {"value": 22.4, "tag": "Youtube", "icon": "icons/youtube.png"},
+    {"value": 21.9, "tag": "Zalo", "icon": "icons/zalo.png"},
+    {"value": 26.2, "tag": "Facebook", "icon": "icons/facebook.png"},
+    {"value": 12, "tag": "Instagram", "icon": "icons/instagram.png"},
+    {"value": 9, "tag": "Tiktok", "icon": "icons/tiktok.png"},
+    {"value": 8.5, "tag": "Twitter", "icon": "icons/twitter.png"}
+  ]' nodelink-data='{
+    "nodes": [
+      {"id": 1, "name": "A"}, {"id": 2, "name": "B"}, {"id": 3, "name": "C"},
+      {"id": 4, "name": "D"}, {"id": 5, "name": "E"}
+    ],
+    "links": [
+      {"source": 1, "target": 2}, {"source": 1, "target": 5}
+    ]
+  }'></my-component>
+  </body>
+</html>

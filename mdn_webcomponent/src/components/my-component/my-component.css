@@ -17,11 +17,14 @@ header {
   font-size: 16px;
   width: 100%;
   margin: 0;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
+
 html, body {
   height: 100%;
   margin: 0;
 }
+
 .layout {
   flex: 1;
   display: flex;
@@ -37,11 +40,11 @@ html, body {
 .info-panel {
   position: absolute;
   left: 80px; 
-  top: 50%;
+  top: 40%;
   transform: translateY(-50%);
-  width: 300px;
+  width: 250px;
   background: #f8f9fa;
-  padding: 15px;
+  padding: 5px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.41);
 }
 
@@ -75,6 +78,30 @@ html, body {
   align-items: center;
   width: 100%;
   height: 100%;
+}
+
+/* Bar Chart */
+.bar-chart {
+  width: 450px;
+  height: 300px;
+}
+
+.bar-chart rect {
+  transition: fill 0.3s ease, transform 0.3s ease;
+}
+
+.bar-chart rect:hover {
+  fill: darkblue;
+}
+
+.bar-chart .axis path,
+.bar-chart .axis line {
+  stroke: black;
+}
+
+.bar-chart text {
+  font-size: 12px;
+  fill: black;
 }
 
 /* Footer */
@@ -153,7 +180,7 @@ button:hover {
   background-color: #b30000;
 }
 
-.chart path:hover {
+.pie-chart path:hover {
   fill: gray;
   transform: scale(1.02);
   transition: transform 0.3s ease, fill 0.3s ease;
@@ -164,4 +191,32 @@ button:hover {
   height: 20px;
   margin-right: 5px;
   vertical-align: middle;
+}
+
+
+/*chart window*/
+window-chart {
+  display: none; /* Ẩn mặc định */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  width: 450px;
+  height: 350px;
+  background: white;
+  box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+window-chart.show {
+  display: block; /* Hiện khi có class 'show' */
+}
+
+pie-chart {
+  display: block;
+  width: 400px;
+  height: 400px;
 }
