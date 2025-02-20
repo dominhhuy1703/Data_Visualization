@@ -23,7 +23,7 @@ class MapChart extends HTMLElement {
     }
 
     drawChart() {
-        console.log("Ve piechart voi data:", this.getAttribute('data'));
+        console.log("Draw Map with data:", this.getAttribute('data'));
         const svgElement = this.shadowRoot.querySelector('svg');
         // const data = JSON.parse(this.getAttribute('data'));
         const width = 400, height = 400;

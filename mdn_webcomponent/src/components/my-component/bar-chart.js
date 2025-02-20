@@ -18,7 +18,8 @@ class BarChart extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `<svg width="450" height="300"></svg>`;
+    this.shadowRoot.innerHTML = `
+    <svg width="450" height="400"></svg>`;
   }
 
   drawChart() {

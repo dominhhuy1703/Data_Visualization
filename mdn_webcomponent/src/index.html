@@ -14,16 +14,17 @@
     <script src = "components/my-component/bar-chart.js"></script>
     <script src = "components/my-component/nodelink-chart.js"></script>
     <script src = "components/my-component/map-chart.js"></script>
+    <script src = "components/my-component/color.js"></script>
     <link rel="stylesheet" href="components/my-component/my-component.css">
   </head>
   <body>
     <my-component data='[
-    {"value": 22.4, "tag": "Youtube", "icon": "icons/youtube.png"},
-    {"value": 21.9, "tag": "Zalo", "icon": "icons/zalo.png"},
-    {"value": 26.2, "tag": "Facebook", "icon": "icons/facebook.png"},
-    {"value": 12, "tag": "Instagram", "icon": "icons/instagram.png"},
-    {"value": 9, "tag": "Tiktok", "icon": "icons/tiktok.png"},
-    {"value": 8.5, "tag": "Twitter", "icon": "icons/twitter.png"}
+    {"value": 22.4, "tag": "Youtube", "icon": "icons/youtube.png", "color": "#ff6347"},
+    {"value": 21.9, "tag": "Zalo", "icon": "icons/zalo.png", "color": "#4682b4"},
+    {"value": 26.2, "tag": "Facebook", "icon": "icons/facebook.png", "color": "#32cd32"},
+    {"value": 12, "tag": "Instagram", "icon": "icons/instagram.png", "color": "#ffcc00"},
+    {"value": 9, "tag": "Tiktok", "icon": "icons/tiktok.png", "color": "#8a2be2"},
+    {"value": 8.5, "tag": "Twitter", "icon": "icons/twitter.png", "color": "#9faecd"}
   ]' nodelink-data='{
     "nodes": [
       {"id": 1, "name": "A"}, {"id": 2, "name": "B"}, {"id": 3, "name": "C"},
@@ -32,6 +33,7 @@
     "links": [
       {"source": 1, "target": 2}, {"source": 1, "target": 5}
     ]
-  }'></my-component>
+  }'
+  ></my-component>
   </body>
 </html>
