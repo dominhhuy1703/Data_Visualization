@@ -2,42 +2,44 @@ class PieChart extends HTMLElement {
   constructor() {
     super();
     this.data = null;
-    this.attachShadow({mode: "open"});
+    this.attachShadow({ mode: "open" });
   }
 
   static get observedAttributes() {
-    return ['data', 'chart-type'];
+    return ["data"];
   }
 
   connectedCallback() {
     this.render();
-    this.addEventListener('color-change', (event) => this.updateColor(event.detail));
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log(`PIE CHART received ${name}:`, newValue);
-    this.drawChart();
-    this.updateColorPicker();
+    if (name === "data") {
+      this.drawChart();
+      this.renderColorPickers();
+    }
   }
 
   render() {
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="components/my-component/my-component.css">
-      <color-change target-chart="pie-chart"></color-change>
-      <svg width="400" height="400"></svg>
+      <div class="container">
+        <svg width="400" height="400"></svg>
+        <div class="color-picker-container"></div>
+      </div>
+      
     `;
   }
 
   drawChart() {
-    console.log("Draw piechart with data:", this.getAttribute('data'));
-    const svgElement = this.shadowRoot.querySelector('svg');
-    const data = JSON.parse(this.getAttribute('data'));
+    const svgElement = this.shadowRoot.querySelector("svg");
+    const data = JSON.parse(this.getAttribute("data"));
     const width = 400, height = 400;
     const radius = Math.min(width, height) / 2;
     d3.select(svgElement).selectAll("g").remove();
 
-    // Default color
-    const colorScale = d3.scaleOrdinal()
+    // Mảng màu mặc định
+    this.colorScale = d3.scaleOrdinal()
       .domain(data.map(d => d.tag))
       .range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
 
@@ -50,16 +52,14 @@ class PieChart extends HTMLElement {
       .append("g")
       .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-    // Draw parts of chart
     this.paths = svg.selectAll("path")
       .data(pieDataStructure)
       .join("path")
-      .attr("fill", d => d.data.color || colorScale(d.data.tag)) 
+      .attr("fill", d => d.data.color || this.colorScale(d.data.tag))
       .attr("d", arcShape)
       .attr("stroke", "white")
-      .on('click', (event, d) => alert(`Clicked on: ${d.data.tag}`));
+      .on("click", (event, d) => alert(`Clicked on: ${d.data.tag}`));
 
-    // Add label
     const textGroup = svg.append("g")
       .attr("font-family", "arial")
       .attr("font-size", 15)
@@ -82,20 +82,35 @@ class PieChart extends HTMLElement {
         .attr("dy", "1.2em")
         .text(d => d.data.value + "%")
       );
+
+    this.renderColorPickers();
   }
 
-  updateColorPicker() {
-    const colorChangeComponent = this.shadowRoot.querySelector('color-change');
-    if (colorChangeComponent) {
-        colorChangeComponent.setAttribute('data', this.getAttribute('data'));
-    }
+  renderColorPickers() {
+    const container = this.shadowRoot.querySelector(".color-picker-container");
+    const data = JSON.parse(this.getAttribute("data"));
+
+    container.innerHTML = data.map((d, index) => `
+      <div class="color-item">
+        <label>${d.tag}</label>
+        <input type="color" value="${d.color || this.colorScale(d.tag)}" data-index="${index}">
+      </div>
+    `).join("");
+
+    container.querySelectorAll("input[type='color']").forEach(input => {
+      input.addEventListener("input", (event) => this.updateColor(event));
+    });
   }
 
-  updateColor(updatedData) {
-    console.log("Updated colors:", updatedData);
-    this.paths.attr("fill", (d, i) => updatedData[i].color);
-    this.setAttribute('data', JSON.stringify(updatedData));
+  updateColor(event) {
+    const index = event.target.dataset.index;
+    const newColor = event.target.value;
+    const data = JSON.parse(this.getAttribute("data"));
+
+    data[index].color = newColor;
+    this.setAttribute("data", JSON.stringify(data));
+    this.paths.attr("fill", (d, i) => data[i].color || this.colorScale(d.data.tag));
   }
 }
 
-customElements.define('pie-chart', PieChart);
+customElements.define("pie-chart", PieChart);
