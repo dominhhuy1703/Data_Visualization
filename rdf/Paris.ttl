@@ -1,0 +1,50 @@
+@prefix skos:	<http://www.w3.org/2004/02/skos/core#> .
+@prefix dbc:	<http://dbpedia.org/resource/Category:> .
+dbc:Culture_of_Paris	skos:broader	dbc:Paris .
+dbc:Geography_of_Paris	skos:broader	dbc:Paris .
+dbc:Sport_in_Paris	skos:broader	dbc:Paris .
+@prefix dcterms:	<http://purl.org/dc/terms/> .
+<http://dbpedia.org/resource/\u00C9cole_d\u0027ing\u00E9nieurs_Denis-Diderot>	dcterms:subject	dbc:Paris .
+@prefix dbo:	<http://dbpedia.org/ontology/> .
+<http://dbpedia.org/resource/\u00C9cole_d\u0027ing\u00E9nieurs_Denis-Diderot>	dbo:wikiPageWikiLink	dbc:Paris .
+dbc:Paris-related_lists	skos:broader	dbc:Paris .
+dbc:People_from_Paris	skos:broader	dbc:Paris .
+@prefix rdf:	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+dbc:Paris	rdf:type	skos:Concept .
+@prefix rdfs:	<http://www.w3.org/2000/01/rdf-schema#> .
+dbc:Paris	rdfs:label	"Paris"@en ;
+	skos:broader	dbc:Cities_in_France ,
+		<http://dbpedia.org/resource/Category:Cities_in_\u00CEle-de-France> ,
+		<http://dbpedia.org/resource/Category:Departments_of_\u00CEle-de-France> ,
+		dbc:Wikipedia_categories_named_after_populated_places_in_France ,
+		dbc:Capitals_in_Europe ,
+		dbc:Departments_of_France ,
+		dbc:Wikipedia_categories_named_after_capitals ;
+	skos:prefLabel	"Paris"@en .
+@prefix dbp:	<http://dbpedia.org/property/> .
+@prefix dbt:	<http://dbpedia.org/resource/Template:> .
+dbc:Paris	dbp:wikiPageUsesTemplate	dbt:Commons_category ,
+		dbt:About ,
+		dbt:Cat_main ,
+		dbt:Portal ;
+	dbo:wikiPageRevisionID	1083278368 ;
+	dbo:wikiPageID	720923 .
+@prefix owl:	<http://www.w3.org/2002/07/owl#> .
+dbc:Paris	owl:sameAs	dbc:Paris .
+@prefix prov:	<http://www.w3.org/ns/prov#> .
+dbc:Paris	prov:wasDerivedFrom	<http://en.wikipedia.org/wiki/Category:Paris?oldid=1083278368&ns=14> .
+dbc:Crime_in_Paris	skos:broader	dbc:Paris .
+dbc:Images_of_Paris	skos:broader	dbc:Paris .
+dbc:Religion_in_Paris	skos:broader	dbc:Paris .
+dbc:History_of_Paris	skos:broader	dbc:Paris .
+dbc:Organizations_based_in_Paris	skos:broader	dbc:Paris .
+dbc:Education_in_Paris	skos:broader	dbc:Paris .
+dbc:Politics_of_Paris	skos:broader	dbc:Paris .
+@prefix dbr:	<http://dbpedia.org/resource/> .
+dbr:Paris	dcterms:subject	dbc:Paris ;
+	dbo:wikiPageWikiLink	dbc:Paris .
+dbc:Buildings_and_structures_in_Paris	skos:broader	dbc:Paris .
+dbc:Burials_in_Paris_by_place	skos:broader	dbc:Paris .
+dbc:Economy_of_Paris	skos:broader	dbc:Paris .
+dbc:Transport_in_Paris	skos:broader	dbc:Paris .
+dbc:Tourism_in_Paris	skos:broader	dbc:Paris .

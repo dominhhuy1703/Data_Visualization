@@ -1,0 +1,101 @@
+@prefix : <http://ns.inria.fr/humans/schema#> .
+@prefix d: <http://ns.inria.fr/humans/data#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+d:Eve a :Lecturer, :Person ;
+    :hasFriend d:Alice ;
+    :hasSpouse d:David ;
+    :name "Eve" .
+
+d:Flora a :Woman ;
+    :age 95 ;
+    :hasChild d:Pierre ;
+    :hasSpouse d:Gaston ;
+    :name "Flora" .
+
+d:Jennifer a :Woman ;
+    :hasSpouse d:John ;
+    :name "Jennifer" .
+
+d:Karl a :Person ;
+    :age 36 ;
+    :hasFriend d:Sophie ;
+    :hasSpouse d:Catherine ;
+    :shirtsize 9 ;
+    :shoesize 7 ;
+    :trouserssize 40 .
+
+d:Lucas a :Man ;
+    :age 12 ;
+    :hasMother d:Catherine ;
+    :name "Lucas" ;
+    :shirtsize 8 ;
+    :shoesize 7 ;
+    :trouserssize 28 .
+
+d:Mark a :Person ;
+    :age 14 ;
+    :hasFather d:John ;
+    :name "Mark" ;
+    :shirtsize 9 ;
+    :shoesize 8 ;
+    :trouserssize 36 .
+
+d:William a :Person ;
+    :age 42 ;
+    :hasSpouse d:Laura ;
+    :name "William" ;
+    :shirtsize 13 ;
+    :shoesize 10 ;
+    :trouserssize 46 .
+
+d:David a :Person, :Researcher ;
+    :hasFriend d:Gaston ;
+    :name "David" .
+
+d:Harry a :Man ;
+    :hasChild d:John ;
+    :hasSpouse d:Sophie ;
+    :name "Harry" .
+
+d:Jack a :Man ;
+    :hasChild d:Harry ;
+    :hasFriend d:Alice ;
+    :name "Jack" .
+
+d:Catherine a :Woman ;
+    :hasMother d:Laura .
+
+d:Gaston a :Man, :Researcher ;
+    :age 102 ;
+    :hasChild d:Jack, d:Pierre ;
+    :name "Gaston" ;
+    :shirtsize 12 ;
+    :shoesize 11 ;
+    :trouserssize 38 .
+
+d:Laura a :Lecturer, :Person, :Researcher ;
+    :hasFriend d:Alice ;
+    :name "Laura" .
+
+d:Pierre a :Man ;
+    :age 71 ;
+    :name "Pierre" ;
+    :shirtsize 9 ;
+    :shoesize 8 ;
+    :trouserssize 30 .
+
+d:Alice a :Woman ;
+    :hasFriend d:John ;
+    :name "Alice" .
+
+d:John a :Person ;
+    :age 37 ;
+    :hasParent d:Sophie ;
+    :name "John" ;
+    :shirtsize 12 ;
+    :shoesize 14 ;
+    :trouserssize 44 .

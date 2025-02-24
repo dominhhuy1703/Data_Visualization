@@ -1,6 +1,10 @@
 class BarChart extends HTMLElement {
+  
+  #dataValue = '';
+
   constructor() {
     super();
+    this.data = null;
     this.attachShadow({ mode: 'open' });
   }
 
@@ -13,15 +17,16 @@ class BarChart extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'data') {
+    if (name === "data" && newValue != null) {
+      this.#dataValue = newValue; 
+      this.removeAttribute("data");
       this.drawChart();
-      this.renderColorPickers();
     }
   }
 
   render() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="components/my-component/my-component.css">
+      <link rel="stylesheet" href="components/my-component/customStyle.css">
       <div class="container">
         <svg width="450" height="400"></svg>
         <div class="color-picker-container"></div>
@@ -30,7 +35,7 @@ class BarChart extends HTMLElement {
   }
 
   drawChart() {
-    const data = JSON.parse(this.getAttribute('data'));
+    const data = JSON.parse(this.dataValue);
     const svgElement = this.shadowRoot.querySelector('svg');
     const width = 400, height = 350;
     const margin = { top: 20, right: 0, bottom: 40, left: 30 };
@@ -56,12 +61,11 @@ class BarChart extends HTMLElement {
       .attr("width", x.bandwidth())
       .attr("fill", d => d.color || this.colorScale(d.tag));
 
-    this.renderColorPickers();
+    this.renderColorPickers(data);
   }
 
-  renderColorPickers() {
+  renderColorPickers(data) {
     const container = this.shadowRoot.querySelector(".color-picker-container");
-    const data = JSON.parse(this.getAttribute("data"));
 
     container.innerHTML = data.map((d, index) => `
       <div class="color-item">
@@ -71,19 +75,27 @@ class BarChart extends HTMLElement {
     `).join("");
 
     container.querySelectorAll("input[type='color']").forEach(input => {
-      input.addEventListener("input", (event) => this.updateColor(event));
+      input.addEventListener("input", (event) => this.updateColor(event, data));
     });
   }
 
-  updateColor(event) {
+  updateColor(event, data) {
     const index = event.target.dataset.index;
     const newColor = event.target.value;
-    const data = JSON.parse(this.getAttribute("data"));
 
     data[index].color = newColor;
     this.setAttribute("data", JSON.stringify(data));
     this.bars.attr("fill", (d, i) => data[i].color || this.colorScale(d.tag));
   }
+
+  get dataValue() {
+    return this.#dataValue;
+  }
+
+  set dataValue(data){
+      this.#dataValue = data;
+  }
+
 }
 
 customElements.define('bar-chart', BarChart);

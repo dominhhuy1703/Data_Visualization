@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:ns0="http://example.org/">
+
+  <rdf:Description rdf:about="http://example.org/P23">
+    <rdf:type rdf:resource="http://example.org/Process"/>
+    <ns0:hasTask rdf:resource="http://example.org/T122"/>
+    <ns0:hasTask rdf:resource="http://example.org/T153"/>
+    <ns0:hasSubprocess>
+      <ns0:Process rdf:about="http://example.org/P175">
+        <ns0:hasTask rdf:resource="http://example.org/T19"/>
+        <ns0:hasTask rdf:resource="http://example.org/T47"/>
+      </ns0:Process>
+    </ns0:hasSubprocess>
+
+  </rdf:Description>
+
+  <ns0:Task rdf:about="http://example.org/T122">
+  </ns0:Task>
+
+  <ns0:Task rdf:about="http://example.org/T153">
+  </ns0:Task>
+
+  <ns0:Task rdf:about="http://example.org/T19">
+  </ns0:Task>
+
+  <ns0:Task rdf:about="http://example.org/T47">
+  </ns0:Task>
+
+  <ns0:Agent rdf:about="http://example.org/Alice_Duncan">
+    <ns0:manages>
+      <ns0:Agent rdf:about="http://example.org/John_Tiwac">
+        <ns0:participatesIn rdf:resource="http://example.org/T122"/>
+        <ns0:participatesIn rdf:resource="http://example.org/T153"/>
+      </ns0:Agent>
+    </ns0:manages>
+
+    <ns0:participatesIn rdf:resource="http://example.org/T122"/>
+    <ns0:participatesIn rdf:resource="http://example.org/T153"/>
+    <ns0:participatesIn rdf:resource="http://example.org/T19"/>
+    <ns0:participatesIn rdf:resource="http://example.org/T47"/>
+  </ns0:Agent>
+
+  <ns0:Agent rdf:about="http://example.org/HAL9000">
+    <ns0:participatesIn rdf:resource="http://example.org/T122"/>
+    <ns0:participatesIn rdf:resource="http://example.org/T19"/>
+  </ns0:Agent>
+
+</rdf:RDF>
