@@ -18,7 +18,6 @@ class NodeLinkChart extends HTMLElement {
 
   render() {
       this.shadowRoot.innerHTML = `
-      <!-- <link rel="stylesheet" href="components/my-component/my-component.css"> -->
       <svg width="400" height="400"></svg>`;
   }
 
@@ -35,7 +34,6 @@ class NodeLinkChart extends HTMLElement {
           .append("g")
       .attr("transform",
           `translate(0, 0)`);
-      console.log("AAAAAAAAAAAA");
 
       // Initialize the links
       const link = svg
@@ -44,7 +42,6 @@ class NodeLinkChart extends HTMLElement {
       .join("line")
           .style("stroke", "#aaa")
 
-      console.log("BBBBBBBBBBBBBB");
 
       // Initialize the nodes
       const node = svg
@@ -54,7 +51,6 @@ class NodeLinkChart extends HTMLElement {
           .attr("r", 20)
           .style("fill", "#69b3a2");
 
-      console.log("CCCCCCCCCCCC");
 
       // Let's list the force we wanna apply on the network
       const simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
@@ -65,8 +61,6 @@ class NodeLinkChart extends HTMLElement {
           .force("charge", d3.forceManyBody().strength(-1000))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
           .force("center", d3.forceCenter(width / 1.2, height / 2))     // This force attracts nodes to the center of the svg area
           .on("end", ticked);
-
-      console.log("DDDDDDDDDDDDDDDDDDDDD");
 
       // This function is run at each iteration of the force algorithm, updating the nodes position.
       function ticked() {

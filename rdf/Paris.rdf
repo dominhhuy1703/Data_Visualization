@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:ns0="http://dbpedia.org/ontology/"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:ns1="http://dbpedia.org/property/"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:prov="http://www.w3.org/ns/prov#">
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Culture_of_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Geography_of_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Sport_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/École_d'ingénieurs_Denis-Diderot">
+    <dc:subject rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+    <ns0:wikiPageWikiLink rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Paris-related_lists">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:People_from_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <skos:Concept rdf:about="http://dbpedia.org/resource/Category:Paris">
+    <rdfs:label xml:lang="en">Paris</rdfs:label>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Cities_in_France"/>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Cities_in_Île-de-France"/>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Departments_of_Île-de-France"/>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Wikipedia_categories_named_after_populated_places_in_France"/>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Capitals_in_Europe"/>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Departments_of_France"/>
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Wikipedia_categories_named_after_capitals"/>
+    <skos:prefLabel xml:lang="en">Paris</skos:prefLabel>
+    <ns1:wikiPageUsesTemplate rdf:resource="http://dbpedia.org/resource/Template:Commons_category"/>
+    <ns1:wikiPageUsesTemplate rdf:resource="http://dbpedia.org/resource/Template:About"/>
+    <ns1:wikiPageUsesTemplate rdf:resource="http://dbpedia.org/resource/Template:Cat_main"/>
+    <ns1:wikiPageUsesTemplate rdf:resource="http://dbpedia.org/resource/Template:Portal"/>
+    <ns0:wikiPageRevisionID rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1083278368</ns0:wikiPageRevisionID>
+    <ns0:wikiPageID rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">720923</ns0:wikiPageID>
+    <owl:sameAs rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+    <prov:wasDerivedFrom rdf:resource="http://en.wikipedia.org/wiki/Category:Paris?oldid=1083278368&amp;ns=14"/>
+  </skos:Concept>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Crime_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Images_of_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Religion_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:History_of_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Organizations_based_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Education_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Politics_of_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Paris">
+    <dc:subject rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+    <ns0:wikiPageWikiLink rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Buildings_and_structures_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Burials_in_Paris_by_place">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Economy_of_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Transport_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://dbpedia.org/resource/Category:Tourism_in_Paris">
+    <skos:broader rdf:resource="http://dbpedia.org/resource/Category:Paris"/>
+  </rdf:Description>
+
+</rdf:RDF>

@@ -1,4 +1,7 @@
 class PieChart extends HTMLElement {
+  
+  #dataValue = '';
+
   constructor() {
     super();
     this.data = null;
@@ -14,15 +17,18 @@ class PieChart extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "data") {
-      this.drawChart();
-      this.renderColorPickers();
+    if (name === "data" && newValue != null) {
+        this.#dataValue = newValue; 
+        this.removeAttribute("data");
+        this.drawChart();
+        // this.renderColorPickers();
     }
+
   }
 
   render() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="components/my-component/my-component.css">
+      <link rel="stylesheet" href="components/my-component/customStyle.css">
       <div class="container">
         <svg width="400" height="400"></svg>
         <div class="color-picker-container"></div>
@@ -33,7 +39,7 @@ class PieChart extends HTMLElement {
 
   drawChart() {
     const svgElement = this.shadowRoot.querySelector("svg");
-    const data = JSON.parse(this.getAttribute("data"));
+    const data = JSON.parse(this.dataValue);
     const width = 400, height = 400;
     const radius = Math.min(width, height) / 2;
     d3.select(svgElement).selectAll("g").remove();
@@ -83,12 +89,11 @@ class PieChart extends HTMLElement {
         .text(d => d.data.value + "%")
       );
 
-    this.renderColorPickers();
+    this.renderColorPickers(data);
   }
 
-  renderColorPickers() {
+  renderColorPickers(data) {
     const container = this.shadowRoot.querySelector(".color-picker-container");
-    const data = JSON.parse(this.getAttribute("data"));
 
     container.innerHTML = data.map((d, index) => `
       <div class="color-item">
@@ -98,18 +103,24 @@ class PieChart extends HTMLElement {
     `).join("");
 
     container.querySelectorAll("input[type='color']").forEach(input => {
-      input.addEventListener("input", (event) => this.updateColor(event));
+      input.addEventListener("input", (event) => this.updateColor(event, data));
     });
   }
 
-  updateColor(event) {
+  updateColor(event, data) {
     const index = event.target.dataset.index;
     const newColor = event.target.value;
-    const data = JSON.parse(this.getAttribute("data"));
-
     data[index].color = newColor;
     this.setAttribute("data", JSON.stringify(data));
     this.paths.attr("fill", (d, i) => data[i].color || this.colorScale(d.data.tag));
+  }
+
+  get dataValue() {
+    return this.#dataValue;
+  }
+
+  set dataValue(data){
+      this.#dataValue = data;
   }
 }
 

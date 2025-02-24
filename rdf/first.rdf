@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:ns0="http://example.org/">
+
+  <rdf:Description rdf:about="http://example.org/Margot">
+    <rdf:type rdf:resource="http://example.org/Person"/>
+    <ns0:age rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">32</ns0:age>
+    <ns0:shoeSize rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">38</ns0:shoeSize>
+    <ns0:pantsSize rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">40</ns0:pantsSize>
+    <ns0:hasSpouse>
+      <ns0:Person rdf:about="http://example.org/Arthur">
+        <ns0:hasChild rdf:resource="http://example.org/Simon"/>
+        <ns0:hasChild rdf:resource="http://example.org/Marie"/>
+      </ns0:Person>
+    </ns0:hasSpouse>
+
+    <ns0:hasChild rdf:resource="http://example.org/Simon"/>
+    <ns0:hasChild rdf:resource="http://example.org/Marie"/>
+    <ns0:hasMother>
+      <ns0:Person rdf:about="http://example.org/Simone">
+      </ns0:Person>
+    </ns0:hasMother>
+
+    <ns0:occupation>
+      <ns0:Occupation rdf:about="http://example.org/Teacher">
+      </ns0:Occupation>
+    </ns0:occupation>
+
+  </rdf:Description>
+
+  <ns0:Person rdf:about="http://example.org/Simon">
+  </ns0:Person>
+
+  <ns0:Person rdf:about="http://example.org/Marie">
+  </ns0:Person>
+
+  <ns0:Person rdf:about="http://example.org/Alice">
+    <ns0:colleagueOf rdf:resource="http://example.org/Margot"/>
+  </ns0:Person>
+
+  <ns0:Person rdf:about="http://example.org/Pierre">
+    <ns0:colleagueOf rdf:resource="http://example.org/Margot"/>
+  </ns0:Person>
+
+</rdf:RDF>
