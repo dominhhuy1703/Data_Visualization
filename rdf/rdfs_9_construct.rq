@@ -1,0 +1,324 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<http://ns.inria.fr/humans/data#Alice> a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Woman> ;
+  <http://ns.inria.fr/humans/schema#hasFriend> <http://ns.inria.fr/humans/data#John> ;
+  <http://ns.inria.fr/humans/schema#name> "Alice" .
+
+<http://ns.inria.fr/humans/data#Catherine> a <http://ns.inria.fr/humans/schema#Animal> ;
+  a <http://ns.inria.fr/humans/schema#Female> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Woman> ;
+  <http://ns.inria.fr/humans/schema#hasAncestor> <http://ns.inria.fr/humans/data#Laura> ;
+  <http://ns.inria.fr/humans/schema#hasMother> <http://ns.inria.fr/humans/data#Laura> ;
+  <http://ns.inria.fr/humans/schema#hasParent> <http://ns.inria.fr/humans/data#Laura> .
+
+<http://ns.inria.fr/humans/data#David> a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Researcher> ;
+  <http://ns.inria.fr/humans/schema#hasFriend> <http://ns.inria.fr/humans/data#Gaston> ;
+  <http://ns.inria.fr/humans/schema#name> "David" .
+
+<http://ns.inria.fr/humans/data#Eve> a <http://ns.inria.fr/humans/schema#Lecturer> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#hasFriend> <http://ns.inria.fr/humans/data#Alice> ;
+  <http://ns.inria.fr/humans/schema#hasSpouse> <http://ns.inria.fr/humans/data#David> ;
+  <http://ns.inria.fr/humans/schema#name> "Eve" .
+
+<http://ns.inria.fr/humans/data#Flora> a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Woman> ;
+  <http://ns.inria.fr/humans/schema#age> 95 ;
+  <http://ns.inria.fr/humans/schema#hasChild> <http://ns.inria.fr/humans/data#Pierre> ;
+  <http://ns.inria.fr/humans/schema#hasSpouse> <http://ns.inria.fr/humans/data#Gaston> ;
+  <http://ns.inria.fr/humans/schema#name> "Flora" .
+
+<http://ns.inria.fr/humans/data#Gaston> a <http://ns.inria.fr/humans/schema#Man> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Researcher> ;
+  <http://ns.inria.fr/humans/schema#age> 102 ;
+  <http://ns.inria.fr/humans/schema#hasChild> <http://ns.inria.fr/humans/data#Jack> ;
+  <http://ns.inria.fr/humans/schema#hasChild> <http://ns.inria.fr/humans/data#Pierre> ;
+  <http://ns.inria.fr/humans/schema#name> "Gaston" ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 12 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 11 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 38 .
+
+<http://ns.inria.fr/humans/data#Harry> a <http://ns.inria.fr/humans/schema#Man> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#hasChild> <http://ns.inria.fr/humans/data#John> ;
+  <http://ns.inria.fr/humans/schema#hasSpouse> <http://ns.inria.fr/humans/data#Sophie> ;
+  <http://ns.inria.fr/humans/schema#name> "Harry" .
+
+<http://ns.inria.fr/humans/data#Jack> a <http://ns.inria.fr/humans/schema#Man> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#hasChild> <http://ns.inria.fr/humans/data#Harry> ;
+  <http://ns.inria.fr/humans/schema#hasFriend> <http://ns.inria.fr/humans/data#Alice> ;
+  <http://ns.inria.fr/humans/schema#name> "Jack" .
+
+<http://ns.inria.fr/humans/data#Jennifer> a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Woman> ;
+  <http://ns.inria.fr/humans/schema#hasSpouse> <http://ns.inria.fr/humans/data#John> ;
+  <http://ns.inria.fr/humans/schema#name> "Jennifer" .
+
+<http://ns.inria.fr/humans/data#John> a <http://ns.inria.fr/humans/schema#Animal> ;
+  a <http://ns.inria.fr/humans/schema#Male> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#age> 37 ;
+  <http://ns.inria.fr/humans/schema#hasAncestor> <http://ns.inria.fr/humans/data#Sophie> ;
+  <http://ns.inria.fr/humans/schema#hasParent> <http://ns.inria.fr/humans/data#Sophie> ;
+  <http://ns.inria.fr/humans/schema#name> "John" ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 12 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 14 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 44 .
+
+<http://ns.inria.fr/humans/data#Karl> a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#age> 36 ;
+  <http://ns.inria.fr/humans/schema#hasFriend> <http://ns.inria.fr/humans/data#Sophie> ;
+  <http://ns.inria.fr/humans/schema#hasSpouse> <http://ns.inria.fr/humans/data#Catherine> ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 9 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 7 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 40 .
+
+<http://ns.inria.fr/humans/data#Laura> a <http://ns.inria.fr/humans/schema#Animal> ;
+  a <http://ns.inria.fr/humans/schema#Female> ;
+  a <http://ns.inria.fr/humans/schema#Lecturer> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  a <http://ns.inria.fr/humans/schema#Researcher> ;
+  <http://ns.inria.fr/humans/schema#hasFriend> <http://ns.inria.fr/humans/data#Alice> ;
+  <http://ns.inria.fr/humans/schema#name> "Laura" .
+
+<http://ns.inria.fr/humans/data#Lucas> a <http://ns.inria.fr/humans/schema#Animal> ;
+  a <http://ns.inria.fr/humans/schema#Man> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#age> 12 ;
+  <http://ns.inria.fr/humans/schema#hasAncestor> <http://ns.inria.fr/humans/data#Catherine> ;
+  <http://ns.inria.fr/humans/schema#hasMother> <http://ns.inria.fr/humans/data#Catherine> ;
+  <http://ns.inria.fr/humans/schema#hasParent> <http://ns.inria.fr/humans/data#Catherine> ;
+  <http://ns.inria.fr/humans/schema#name> "Lucas" ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 8 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 7 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 28 .
+
+<http://ns.inria.fr/humans/data#Mark> a <http://ns.inria.fr/humans/schema#Animal> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#age> 14 ;
+  <http://ns.inria.fr/humans/schema#hasAncestor> <http://ns.inria.fr/humans/data#John> ;
+  <http://ns.inria.fr/humans/schema#hasFather> <http://ns.inria.fr/humans/data#John> ;
+  <http://ns.inria.fr/humans/schema#hasParent> <http://ns.inria.fr/humans/data#John> ;
+  <http://ns.inria.fr/humans/schema#name> "Mark" ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 9 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 8 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 36 .
+
+<http://ns.inria.fr/humans/data#Pierre> a <http://ns.inria.fr/humans/schema#Man> ;
+  a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#age> 71 ;
+  <http://ns.inria.fr/humans/schema#name> "Pierre" ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 9 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 8 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 30 .
+
+<http://ns.inria.fr/humans/data#Sophie> a <http://ns.inria.fr/humans/schema#Animal> ;
+  a <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/data#William> a <http://ns.inria.fr/humans/schema#Person> ;
+  <http://ns.inria.fr/humans/schema#age> 42 ;
+  <http://ns.inria.fr/humans/schema#hasSpouse> <http://ns.inria.fr/humans/data#Laura> ;
+  <http://ns.inria.fr/humans/schema#name> "William" ;
+  <http://ns.inria.fr/humans/schema#shirtsize> 13 ;
+  <http://ns.inria.fr/humans/schema#shoesize> 10 ;
+  <http://ns.inria.fr/humans/schema#trouserssize> 46 .
+
+<http://ns.inria.fr/humans/schema#> a owl:Ontology ;
+  rdfs:comment "An example of schema to describe people and for teaching purposes" ;
+  rdfs:label "Toy Human Ontology" ;
+  owl:priorVersion <http://www.inria.fr/2007/09/11/humans.rdfs#> .
+
+<http://ns.inria.fr/humans/schema#Animal> a rdfs:Class ;
+  rdfs:comment "a living organism characterized by voluntary movement."@en ;
+  rdfs:comment "être vivant doué de sensibilite de mobilité."@fr ;
+  rdfs:label "animal"@en ;
+  rdfs:label "animal"@fr .
+
+<http://ns.inria.fr/humans/schema#Female> a rdfs:Class ;
+  rdfs:comment "an animal that produces gametes (ova) that can be fertilized by male gametes (spermatozoa)."@en ;
+  rdfs:comment "animal appartenant au sexe apte à produire des ovules."@fr ;
+  rdfs:label "female"@en ;
+  rdfs:label "femelle"@fr ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Animal> .
+
+<http://ns.inria.fr/humans/schema#Lecturer> a rdfs:Class ;
+  rdfs:comment "personne qui enseigne une discipline, une technique, un art."@fr ;
+  rdfs:comment "someone who lectures professionally"@en ;
+  rdfs:label "lecturer"@en ;
+  rdfs:label "professeur"@fr ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/schema#Male> a rdfs:Class ;
+  rdfs:comment "an animal that produces gametes (spermatozoa) that can fertilize female gametes (ova)."@en ;
+  rdfs:comment "individu appartenant au sexe qui possède le pouvoir de fécondation."@fr ;
+  rdfs:label "male"@en ;
+  rdfs:label "mâle"@fr ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Animal> .
+
+<http://ns.inria.fr/humans/schema#Man> a rdfs:Class ;
+  rdfs:comment "an adult male person"@en ;
+  rdfs:comment "mâle adulte de l'espèce humaine."@fr ;
+  rdfs:label "homme"@fr ;
+  rdfs:label "man"@en ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Male> ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/schema#Person> a rdfs:Class ;
+  rdfs:comment "a member of the human species"@en ;
+  rdfs:comment "un membre de l'espèce humaine."@fr ;
+  rdfs:label "homme"@fr ;
+  rdfs:label "humain"@fr ;
+  rdfs:label "human"@en ;
+  rdfs:label "human being"@en ;
+  rdfs:label "person"@en ;
+  rdfs:label "personne"@fr ;
+  rdfs:label "être humain"@fr ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Animal> .
+
+<http://ns.inria.fr/humans/schema#Researcher> a rdfs:Class ;
+  rdfs:comment "a person who devotes himself to doing research"@en ;
+  rdfs:comment "personne adonnée à des recherches spécialisées."@fr ;
+  rdfs:label "chercheur"@fr ;
+  rdfs:label "researcher"@en ;
+  rdfs:label "scientifique"@fr ;
+  rdfs:label "scientist"@en ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/schema#Woman> a rdfs:Class ;
+  rdfs:comment "an adult female person"@en ;
+  rdfs:comment "femelle adulte de l'espèce humaine."@fr ;
+  rdfs:label "femme"@fr ;
+  rdfs:label "woman"@en ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Female> ;
+  rdfs:subClassOf <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/schema#age> a rdf:Property ;
+  rdfs:comment "complete existence duration."@en ;
+  rdfs:comment "durée complète d'existence."@fr ;
+  rdfs:label "age"@en ;
+  rdfs:label "âge"@fr .
+
+<http://ns.inria.fr/humans/schema#hasAncestor> a rdf:Property ;
+  rdfs:comment "relation between an animal and another animal from which it is descended."@en ;
+  rdfs:comment "relation entre un animal et un autre animal duquel il descend."@fr ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Animal> ;
+  rdfs:label "a pour ancêtre"@fr ;
+  rdfs:label "has for ancestor"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Animal> .
+
+<http://ns.inria.fr/humans/schema#hasBrother> a rdf:Property ;
+  rdfs:comment "relation avec un mâle ayant les mêmes parents."@fr ;
+  rdfs:comment "relation with a male who has the same parents."@en ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Animal> ;
+  rdfs:label "a pour frère"@fr ;
+  rdfs:label "has for brother"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Male> .
+
+<http://ns.inria.fr/humans/schema#hasChild> a rdf:Property ;
+  rdfs:comment "relation between an animal and another animal to which it gave birth."@en ;
+  rdfs:comment "relation entre un animal et un autre animal auquel il a donné naissance."@fr ;
+  rdfs:label "a pour enfant"@fr ;
+  rdfs:label "has for child"@en .
+
+<http://ns.inria.fr/humans/schema#hasFather> a rdf:Property ;
+  rdfs:comment "avoir pour parent un mâle."@fr ;
+  rdfs:comment "to have for parent a male."@en ;
+  rdfs:label "a pour père"@fr ;
+  rdfs:label "has for father"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Male> ;
+  rdfs:subPropertyOf <http://ns.inria.fr/humans/schema#hasParent> .
+
+<http://ns.inria.fr/humans/schema#hasFriend> a rdf:Property ;
+  rdfs:comment "relation between a person and another person he or she knows well and regards with affection and trust."@en ;
+  rdfs:comment "relation entre une personne et une autre personne qui est l'objet d'un attachement privilégié."@fr ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Person> ;
+  rdfs:label "a pour ami"@fr ;
+  rdfs:label "has for friend"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/schema#hasMother> a rdf:Property ;
+  rdfs:comment "avoir pour parent un femmelle."@fr ;
+  rdfs:comment "to have for parent a female."@en ;
+  rdfs:label "a pour mère"@fr ;
+  rdfs:label "has for mother"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Female> ;
+  rdfs:subPropertyOf <http://ns.inria.fr/humans/schema#hasParent> .
+
+<http://ns.inria.fr/humans/schema#hasParent> a rdf:Property ;
+  rdfs:comment "relation between an animal and another animal which gave birth to it."@en ;
+  rdfs:comment "relation entre un animal et un autre animal qui lui a donné naissance."@fr ;
+  rdfs:label "a pour parent"@fr ;
+  rdfs:label "has for parent"@en ;
+  rdfs:subPropertyOf <http://ns.inria.fr/humans/schema#hasAncestor> .
+
+<http://ns.inria.fr/humans/schema#hasSister> a rdf:Property ;
+  rdfs:comment "relation avec une femelle ayant les mêmes parents."@fr ;
+  rdfs:comment "relation with a female who has the same parents."@en ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Animal> ;
+  rdfs:label "a pour soeur"@fr ;
+  rdfs:label "has for sister"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Female> .
+
+<http://ns.inria.fr/humans/schema#hasSpouse> a rdf:Property ;
+  rdfs:comment "a person's partner in marriage."@en ;
+  rdfs:comment "le partenaire d'une personne dans un mariage."@fr ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Person> ;
+  rdfs:label "est en ménage avec"@fr ;
+  rdfs:label "has for spouse"@en ;
+  rdfs:range <http://ns.inria.fr/humans/schema#Person> .
+
+<http://ns.inria.fr/humans/schema#name> a rdf:Property ;
+  rdfs:comment "designation of something."@en ;
+  rdfs:comment "désignation de quelque chose."@fr ;
+  rdfs:label "name"@en ;
+  rdfs:label "nom"@fr .
+
+<http://ns.inria.fr/humans/schema#shirtsize> a rdf:Property ;
+  rdfs:comment "dimensions approximatives des chemises portées par une personne."@fr ;
+  rdfs:comment "express in some way the approximate dimensions of the shirts of a person."@en ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Person> ;
+  rdfs:label "shirt size"@en ;
+  rdfs:label "size"@en ;
+  rdfs:label "taille"@fr ;
+  rdfs:label "taille de chemise"@fr .
+
+<http://ns.inria.fr/humans/schema#shoesize> a rdf:Property ;
+  rdfs:comment "express in some way the approximate length of the shoes for a person."@en ;
+  rdfs:comment "taille, exprimée en points, des chaussures d'une personne."@fr ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Person> ;
+  rdfs:label "pointure"@fr ;
+  rdfs:label "shoe size"@en ;
+  rdfs:label "size"@en .
+
+<http://ns.inria.fr/humans/schema#trouserssize> a rdf:Property ;
+  rdfs:comment "dimensions approximatives des pantalons portés par une personne."@fr ;
+  rdfs:comment "express in some way the approximate dimensions of the trousers of a person."@en ;
+  rdfs:domain <http://ns.inria.fr/humans/schema#Person> ;
+  rdfs:label "size"@en ;
+  rdfs:label "taille"@fr ;
+  rdfs:label "taille de pantalon"@fr ;
+  rdfs:label "trousers size"@en .
+
+rdf:type a rdf:Property .
+
+rdfs:comment a rdf:Property .
+
+rdfs:domain a rdf:Property .
+
+rdfs:label a rdf:Property .
+
+rdfs:range a rdf:Property .
+
+rdfs:subClassOf a rdf:Property .
+
+rdfs:subPropertyOf a rdf:Property .
+
+owl:priorVersion a rdf:Property .
+

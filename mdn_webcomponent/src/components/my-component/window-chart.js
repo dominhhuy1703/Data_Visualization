@@ -37,7 +37,58 @@ class WindowChart extends HTMLElement {
 
     render() {
         this.shadowRoot.innerHTML = `
-            <link rel="stylesheet" href="components/my-component/customStyle.css">
+            <style>
+                window-chart {
+                    display: block;
+                    position: absolute;
+                }
+                .window {
+                    width: 650px;
+                    height: 650px;
+                    background: white;
+                    border-radius: 10px;
+                    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+                    overflow: hidden;
+                    border: 1px solid #ccc;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    z-index: 9;
+                }
+                .title-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 8px 12px;
+                    background: #0078D7;
+                    color: white;
+                    font-weight: bold;
+                    cursor: move;
+                    z-index: 10;
+                }
+                .close-btn {
+                    width: 16px;
+                    height: 16px;
+                    background: red;
+                    border-radius: 50%;
+                    cursor: pointer;
+                }
+                .content {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100%;
+                    width: 100%;
+                    position: relative;
+                }
+                svg {
+                    position: absolute;
+                    left: 50%;
+                    top: 50%;
+                    transform: translate(-50%, -50%);
+                }
+            </style>
             
             <div class="window" id='window-container'>
                 <div class="title-bar" id='window-header'>

@@ -25,14 +25,79 @@ class BarChart extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="components/my-component/customStyle.css">
-      <div class="container">
-        <svg width="450" height="400"></svg>
-        <div class="color-picker-container"></div>
-      </div>
-    `;
-  }
+  this.shadowRoot.innerHTML = `
+    <style>
+      :host {
+          display: block;
+          width: 100%;
+          height: 100%;
+          position: relative;
+      }
+      * {
+          box-sizing: border-box;
+      }
+      .container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+      }
+      .bar-chart svg {
+          display: block;
+          margin: auto;
+      }
+      .bar-chart rect {
+          transition: fill 0.3s ease, transform 0.3s ease;
+      }
+      .bar-chart rect:hover {
+          fill: darkblue;
+      }
+      .bar-chart .axis path,
+      .bar-chart .axis line {
+          stroke: black;
+      }
+      .bar-chart text {
+          font-size: 12px;
+          fill: black;
+      }
+      
+      .color-picker-container {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        .color-item label {
+            min-width: 80px;
+            font-weight: bold;
+        }
+        .color-item input {
+            width: 30px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+
+    <div class="container">
+      <svg width="450" height="350"></svg>
+      <div class="color-picker-container"></div>
+    </div>
+  `;
+}
+
 
   drawChart() {
     const data = JSON.parse(this.dataValue);

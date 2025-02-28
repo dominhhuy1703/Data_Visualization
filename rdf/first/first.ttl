@@ -1,0 +1,25 @@
+@prefix ex: <http://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+ex:Margot a foaf:Person, ex:Teacher ;
+    foaf:age "32"^^xsd:integer ;
+    foaf:shoeSize "38"^^xsd:integer ;
+    foaf:pantsSize "40"^^xsd:integer ;
+    foaf:knows ex:Arthur ;
+    ex:hasChild ex:Simon, ex:Marie ;
+    ex:hasMother ex:Simone .
+
+ex:Arthur a foaf:Person ;
+    ex:hasChild ex:Simon, ex:Marie .
+
+ex:Simon a foaf:Person .
+ex:Marie a foaf:Person .
+ex:Simone a foaf:Person .
+
+ex:Alice a foaf:Person ;
+    foaf:knows ex:Margot .
+
+ex:Pierre a foaf:Person ;
+    foaf:knows ex:Margot .

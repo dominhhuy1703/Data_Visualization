@@ -28,7 +28,82 @@ class PieChart extends HTMLElement {
 
   render() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="components/my-component/customStyle.css">
+      <style>
+        :host {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+        .pie-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            gap: 20px;
+        }
+        .pie-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .pie-chart svg {
+            width: 450px;
+            height: 450px;
+        }
+        .color-picker-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        .color-item label {
+            min-width: 80px;
+            font-weight: bold;
+        }
+        .color-item input {
+            width: 30px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+        }
+        .pie-chart path {
+            transition: transform 0.3s ease, fill 0.3s ease;
+        }
+        .pie-chart path:hover {
+            transform: scale(1.05);
+            fill: gray !important;
+        }
+    </style>
+
+
       <div class="container">
         <svg width="400" height="400"></svg>
         <div class="color-picker-container"></div>
