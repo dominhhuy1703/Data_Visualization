@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:ns0="http://example.org/">
+         xmlns:ns0="http://example.org/"
+         xmlns:ns1="http://dbpedia.org/resource/"
+         xmlns:ns2="http://dbpedia.org/ontology/">
 
   <rdf:Description rdf:about="http://example.org/Tim_Berners_Lee">
     <rdf:type rdf:resource="http://example.org/Person"/>
@@ -39,14 +41,17 @@
 
     <ns0:receivedAward>
       <ns0:Award rdf:about="http://example.org/Turing_Award">
-        <ns0:year rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2016</ns0:year>
+        <ns0:year rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">2016</ns0:year>
         <ns0:awardedBy rdf:resource="http://example.org/Association_for_Computing_Machinery"/>
+        <ns1:subject rdf:resource="http://dbpedia.org/resource/Turing_Award"/>
+        <ns2:wikiPageID rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">32385</ns2:wikiPageID>
+        <ns2:wikiPageExternalLink rdf:resource="https://en.wikipedia.org/wiki/Turing_Award"/>
       </ns0:Award>
     </ns0:receivedAward>
 
     <ns0:receivedAward>
       <ns0:Award rdf:about="http://example.org/Queen_Elizabeth_Prize">
-        <ns0:year rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2013</ns0:year>
+        <ns0:year rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">2013</ns0:year>
         <ns0:awardedBy rdf:resource="http://example.org/Queen_of_United_Kingdom"/>
       </ns0:Award>
     </ns0:receivedAward>
