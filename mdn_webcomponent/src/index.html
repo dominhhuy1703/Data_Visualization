@@ -3,13 +3,11 @@
   <head>
     <link rel="icon" href="data:,">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-    <script src = "components/my-component/window-chart.js"></script>
-    <script src = "components/my-component/pie-chart.js"></script>
-    <script src = "components/my-component/bar-chart.js"></script>
-    <script src = "components/my-component/nodelink-chart.js"></script>
-    <script src = "components/my-component/map-chart.js"></script>
+    <script src="components/my-component/window-chart.js"></script>
+    <script src="components/my-component/pie-chart.js"></script>
+    <script src="components/my-component/bar-chart.js"></script>
+    <script src="components/my-component/nodelink-chart.js"></script>
+    <script src="components/my-component/map-chart.js"></script>
     <link rel="stylesheet" href="index.css">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
@@ -27,19 +25,61 @@
         </div>
     </div>
     <script>
-        const runButton = document.querySelector('#run');
-        runButton.addEventListener('click', () => updateChart());
+        async function fetchSPARQLData() {
+            const query = `
+                PREFIX dbo: <http://dbpedia.org/ontology/>
+                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        function updateChart(){
-            const data=`[
-                {"value": 22.4, "tag": "Youtube", "icon": "icons/youtube.png"},
-                {"value": 21.9, "tag": "Zalo", "icon": "icons/zalo.png"},
-                {"value": 26.2, "tag": "Facebook", "icon": "icons/facebook.png"},
-                {"value": 12, "tag": "Instagram", "icon": "icons/instagram.png"},
-                {"value": 9, "tag": "Tiktok", "icon": "icons/tiktok.png"},
-                {"value": 8.5, "tag": "Twitter", "icon": "icons/twitter.png"}
-            ]`;
-            const nodelinkData=`{
+                SELECT ?countryName ?gdp WHERE {
+                    ?country a dbo:Country .
+                    ?country dbo:grossDomesticProduct ?gdp .
+                    ?country rdfs:label ?countryName .
+                    FILTER (lang(?countryName) = "en")
+                }
+                ORDER BY DESC(?gdp)
+                LIMIT 3
+            `;
+            const endpointUrl = "https://dbpedia.org/sparql";
+            const url = `${endpointUrl}?query=${encodeURIComponent(query)}&format=xml`;
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                return parseSPARQLXML(text);
+            } catch (error) {
+                console.error("Error fetching SPARQL data:", error);
+                return [];
+            }
+        }
+
+        function parseSPARQLXML(xmlText) {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(xmlText, "text/xml");
+            const results = xml.getElementsByTagName("result");
+            let data = [];
+            for (let result of results) {
+                const nameNode = result.getElementsByTagName("binding")[0]?.getElementsByTagName("literal")[0];
+                const popNode = result.getElementsByTagName("binding")[1]?.getElementsByTagName("literal")[0];
+                if (nameNode && popNode) {
+                    const name = nameNode.textContent.trim();
+                    const population = parseFloat(popNode.textContent.trim()) / 1e6;
+                    data.push({
+                        tag: name,
+                        value: parseFloat(population.toFixed(1))
+                    });
+                }
+            }
+            return data;
+        }
+
+        async function updateChart() {
+            const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
+            const sparqlData = await fetchSPARQLData();
+            if (sparqlData.length === 0) {
+                alert("No data retrieved from SPARQL query.");
+                return;
+            }
+            const data = JSON.stringify(sparqlData);
+            const nodelinkData = `{
                 "nodes": [
                     {"id": 1, "name": "A"},
                     {"id": 2, "name": "B"},
@@ -52,18 +92,17 @@
                     {"source": 1, "target": 5}
                 ]
             }`;
-            const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
-            let windowChart = document.createElement('window-chart')
-            if (selectedChart === 'nodelink-chart'){
-            windowChart.setAttribute('data', nodelinkData);
-            }
-            else {
-            windowChart.setAttribute('data', data);
+            let windowChart = document.createElement('window-chart');
+            if (selectedChart === 'nodelink-chart') {
+                windowChart.setAttribute('data', nodelinkData);
+            } else {
+                windowChart.setAttribute('data', data);
             }
             windowChart.setAttribute('chart-type', selectedChart);
             document.querySelector(".container").append(windowChart);
-        };
-        
+        }
+
+        document.querySelector('#run').addEventListener('click', updateChart);
     </script>
   </body>
 </html>
