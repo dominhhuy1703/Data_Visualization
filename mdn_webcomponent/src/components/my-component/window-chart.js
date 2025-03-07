@@ -43,8 +43,8 @@ class WindowChart extends HTMLElement {
                     position: absolute;
                 }
                 .window {
-                    width: 650px;
-                    height: 650px;
+                    width: 750px;
+                    height: 750px;
                     background: white;
                     border-radius: 10px;
                     box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
