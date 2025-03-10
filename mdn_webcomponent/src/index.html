@@ -2,6 +2,9 @@
 <html dir="ltr" lang="en">
   <head>
     <link rel="icon" href="data:,">
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="components/my-component/window-chart.js"></script>
     <script src="components/my-component/pie-chart.js"></script>
@@ -74,33 +77,74 @@
         async function updateChart() {
             const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
             const sparqlData = await fetchSPARQLData();
+
             if (sparqlData.length === 0) {
                 alert("No data retrieved from SPARQL query.");
                 return;
             }
-            const data = JSON.stringify(sparqlData);
-            const nodelinkData = `{
-                "nodes": [
-                    {"id": 1, "name": "A"},
-                    {"id": 2, "name": "B"},
-                    {"id": 3, "name": "C"},
-                    {"id": 4, "name": "D"},
-                    {"id": 5, "name": "E"}
-                ],
-                "links": [
-                    {"source": 1, "target": 2},
-                    {"source": 1, "target": 5}
-                ]
-            }`;
+
+
+            const vegaFormattedData = {
+                width: 500,
+                height: 500,
+                scales: [
+                {
+                    name: "x",
+                    type: "band",
+                    range: "width",
+                    domain: {"data": "table", "field": "x"}
+                    },
+                    {
+                    name: "y",
+                    type: "linear",
+                    range: "height",
+                    nice: true, 
+                    zero: true,
+                    domain: {"data": "table", "field": "y1"}
+                    },
+                    {
+                        name: "color",
+                        type: "ordinal",
+                        range: "category",
+                        domain: {"data": "table", "field": "c"}
+                    }],
+                    
+                data: [
+                    {
+                        name: "table",
+                        values: sparqlData.map(d => ({ x: d.tag, y: d.value, c: 1 }))
+                    }
+                ]  
+            };
+
+            console.log(JSON.stringify(vegaFormattedData, null, 2)); // Kiểm tra dữ liệu đã đúng chưa
+
             let windowChart = document.createElement('window-chart');
+
             if (selectedChart === 'nodelink-chart') {
-                windowChart.setAttribute('data', nodelinkData);
+                const nodelinkData = {
+                    nodes: [
+                        { id: 1, name: "A" },
+                        { id: 2, name: "B" },
+                        { id: 3, name: "C" },
+                        { id: 4, name: "D" },
+                        { id: 5, name: "E" }
+                    ],
+                    links: [
+                        { source: 1, target: 2 },
+                        { source: 1, target: 5 }
+                    ]
+                };
+                windowChart.setAttribute('data', JSON.stringify(nodelinkData));
             } else {
-                windowChart.setAttribute('data', data);
+                // Truyền dữ liệu Vega đã format
+                windowChart.setAttribute('data', JSON.stringify(vegaFormattedData));
             }
+            
             windowChart.setAttribute('chart-type', selectedChart);
+            
             document.querySelector(".container").append(windowChart);
-        }
+            }
 
         document.querySelector('#run').addEventListener('click', updateChart);
     </script>

@@ -1,3 +1,16 @@
+function findHighestZIndex()
+{
+    const allWindows = document.querySelectorAll('window-chart');
+    let highestZIndex = 1;
+    allWindows.forEach(window => {
+        const zIndex = parseInt(window.shadowRoot.querySelector('.window').style.zIndex, 10);
+        if (zIndex > highestZIndex) {
+            highestZIndex = zIndex;
+        }
+    });
+    return highestZIndex;
+};
+
 class WindowChart extends HTMLElement {
 
     #dataValue = "";
@@ -18,13 +31,17 @@ class WindowChart extends HTMLElement {
     connectedCallback() {
         this.graph = document.createElement(this.getAttribute("chart-type"));
         this.shadowRoot.querySelector('.content').appendChild(this.graph);
+
+        // Gán dữ liệu cho component con (ví dụ: bar-chart, pie-chart, v.v.)
         this.graph.setAttribute('data', this.dataValue);
+
         // Add event: 'Close Window'
         this.shadowRoot.querySelector('.close-btn').addEventListener('click', () => {
             this.remove();
         });
-        this.shadowRoot.querySelector('#title-text').textContent =this.getChartTitle(this.getAttribute("chart-type"));
-        makeDraggable(this.cont)
+        this.shadowRoot.querySelector('#title-text').textContent = this.getChartTitle(this.getAttribute("chart-type"));
+        makeDraggable(this.cont);
+        this.cont.style.zIndex = findHighestZIndex();
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -43,18 +60,15 @@ class WindowChart extends HTMLElement {
                     position: absolute;
                 }
                 .window {
-                    width: 750px;
-                    height: 750px;
                     background: white;
                     border-radius: 10px;
                     box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
-                    overflow: hidden;
+                    // overflow: hidden;
                     border: 1px solid #ccc;
                     position: fixed;
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    z-index: 9;
                 }
                 .title-bar {
                     display: flex;
@@ -65,7 +79,6 @@ class WindowChart extends HTMLElement {
                     color: white;
                     font-weight: bold;
                     cursor: move;
-                    z-index: 10;
                 }
                 .close-btn {
                     width: 16px;
@@ -122,10 +135,12 @@ function makeDraggable (element) {
     // Make an element draggable (or if it has a .window-top class, drag based on the .window-top element)
     let currentPosX = 0, currentPosY = 0, previousPosX = 0, previousPosY = 0;
 
+    const windowChart = element.closest('window-chart');
+
 		// If there is a window-top classed element, attach to that element instead of full window
-    if (element.querySelector('.window-header')) {
+    if (element.querySelector('#window-header')) {
         // If present, the window-top element is where you move the parent element from
-        element.querySelector('.window-top').onmousedown = dragMouseDown;
+        element.querySelector('#window-header').onmousedown = dragMouseDown;
     }
     else {
         // Otherwise, move the element itself
@@ -138,6 +153,10 @@ function makeDraggable (element) {
         // Get the mouse cursor position and set the initial previous positions to begin
         previousPosX = e.clientX;
         previousPosY = e.clientY;
+
+        // Bring the window to front when dragging starts
+        this.style.zIndex = findHighestZIndex() + 1;
+
         // When the mouse is let go, call the closing event
         document.onmouseup = closeDragElement;
         // call a function whenever the cursor moves
