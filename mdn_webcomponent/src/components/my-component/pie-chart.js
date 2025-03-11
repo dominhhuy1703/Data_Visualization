@@ -37,24 +37,12 @@ class PieChart extends HTMLElement {
 
         .container {
           display: flex; 
+          flex-direction: column;
           justify-content: center; 
           align-items: center; 
           width: 100%; 
           height: 100%; 
           position: relative; 
-        }
-
-        .pie-chart-container { 
-          display: flex; 
-          flex-direction: column; 
-          align-items: center; 
-          justify-content: center; 
-          padding: 20px; 
-        }
-
-        .pie-chart svg { 
-          width: 450px; 
-          height: 450px; 
         }
 
         .popup { 
@@ -145,9 +133,20 @@ class PieChart extends HTMLElement {
           transition: opacity 0.2s;
           z-index: 9999;
         }
+
+        .description {
+          text-align: center;
+          font-size: 22px;
+          font-weight: bold;
+          margin-bottom: 20px;
+          display: block;
+          width: 100%;
+        }
+
       </style>
       <div class="container">
         <svg></svg>
+        <div class="description"></div>
         <div class="tooltip"></div>
         <button class="change-color-btn">Change Color</button>
         <div class="overlay"></div>
@@ -215,28 +214,51 @@ class PieChart extends HTMLElement {
       .on("mousemove", (event) => {
         tooltip.style.left = (d3.pointer(event)[0] + width/2  + 10) + "px";
         tooltip.style.top = (d3.pointer(event)[1] + height/2 + 10) + "px";
-        console.log(tooltip.style.left, tooltip.style.top)
       })
       .on("mouseout", (event) => {
         tooltip.style.opacity = 0;
         d3.select(event.target).style("stroke", "white").style("opacity", 1);
       });
 
+      const chartDescription = this.shadowRoot.querySelector(".description");
+      chartDescription.textContent = coreData.description;
+
     const textGroup = svg.append("g")
       .attr("font-family", "arial")
-      .attr("font-size", 15)
-      .attr("font-weight", 650)
+      .attr("font-size", 12)
+      .attr("font-weight", 550)
       .attr("text-anchor", "middle");
 
-    textGroup.selectAll("text")
+      textGroup.selectAll("text")
       .data(pieDataStructure)
       .join("text")
       .attr("transform", d => {
         const centroid = arcShapeLabels.centroid(d);
-        return d.data.y < 5 ? `translate(${centroid[0] * 1.5},${centroid[1] * 1.5})` : `translate(${centroid[0] * 0.8},${centroid[1] * 0.8})`;
+        return d.data.y < 5 
+          ? `translate(${centroid[0] * 1.5},${centroid[1] * 1.5})` 
+          : `translate(${centroid[0] * 1},${centroid[1] * 1})`;
       })
-      .call(text => text.append("tspan").attr("x", "0").attr("dy", "0em").text(d => d.data.x))
-      .call(text => text.append("tspan").attr("x", "0").attr("dy", "1.2em").text(d => d.data.y));
+      .each(function(d) {
+        const textElement = d3.select(this);
+        const words = d.data.x.split(" "); // Chia thành mảng từ
+        const groupedWords = [];
+    
+        for (let i = 0; i < words.length; i += 2) {
+          groupedWords.push(words.slice(i, i + 2).join(" ")); // Gộp 2 từ mỗi dòng
+        }
+    
+        groupedWords.forEach((line, i) => {
+          textElement.append("tspan")
+            .attr("x", 0)
+            .attr("dy", i === 0 ? "0em" : "1.2em") // Cách dòng hợp lý
+            .text(line);
+        });
+    
+        textElement.append("tspan")
+          .attr("x", "0")
+          .attr("dy", "1.2em")
+          .text(d.data.y);
+      });
 
     this.renderColorPickers(data);
   }
