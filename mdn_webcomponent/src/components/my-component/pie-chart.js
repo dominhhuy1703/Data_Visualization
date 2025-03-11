@@ -1,3 +1,5 @@
+const scale_d3 = {'ordinal': d3.scaleOrdinal}
+
 class PieChart extends HTMLElement {
   #dataValue = '';
 
@@ -145,7 +147,7 @@ class PieChart extends HTMLElement {
         }
       </style>
       <div class="container">
-        <svg width="400" height="400"></svg>
+        <svg></svg>
         <div class="tooltip"></div>
         <button class="change-color-btn">Change Color</button>
         <div class="overlay"></div>
@@ -160,44 +162,60 @@ class PieChart extends HTMLElement {
     this.shadowRoot.querySelector(".overlay").addEventListener("click", () => this.togglePopup(false));
   }
 
-
   togglePopup(show) {
     const popup = this.shadowRoot.querySelector(".popup");
     popup.classList.toggle("show", show);
   }
 
   drawChart() {
-    const svgElement = this.shadowRoot.querySelector("svg");
     const tooltip = this.shadowRoot.querySelector(".tooltip");
-    let data = JSON.parse(this.#dataValue);
-    const width = 400, height = 400;
+    let coreData = JSON.parse(this.#dataValue);
+    let data = coreData.data[0].values; // Use vegaFormattedData
+    const width = coreData.width, height = coreData.height;
     const radius = Math.min(width, height) / 2;
+    const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove();
 
-    this.colorScale = d3.scaleOrdinal()
-      .domain(data.map(d => d.tag))
+    let colorScale = coreData.scales.find((element) => element.name == "color");
+    if (colorScale) {
+      this.colorScale = scale_d3[colorScale.type]();
+    }
+    else {
+      this.colorScale = d3.scaleOrdinal();
+    }
+
+
+    // const truthCheckCollection = (collection, pre) =>
+    //   collection.every(obj => obj[pre]);
+    // console.log(truthCheckCollection(data, "c"));
+
+    this.colorScale
+      .domain(data.map(d => d.x)) // Use d.x for tag
       .range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
 
     const arcShape = d3.arc().innerRadius(radius * 0.4).outerRadius(radius - 0.9);
     const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
-    const pieDataStructure = d3.pie().sort(null).value(d => d.value)(data);
-    const svg = d3.select(svgElement).append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
+    const pieDataStructure = d3.pie().sort(null).value(d => d.y)(data); // Use d.y for value
+    const svg = d3.select(svgElement)
+    .attr("width", width).attr("height", height).style("margin", "50px")
+    .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
 
     this.paths = svg.selectAll("path")
       .data(pieDataStructure)
       .join("path")
-      .attr("fill", d => d.data.color || this.colorScale(d.data.tag))
+      .attr("fill", d => d.data.color || this.colorScale(d.data.x))
       .attr("d", arcShape)
       .attr("stroke", "white")
-      .on("click", (event, d) => alert(`Clicked on: ${d.data.tag}, ${d.data.value}`))
+      .on("click", (event, d) => alert(`Clicked on: ${d.data.x}, ${d.data.y}`))
       .on("mouseover", (event, d) => {
         tooltip.style.opacity = 1;
-        tooltip.innerHTML = `<strong>${d.data.tag}</strong>: ${d.data.value.toFixed(1)}`;
+        tooltip.innerHTML = `<strong>${d.data.x}</strong>: ${d.data.y.toFixed(1)}`;
         d3.select(event.target).style("stroke", "black").style("opacity", 1);
       })
       .on("mousemove", (event) => {
-        tooltip.style.left = `${event.pageX + 10}px`;
-        tooltip.style.top = `${event.pageY - 10}px`;
+        tooltip.style.left = (d3.pointer(event)[0] + width/2  + 10) + "px";
+        tooltip.style.top = (d3.pointer(event)[1] + height/2 + 10) + "px";
+        console.log(tooltip.style.left, tooltip.style.top)
       })
       .on("mouseout", (event) => {
         tooltip.style.opacity = 0;
@@ -215,10 +233,10 @@ class PieChart extends HTMLElement {
       .join("text")
       .attr("transform", d => {
         const centroid = arcShapeLabels.centroid(d);
-        return d.data.value < 5 ? `translate(${centroid[0] * 1.5},${centroid[1] * 1.5})` : `translate(${centroid[0] * 0.8},${centroid[1] * 0.8})`;
+        return d.data.y < 5 ? `translate(${centroid[0] * 1.5},${centroid[1] * 1.5})` : `translate(${centroid[0] * 0.8},${centroid[1] * 0.8})`;
       })
-      .call(text => text.append("tspan").attr("x", "0").attr("dy", "0em").text(d => d.data.tag))
-      .call(text => text.append("tspan").attr("x", "0").attr("dy", "1.2em").text(d => d.data.value));
+      .call(text => text.append("tspan").attr("x", "0").attr("dy", "0em").text(d => d.data.x))
+      .call(text => text.append("tspan").attr("x", "0").attr("dy", "1.2em").text(d => d.data.y));
 
     this.renderColorPickers(data);
   }
@@ -227,8 +245,8 @@ class PieChart extends HTMLElement {
     const container = this.shadowRoot.querySelector(".color-picker-container");
     container.innerHTML = data.map((d, index) => `
       <div class="color-item">
-        <label>${d.tag}</label>
-        <input type="color" value="${d.color || this.colorScale(d.tag)}" data-index="${index}">
+        <label>${d.x}</label>
+        <input type="color" value="${d.color || this.colorScale(d.x)}" data-index="${index}">
       </div>
     `).join("");
 
@@ -241,7 +259,14 @@ class PieChart extends HTMLElement {
     const index = event.target.dataset.index;
     const newColor = event.target.value;
     data[index].color = newColor;
-    this.paths.data(data).attr("fill", d => d.color || this.colorScale(d.data.tag));
+
+    const path = this.shadowRoot.querySelectorAll("path")[index];
+    d3.select(path)
+      .transition()
+      .duration(300)
+      .attr("fill", newColor);
+
+    this.#dataValue = JSON.stringify(data); // Update data
   }
 
   get dataValue() {
