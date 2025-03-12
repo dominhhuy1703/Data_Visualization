@@ -103,8 +103,7 @@
                 return;
             }
 
-
-            const vegaFormattedData = {
+            const pieData = {
                 description: "Countries with the largest population",
                 width: 500,
                 height: 500,
@@ -119,8 +118,6 @@
                     name: "y",
                     type: "linear",
                     range: "height",
-                    nice: true, 
-                    zero: true,
                     domain: {"data": "table", "field": "y1"}
                     },
                     {
@@ -137,8 +134,67 @@
                     }
                 ]  
             };
+            console.log("pie", JSON.stringify(pieData, null, 2)); // Check pie data
 
-            console.log(JSON.stringify(vegaFormattedData, null, 2)); // Check data
+
+            const barData = {
+                description: "Countries with the largest population",
+                width: 500,
+                height: 500,
+                scales: [
+                    {
+                        name: "x",
+                        type: "band",
+                        range: "width",
+                        domain: {"data": "table", "field": "x"}
+                    },
+                    {
+                        name: "y",
+                        type: "linear",
+                        range: "height",
+                        domain: {"data": "table", "field": "y"}
+                    },
+                    {
+                        name: "color",
+                        type: "ordinal",
+                        range: "category",
+                        domain: {"data": "table", "field": "c"}
+                    }
+                ],
+                
+                "marks": [
+                    {
+                        "type": "rect",
+                        "from": {"data":"table"},
+                        "encode": {
+                        "enter": {
+                            "x": {"scale": "x", "field": "x"},
+                            "width": {"scale": "x", "band": 1},
+                            "y": {"scale": "y", "field": "y"},
+                            "y2": {"scale": "y", "value": 0}
+                        },
+                        "update": {
+                            "fill": [
+                            {"test": "datum.c !== null && datum.c !== undefined", "scale": "color", "field": "c"},
+                            {"value": "steelblue"}
+                            ]
+                        },
+                        "hover": {
+                            "fill": {"value": "red"}
+                        }
+                        }
+                    }
+                ],
+
+                data: [
+                    {
+                        name: "table",
+                        values: sparqlData.map(d => ({ x: d.tag, y: d.value, /* c: "#333"*/}))
+                    }
+                ]  
+            };
+
+            console.log("bar", JSON.stringify(barData, null, 2)); // Check bar data
 
             let windowChart = document.createElement('window-chart');
 
@@ -157,9 +213,10 @@
                     ]
                 };
                 windowChart.setAttribute('data', JSON.stringify(nodelinkData));
-            } else {
-                // Transmit data
-                windowChart.setAttribute('data', JSON.stringify(vegaFormattedData));
+            } else if (selectedChart === 'bar-chart') {
+                windowChart.setAttribute('data', JSON.stringify(barData));
+            } else if (selectedChart === 'pie-chart') {
+                windowChart.setAttribute('data', JSON.stringify(pieData));
             }
             
             windowChart.setAttribute('chart-type', selectedChart);
