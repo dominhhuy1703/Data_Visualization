@@ -94,7 +94,7 @@ class BarChart extends HTMLElement {
 		let coreData = JSON.parse(this.#dataValue);
 		const data = coreData.data[0].values;
 		const width = coreData.width, height = coreData.height;
-		const margin = { top: 20, right: 0, bottom: 40, left: 30 };
+		const margin = { top: 20, right: 0, bottom: 40, left: 20 };
 		const svgElement = this.shadowRoot.querySelector('svg');
 		svgElement.innerHTML = '';
 		
@@ -107,7 +107,8 @@ class BarChart extends HTMLElement {
 		}
 
 		this.colorScale
-			.domain(data.map(d => d.x)) // Sử dụng d.x cho nhãn
+			.domain(data.map(d => d.c).filter(c => c))
+			// .domain(data.map(d => d.x)) // Sử dụng d.x cho nhãn
 			.range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
 
 		const x = d3.scaleBand().domain(data.map(d => d.x)).range([margin.left, width - margin.right]).padding(0.5);
@@ -118,7 +119,15 @@ class BarChart extends HTMLElement {
 			.attr("transform",
 				"translate(" + margin.left + "," + margin.top + ")");;
 
-		svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x));
+				const xAxis = svg.append("g")
+				.attr("transform", `translate(0,${height - margin.bottom})`)
+				.call(d3.axisBottom(x));
+			
+			xAxis.selectAll("text")
+				.text(d => d.length > 5 ? d.slice(0, 5) + "..." : d) // Rút gọn nếu > 5 ký tự
+				.append("title") // Giữ nội dung đầy đủ khi hover
+				.style("font-size", "14px")
+				.text(d => d);
 			// .selectAll("text")
 			// .style("font-size", "14px");
 
@@ -131,34 +140,54 @@ class BarChart extends HTMLElement {
 			.attr("y", d => y(d.y))  // Dùng d.y cho trục y
 			.attr("height", d => y(0) - y(d.y))
 			.attr("width", x.bandwidth())
-			.attr("fill", d => d.color || this.colorScale(d.x))
+			.attr("fill", d => d.c ? this.colorScale(d.c) : "steelblue")
+			// .attr("fill", d => d.color || this.colorScale(d.x))
 			.on("click", (event, d) => this.showInfoPopup(d))
 			.on("mouseover", (event, d) => {
 				tooltip.style.opacity = 1;
 				tooltip.innerHTML = `<strong>${d.x}</strong>: ${d.y.toFixed(1)}`;
-				d3.select(event.target).style("stroke", "black").style("opacity", 1);
+			
+				d3.select(event.target)
+					.attr("fill", "red") // Chuyển màu thành đỏ
+					.style("stroke", "black")
+					.style("opacity", 1);
+			
+				// Hiển thị giá trị trên thanh bar
+				svg.append("text")
+					.attr("class", "hover-value")
+					.attr("x", x(d.x) + x.bandwidth() / 2)
+					.attr("y", y(d.y) - 10)
+					.attr("text-anchor", "middle")
+					.attr("fill", "black")
+					.style("font-size", "16px")
+					.text(d.y);
 			})
 			.on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + width/2  + 10) + "px";
-				tooltip.style.top = (d3.pointer(event)[1] + height/2 + 10) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + width/2) + "px";
+        		tooltip.style.top = (d3.pointer(event)[1] + height/2) + "px";
 			})
-			.on("mouseout", (event) => {
+			.on("mouseout", (event, d) => {
 				tooltip.style.opacity = 0;
-				d3.select(event.target).style("stroke", "white").style("opacity", 1);
-			})
-			.append("title")
-			.text(d => `${d.x}: ${d.y}`);
+			
+				d3.select(event.target)
+					.attr("fill", d.c ? this.colorScale(d.c) : "steelblue") // Quay lại màu ban đầu
+					.style("stroke", "none")
+					.style("opacity", 1);
+			
+				// Xóa giá trị hiển thị khi hover ra ngoài
+				svg.selectAll(".hover-value").remove();
+			});
 	
-		svg.selectAll(".bar-value")
-			.data(data)
-			.join("text")
-			.attr("class", "bar-value")
-			.attr("x", d => x(d.x) + x.bandwidth() / 2)
-			.attr("y", d => y(d.y) - 10)
-			.attr("text-anchor", "middle")
-			.attr("fill", "black")
-			.style("font-size", "16px")
-			.text(d => d.y);
+		// svg.selectAll(".bar-value")
+		// 	.data(data)
+		// 	.join("text")
+		// 	.attr("class", "bar-value")
+		// 	.attr("x", d => x(d.x) + x.bandwidth() / 2)
+		// 	.attr("y", d => y(d.y) - 10)
+		// 	.attr("text-anchor", "middle")
+		// 	.attr("fill", "black")
+		// 	.style("font-size", "16px")
+		// 	.text(d => d.y);
 		
 		const chartDescription = this.shadowRoot.querySelector(".description");
 		chartDescription.textContent = coreData.description;

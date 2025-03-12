@@ -32,7 +32,6 @@ class WindowChart extends HTMLElement {
         this.graph = document.createElement(this.getAttribute("chart-type"));
         this.shadowRoot.querySelector('.content').appendChild(this.graph);
 
-        // Gán dữ liệu cho component con (ví dụ: bar-chart, pie-chart, v.v.)
         this.graph.setAttribute('data', this.dataValue);
 
         // Add event: 'Close Window'
@@ -155,7 +154,7 @@ function makeDraggable (element) {
         previousPosY = e.clientY;
 
         // Bring the window to front when dragging starts
-        this.style.zIndex = findHighestZIndex() + 1;
+        element.style.zIndex = findHighestZIndex() + 1;
 
         // When the mouse is let go, call the closing event
         document.onmouseup = closeDragElement;
