@@ -30,17 +30,37 @@
     <script>
         async function fetchSPARQLData() {
             const query = `
-                PREFIX dbo: <http://dbpedia.org/ontology/>
+                PREFIX dbpprop: <http://dbpedia.org/property/>
                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX yago:<http://dbpedia.org/class/yago/>
+                PREFIX dbo: <http://dbpedia.org/ontology/>
+                PREFIX category: <http://dbpedia.org/resource/Category:>
+                PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
 
-                SELECT ?countryName ?gdp WHERE {
-                    ?country a dbo:Country .
-                    ?country dbo:grossDomesticProduct ?gdp .
-                    ?country rdfs:label ?countryName .
-                    FILTER (lang(?countryName) = "en")
+                SELECT DISTINCT ?name ?population
+                WHERE {
+                    ?country a dbo:Country . 
+                    ?country rdfs:label ?enName .
+
+                    OPTIONAL { ?country dbpprop:populationEstimate ?population }
+                    OPTIONAL { ?country dbpprop:populationCensus ?population }
+
+                    { ?country dbpprop:iso3166code ?code . }
+                    UNION
+                    { ?country dbpprop:iso31661Alpha ?code . }
+                    UNION
+                    { ?country dbpprop:countryCode ?code . }
+                    UNION
+                    { ?country a yago:MemberStatesOfTheUnitedNations . }
+
+                    FILTER (langMatches(lang(?enName), "en")) 
+                    FILTER (xsd:integer(?population))  
+
+                    BIND (str(?enName) AS ?name)
                 }
-                ORDER BY DESC(?gdp)
-                LIMIT 3
+                ORDER BY DESC(?population)  
+                LIMIT 10  
+
             `;
             const endpointUrl = "https://dbpedia.org/sparql";
             const url = `${endpointUrl}?query=${encodeURIComponent(query)}&format=xml`;
@@ -85,6 +105,7 @@
 
 
             const vegaFormattedData = {
+                description: "Countries with the largest population",
                 width: 500,
                 height: 500,
                 scales: [
@@ -112,12 +133,12 @@
                 data: [
                     {
                         name: "table",
-                        values: sparqlData.map(d => ({ x: d.tag, y: d.value, c: 1 }))
+                        values: sparqlData.map(d => ({ x: d.tag, y: d.value}))
                     }
                 ]  
             };
 
-            console.log(JSON.stringify(vegaFormattedData, null, 2)); // Kiểm tra dữ liệu đã đúng chưa
+            console.log(JSON.stringify(vegaFormattedData, null, 2)); // Check data
 
             let windowChart = document.createElement('window-chart');
 
@@ -137,7 +158,7 @@
                 };
                 windowChart.setAttribute('data', JSON.stringify(nodelinkData));
             } else {
-                // Truyền dữ liệu Vega đã format
+                // Transmit data
                 windowChart.setAttribute('data', JSON.stringify(vegaFormattedData));
             }
             
