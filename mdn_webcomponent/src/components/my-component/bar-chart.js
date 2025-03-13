@@ -79,25 +79,29 @@ class BarChart extends HTMLElement {
 		  </div>
 		</div>
 	  `;
+	  // Event listeners for handling color change and popup visibility
 	  this.shadowRoot.querySelector(".change-color-btn").addEventListener("click", () => this.togglePopup(true));
 	  this.shadowRoot.querySelector(".close-popup").addEventListener("click", () => this.togglePopup(false));
 	  this.shadowRoot.querySelector(".overlay").addEventListener("click", () => this.togglePopup(false));
 	}
-  
+	
+	// Function to show or hide the popup
 	togglePopup(show) {
 	  const popup = this.shadowRoot.querySelector(".popup");
 	  popup.classList.toggle("show", show);
 	}
-  
+	
+	// Draw chart
 	drawChart() {
 		const tooltip = this.shadowRoot.querySelector(".tooltip");
-		let coreData = JSON.parse(this.#dataValue);
-		const data = coreData.data[0].values;
+		let coreData = JSON.parse(this.#dataValue); // Parse the JSON data
+		const data = coreData.data[0].values; // Extract the values from the parsed data
 		const width = coreData.width, height = coreData.height;
 		const margin = { top: 20, right: 0, bottom: 40, left: 20 };
 		const svgElement = this.shadowRoot.querySelector('svg');
-		svgElement.innerHTML = '';
+		svgElement.innerHTML = ''; // Clear the SVG element before redrawing
 		
+		// Define color scale for bars based on data categories (color or other attributes)
 		let colorScale = coreData.scales.find((element) => element.name == "color");
 		if (colorScale) {
 			this.colorScale = scale_d3[colorScale.type]();
@@ -106,53 +110,65 @@ class BarChart extends HTMLElement {
 			this.colorScale = d3.scaleOrdinal();
 		}
 
+		// Set domain and range for color scale
 		this.colorScale
 			.domain(data.map(d => d.c).filter(c => c))
 			// .domain(data.map(d => d.x)) // Sử dụng d.x cho nhãn
 			.range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
 
+		// Set up scales for X and Y axes
 		const x = d3.scaleBand().domain(data.map(d => d.x)).range([margin.left, width - margin.right]).padding(0.5);
 		const y = d3.scaleLinear().domain([0, d3.max(data, d => d.y)]).nice().range([height - margin.bottom, margin.top]);
+		
+		// Append axes to the SVG
 		const svg = d3.select(svgElement)
 			.attr("width", width).attr("height", height).style("margin", "50px")
 			.append("g")
 			.attr("transform",
 				"translate(" + margin.left + "," + margin.top + ")");;
-
-				const xAxis = svg.append("g")
-				.attr("transform", `translate(0,${height - margin.bottom})`)
-				.call(d3.axisBottom(x));
-			
-			xAxis.selectAll("text")
-				.text(d => d.length > 5 ? d.slice(0, 5) + "..." : d) // Rút gọn nếu > 5 ký tự
-				.append("title") // Giữ nội dung đầy đủ khi hover
-				.style("font-size", "14px")
-				.text(d => d);
+		
+		// X-axis
+		const xAxis = svg.append("g")
+			.attr("transform", `translate(0,${height - margin.bottom})`)
+			.call(d3.axisBottom(x));
+		
+		// Truncate long x-axis labels and add tooltips
+		xAxis.selectAll("text")
+			.text(d => d.length > 5 ? d.slice(0, 5) + "..." : d) // Shorten if > 5 characters
+			.append("title") 
+			.style("font-size", "14px")
+			.text(d => d);
 			// .selectAll("text")
 			// .style("font-size", "14px");
-
+		
+		// Y-axis
 		svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
 		
+		// Draw bars on the chart
 		this.bars = svg.selectAll("rect")
 			.data(data)
 			.join("rect")
-			.attr("x", d => x(d.x))  // Dùng d.x cho trục x
-			.attr("y", d => y(d.y))  // Dùng d.y cho trục y
-			.attr("height", d => y(0) - y(d.y))
-			.attr("width", x.bandwidth())
-			.attr("fill", d => d.c ? this.colorScale(d.c) : "steelblue")
+			.attr("x", d => x(d.x))  // Position each bar based on data.x
+			.attr("y", d => y(d.y))  // Position each bar based on data.y
+			.attr("height", d => y(0) - y(d.y)) // Calculate height of each bar
+			.attr("width", x.bandwidth()) //Set width of each bar
+			.attr("fill", d => d.c ? this.colorScale(d.c) : "steelblue") // Fill color based on category
 			// .attr("fill", d => d.color || this.colorScale(d.x))
-			.on("click", (event, d) => this.showInfoPopup(d))
+			
+			.on("click", (event, d) => this.showInfoPopup(d)) // Popup bar click
+
+			// Tooltip
 			.on("mouseover", (event, d) => {
 				tooltip.style.opacity = 1;
 				tooltip.innerHTML = `<strong>${d.x}</strong>: ${d.y.toFixed(1)}`;
-			
+				
+				// Highlight on hover
 				d3.select(event.target)
-					.attr("fill", "red") // Chuyển màu thành đỏ
+					.attr("fill", "red") // Red
 					.style("stroke", "black")
 					.style("opacity", 1);
 			
-				// Hiển thị giá trị trên thanh bar
+				// Display the value
 				svg.append("text")
 					.attr("class", "hover-value")
 					.attr("x", x(d.x) + x.bandwidth() / 2)
@@ -174,7 +190,7 @@ class BarChart extends HTMLElement {
 					.style("stroke", "none")
 					.style("opacity", 1);
 			
-				// Xóa giá trị hiển thị khi hover ra ngoài
+				// Remove value when hovering out
 				svg.selectAll(".hover-value").remove();
 			});
 	
@@ -189,11 +205,13 @@ class BarChart extends HTMLElement {
 		// 	.style("font-size", "16px")
 		// 	.text(d => d.y);
 		
+		// Display chart description
 		const chartDescription = this.shadowRoot.querySelector(".description");
 		chartDescription.textContent = coreData.description;
-		this.renderColorPickers(data);
+		this.renderColorPickers(data); // Render color pickers for bars
 	}
-  
+	
+	// Show information popup with data details when a bar is clicked
 	showInfoPopup(d) {
 	  const infoPopup = this.shadowRoot.querySelector(".info-popup");
 	  infoPopup.innerHTML = `
@@ -204,7 +222,8 @@ class BarChart extends HTMLElement {
 	  infoPopup.classList.add("show");
 	  this.shadowRoot.querySelector(".close-popup").addEventListener("click", () => infoPopup.classList.remove("show"));
 	}
-  
+	
+	// Render color pickers for each bar based on data
 	renderColorPickers(data) {
 	  const container = this.shadowRoot.querySelector(".color-picker-container");
 	  container.innerHTML = data.map((d, index) => `
@@ -218,7 +237,8 @@ class BarChart extends HTMLElement {
 		input.addEventListener("input", (event) => this.updateColor(event, data));
 	  });
 	}
-  
+	
+	// Add event listeners to update color
 	updateColor(event, data) {
 	  const index = event.target.dataset.index;
 	  const newColor = event.target.value;
@@ -233,11 +253,13 @@ class BarChart extends HTMLElement {
   
 	  this.#dataValue = JSON.stringify(data); // Update data
 	}
-  
+	
+	// Getter
 	get dataValue() {
 	  return this.#dataValue;
 	}
-  
+	
+	// Setter
 	set dataValue(data) {
 	  this.#dataValue = data;
 	}
