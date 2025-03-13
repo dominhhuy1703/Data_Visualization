@@ -42,8 +42,8 @@
                     ?country a dbo:Country . 
                     ?country rdfs:label ?enName .
 
-                    OPTIONAL { ?country dbpprop:populationEstimate ?population }
-                    OPTIONAL { ?country dbpprop:populationCensus ?population }
+                    OPTIONAL { ?country dbpprop:populationEstimate ?populationRaw }
+                    OPTIONAL { ?country dbpprop:populationCensus ?populationRaw }
 
                     { ?country dbpprop:iso3166code ?code . }
                     UNION
@@ -54,12 +54,17 @@
                     { ?country a yago:MemberStatesOfTheUnitedNations . }
 
                     FILTER (langMatches(lang(?enName), "en")) 
-                    FILTER (xsd:integer(?population))  
+
+                    # Chuyển đổi giá trị dân số sang số nguyên nếu có thể
+                    BIND (IF(datatype(?populationRaw) = xsd:integer, ?populationRaw, xsd:integer(?populationRaw)) AS ?population)
+
+                    # Lọc chỉ lấy dân số từ 50 trở lên
+                    FILTER (?population >= 50000000)
 
                     BIND (str(?enName) AS ?name)
                 }
-                ORDER BY DESC(?population)  
-                LIMIT 10  
+                # ORDER BY DESC(?population) 
+                LIMIT 10
 
             `;
             const endpointUrl = "https://dbpedia.org/sparql";
@@ -74,6 +79,7 @@
             }
         }
 
+        // Function to parse SPARQL XML response
         function parseSPARQLXML(xmlText) {
             const parser = new DOMParser();
             const xml = parser.parseFromString(xmlText, "text/xml");
@@ -94,6 +100,7 @@
             return data;
         }
 
+        // Function to update the chart based on user selection
         async function updateChart() {
             const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
             const sparqlData = await fetchSPARQLData();
@@ -103,23 +110,35 @@
                 return;
             }
 
+            // Data structure for Pie Chart
             const pieData = {
-                description: "Countries with the largest population",
+                description: "Pie chart - Countries with the largest population",
                 width: 500,
                 height: 500,
-                scales: [
-                {
-                    name: "x",
-                    type: "band",
-                    range: "width",
-                    domain: {"data": "table", "field": "x"}
+
+                signals: [
+                    {
+                    name: "startAngle", "value": 0,
                     },
                     {
-                    name: "y",
-                    type: "linear",
-                    range: "height",
-                    domain: {"data": "table", "field": "y1"}
+                    name: "endAngle", "value": 6.29,
                     },
+                    {
+                    name: "padAngle", "value": 0,
+                    },
+                    {
+                    name: "innerRadius", "value": 0,
+                    },
+                    {
+                    name: "cornerRadius", "value": 0,
+                    },
+                    {
+                    name: "sort", "value": false,
+                    bind: {"input": "checkbox"}
+                    }
+                ],
+                
+                scales: [
                     {
                         name: "color",
                         type: "ordinal",
@@ -130,15 +149,15 @@
                 data: [
                     {
                         name: "table",
-                        values: sparqlData.map(d => ({ x: d.tag, y: d.value}))
+                        values: sparqlData.map(d => ({ x: d.tag, y: d.value, /*c: "#32cd32"*/}))
                     }
                 ]  
             };
             console.log("pie", JSON.stringify(pieData, null, 2)); // Check pie data
 
-
+            // Data structure for Bar Chart
             const barData = {
-                description: "Countries with the largest population",
+                description: "Bar chart- Countries with the largest population",
                 width: 500,
                 height: 500,
                 scales: [
@@ -196,6 +215,7 @@
 
             console.log("bar", JSON.stringify(barData, null, 2)); // Check bar data
 
+            // Create a new chart component dynamically
             let windowChart = document.createElement('window-chart');
 
             if (selectedChart === 'nodelink-chart') {
@@ -222,8 +242,9 @@
             windowChart.setAttribute('chart-type', selectedChart);
             
             document.querySelector(".container").append(windowChart);
-            }
-
+        }
+        
+        // Attach event listener to the Run button
         document.querySelector('#run').addEventListener('click', updateChart);
     </script>
   </body>
