@@ -28,6 +28,8 @@
         </div>
     </div>
     <script>
+
+        // Function make query for Pie, BarData
         async function fetchSPARQLData() {
             const query = `
                 PREFIX dbpprop: <http://dbpedia.org/property/>
@@ -55,10 +57,10 @@
 
                     FILTER (langMatches(lang(?enName), "en")) 
 
-                    # Chuyển đổi giá trị dân số sang số nguyên nếu có thể
+                    # Change population to integer
                     BIND (IF(datatype(?populationRaw) = xsd:integer, ?populationRaw, xsd:integer(?populationRaw)) AS ?population)
 
-                    # Lọc chỉ lấy dân số từ 50 trở lên
+                    # Filter to get population > 50m
                     FILTER (?population >= 50000000)
 
                     BIND (str(?enName) AS ?name)
@@ -99,150 +101,183 @@
             }
             return data;
         }
+        
+        // Funtion to make query for Node link
+        async function fetchNodeLinkData() {
+    const query = `
+        PREFIX dbo: <http://dbpedia.org/ontology/>
+        PREFIX dbr: <http://dbpedia.org/resource/>
+        PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?band ?bandName ?member ?memberName WHERE {
+            ?band dbo:genre dbr:Punk_rock ;
+                  foaf:name ?bandName ;
+                  dbo:bandMember ?member .
+
+            ?member foaf:name ?memberName .
+
+            FILTER(langMatches(lang(?bandName), "en") && langMatches(lang(?memberName), "en"))
+        }
+        LIMIT 5
+    `;
+
+    const endpointUrl = "https://dbpedia.org/sparql";
+    const url = `${endpointUrl}?query=${encodeURIComponent(query)}&format=xml`;
+
+    try {
+        const response = await fetch(url);
+        const text = await response.text();
+        return parseNodeLinkXML(text);
+    } catch (error) {
+        console.error("Error fetching SPARQL data for node-link:", error);
+        return [];
+    }
+}
+
+// Function to parse node-link data from XML
+function parseNodeLinkXML(xmlText) {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(xmlText, "text/xml");
+    const results = xml.getElementsByTagName("result");
+
+    let nodes = new Map();
+    let links = [];
+
+    for (let result of results) {
+        const bandNode = result.getElementsByTagName("binding")[1]?.getElementsByTagName("literal")[0];
+        const memberNode = result.getElementsByTagName("binding")[3]?.getElementsByTagName("literal")[0];
+
+        if (bandNode && memberNode) {
+            const bandName = bandNode.textContent.trim();
+            const memberName = memberNode.textContent.trim();
+
+            if (!nodes.has(bandName)) nodes.set(bandName, { id: nodes.size + 1, name: bandName });
+            if (!nodes.has(memberName)) nodes.set(memberName, { id: nodes.size + 1, name: memberName });
+
+            links.push({
+                source: nodes.get(bandName).id,
+                target: nodes.get(memberName).id
+            });
+        }
+    }
+
+    return { nodes: Array.from(nodes.values()), links };
+}
+
 
         // Function to update the chart based on user selection
         async function updateChart() {
-            const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
-            const sparqlData = await fetchSPARQLData();
+    const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
 
-            if (sparqlData.length === 0) {
-                alert("No data retrieved from SPARQL query.");
-                return;
-            }
+    let chartData;
+    if (selectedChart === 'nodelink-chart') {
+        chartData = await fetchNodeLinkData(); // Gọi truy vấn node-link
+    } else {
+        chartData = await fetchSPARQLData(); // Gọi truy vấn bar/pie chart
+    }
 
-            // Data structure for Pie Chart
-            const pieData = {
-                description: "Pie chart - Countries with the largest population",
-                width: 500,
-                height: 500,
+    if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
+        alert("No data retrieved from SPARQL query.");
+        return;
+    }
 
-                signals: [
-                    {
-                    name: "startAngle", "value": 0,
-                    },
-                    {
-                    name: "endAngle", "value": 6.29,
-                    },
-                    {
-                    name: "padAngle", "value": 0,
-                    },
-                    {
-                    name: "innerRadius", "value": 0,
-                    },
-                    {
-                    name: "cornerRadius", "value": 0,
-                    },
-                    {
-                    name: "sort", "value": false,
-                    bind: {"input": "checkbox"}
-                    }
-                ],
-                
-                scales: [
-                    {
-                        name: "color",
-                        type: "ordinal",
-                        range: "category",
-                        domain: {"data": "table", "field": "c"}
-                    }],
-                    
-                data: [
-                    {
-                        name: "table",
-                        values: sparqlData.map(d => ({ x: d.tag, y: d.value, /*c: "#32cd32"*/}))
-                    }
-                ]  
-            };
-            console.log("pie", JSON.stringify(pieData, null, 2)); // Check pie data
+    // Tạo component window-chart
+    let windowChart = document.createElement('window-chart');
 
-            // Data structure for Bar Chart
-            const barData = {
-                description: "Bar chart- Countries with the largest population",
-                width: 500,
-                height: 500,
-                scales: [
-                    {
-                        name: "x",
-                        type: "band",
-                        range: "width",
-                        domain: {"data": "table", "field": "x"}
-                    },
-                    {
-                        name: "y",
-                        type: "linear",
-                        range: "height",
-                        domain: {"data": "table", "field": "y"}
-                    },
-                    {
-                        name: "color",
-                        type: "ordinal",
-                        range: "category",
-                        domain: {"data": "table", "field": "c"}
-                    }
-                ],
-                
-                "marks": [
-                    {
-                        "type": "rect",
-                        "from": {"data":"table"},
-                        "encode": {
-                        "enter": {
-                            "x": {"scale": "x", "field": "x"},
-                            "width": {"scale": "x", "band": 1},
-                            "y": {"scale": "y", "field": "y"},
-                            "y2": {"scale": "y", "value": 0}
+    if (selectedChart === 'nodelink-chart') {
+        windowChart.setAttribute('data', JSON.stringify(chartData));
+    } else if (selectedChart === 'bar-chart') {
+        const barData = {
+            description: "Bar chart - Countries with the largest population",
+            width: 500,
+            height: 500,
+            scales: [
+                {
+                    name: "x",
+                    type: "band",
+                    range: "width",
+                    domain: {"data": "table", "field": "x"}
+                },
+                {
+                    name: "y",
+                    type: "linear",
+                    range: "height",
+                    domain: {"data": "table", "field": "y"}
+                },
+                {
+                    name: "color",
+                    type: "ordinal",
+                    range: "category",
+                    domain: {"data": "table", "field": "c"}
+                }
+            ],
+            marks: [
+                {
+                    type: "rect",
+                    from: {"data": "table"},
+                    encode: {
+                        enter: {
+                            x: {"scale": "x", "field": "x"},
+                            width: {"scale": "x", "band": 1},
+                            y: {"scale": "y", "field": "y"},
+                            y2: {"scale": "y", "value": 0}
                         },
-                        "update": {
-                            "fill": [
-                            {"test": "datum.c !== null && datum.c !== undefined", "scale": "color", "field": "c"},
-                            {"value": "steelblue"}
+                        update: {
+                            fill: [
+                                {"test": "datum.c !== null && datum.c !== undefined", "scale": "color", "field": "c"},
+                                {"value": "steelblue"}
                             ]
                         },
-                        "hover": {
-                            "fill": {"value": "red"}
-                        }
+                        hover: {
+                            fill: {"value": "red"}
                         }
                     }
-                ],
+                }
+            ],
+            data: [
+                {
+                    name: "table",
+                    values: chartData.map(d => ({ x: d.tag, y: d.value }))
+                }
+            ]
+        };
+        windowChart.setAttribute('data', JSON.stringify(barData));
+    } else if (selectedChart === 'pie-chart') {
+        const pieData = {
+            description: "Pie chart - Countries with the largest population",
+            width: 500,
+            height: 500,
+            signals: [
+                { name: "startAngle", value: 0 },
+                { name: "endAngle", value: 6.29 },
+                { name: "padAngle", value: 0 },
+                { name: "innerRadius", value: 0 },
+                { name: "cornerRadius", value: 0 },
+                { name: "sort", value: false, bind: {"input": "checkbox"} }
+            ],
+            scales: [
+                {
+                    name: "color",
+                    type: "ordinal",
+                    range: "category",
+                    domain: {"data": "table", "field": "c"}
+                }
+            ],
+            data: [
+                {
+                    name: "table",
+                    values: chartData.map(d => ({ x: d.tag, y: d.value }))
+                }
+            ]
+        };
+        windowChart.setAttribute('data', JSON.stringify(pieData));
+    }
 
-                data: [
-                    {
-                        name: "table",
-                        values: sparqlData.map(d => ({ x: d.tag, y: d.value, /* c: "#333"*/}))
-                    }
-                ]  
-            };
+    windowChart.setAttribute('chart-type', selectedChart);
+    document.querySelector(".container").append(windowChart);
+}
 
-            console.log("bar", JSON.stringify(barData, null, 2)); // Check bar data
-
-            // Create a new chart component dynamically
-            let windowChart = document.createElement('window-chart');
-
-            if (selectedChart === 'nodelink-chart') {
-                const nodelinkData = {
-                    nodes: [
-                        { id: 1, name: "A" },
-                        { id: 2, name: "B" },
-                        { id: 3, name: "C" },
-                        { id: 4, name: "D" },
-                        { id: 5, name: "E" }
-                    ],
-                    links: [
-                        { source: 1, target: 2 },
-                        { source: 1, target: 5 }
-                    ]
-                };
-                windowChart.setAttribute('data', JSON.stringify(nodelinkData));
-            } else if (selectedChart === 'bar-chart') {
-                windowChart.setAttribute('data', JSON.stringify(barData));
-            } else if (selectedChart === 'pie-chart') {
-                windowChart.setAttribute('data', JSON.stringify(pieData));
-            }
-            
-            windowChart.setAttribute('chart-type', selectedChart);
-            
-            document.querySelector(".container").append(windowChart);
-        }
         
         // Attach event listener to the Run button
         document.querySelector('#run').addEventListener('click', updateChart);
