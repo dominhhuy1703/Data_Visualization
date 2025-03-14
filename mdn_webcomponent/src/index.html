@@ -172,9 +172,9 @@ function parseNodeLinkXML(xmlText) {
 
     let chartData;
     if (selectedChart === 'nodelink-chart') {
-        chartData = await fetchNodeLinkData(); // Gọi truy vấn node-link
+        chartData = await fetchNodeLinkData(); // Call node-link query
     } else {
-        chartData = await fetchSPARQLData(); // Gọi truy vấn bar/pie chart
+        chartData = await fetchSPARQLData(); // Call bar/pie chart query 
     }
 
     if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
@@ -182,11 +182,14 @@ function parseNodeLinkXML(xmlText) {
         return;
     }
 
-    // Tạo component window-chart
+    // create component window-chart
     let windowChart = document.createElement('window-chart');
 
+    // Nodelink Data
     if (selectedChart === 'nodelink-chart') {
         windowChart.setAttribute('data', JSON.stringify(chartData));
+
+    // Data structure for barChart
     } else if (selectedChart === 'bar-chart') {
         const barData = {
             description: "Bar chart - Countries with the largest population",
@@ -238,12 +241,15 @@ function parseNodeLinkXML(xmlText) {
             data: [
                 {
                     name: "table",
-                    values: chartData.map(d => ({ x: d.tag, y: d.value }))
+                    values: chartData.map(d => ({ x: d.tag, y: d.value, /*c: "#ffcc00"*/}))
                 }
             ]
         };
+        console.log("bar", JSON.stringify(barData, null, 2)); // Check bar data
         windowChart.setAttribute('data', JSON.stringify(barData));
-    } else if (selectedChart === 'pie-chart') {
+    } 
+    // Data structure for Pie Chart
+    else if (selectedChart === 'pie-chart') {
         const pieData = {
             description: "Pie chart - Countries with the largest population",
             width: 500,
@@ -267,7 +273,7 @@ function parseNodeLinkXML(xmlText) {
             data: [
                 {
                     name: "table",
-                    values: chartData.map(d => ({ x: d.tag, y: d.value }))
+                    values: chartData.map(d => ({ x: d.tag, y: d.value, /*c: "#ffcc00"*/ }))
                 }
             ]
         };
