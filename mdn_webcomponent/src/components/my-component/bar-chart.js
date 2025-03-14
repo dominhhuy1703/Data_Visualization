@@ -97,7 +97,7 @@ class BarChart extends HTMLElement {
 		let coreData = JSON.parse(this.#dataValue); // Parse the JSON data
 		const data = coreData.data[0].values; // Extract the values from the parsed data
 		const width = coreData.width, height = coreData.height;
-		const margin = { top: 20, right: 0, bottom: 40, left: 20 };
+		const margin = { top: 20, right: 0, bottom: 70, left: 20 };
 		const svgElement = this.shadowRoot.querySelector('svg');
 		svgElement.innerHTML = ''; // Clear the SVG element before redrawing
 		
@@ -112,9 +112,8 @@ class BarChart extends HTMLElement {
 
 		// Set domain and range for color scale
 		this.colorScale
-			.domain(data.map(d => d.c).filter(c => c))
-			// .domain(data.map(d => d.x)) // Sử dụng d.x cho nhãn
-			.range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
+			.domain(data.map(d => d.x))
+			.range(["#4682b4"]);
 
 		// Set up scales for X and Y axes
 		const x = d3.scaleBand().domain(data.map(d => d.x)).range([margin.left, width - margin.right]).padding(0.5);
@@ -122,7 +121,7 @@ class BarChart extends HTMLElement {
 		
 		// Append axes to the SVG
 		const svg = d3.select(svgElement)
-			.attr("width", width).attr("height", height).style("margin", "50px")
+			.attr("width", width).attr("height", height).style("margin", "30px")
 			.append("g")
 			.attr("transform",
 				"translate(" + margin.left + "," + margin.top + ")");;
@@ -132,10 +131,20 @@ class BarChart extends HTMLElement {
 			.attr("transform", `translate(0,${height - margin.bottom})`)
 			.call(d3.axisBottom(x));
 		
+		// Thêm nhãn cho trục X
+		svg.append("text")
+		.attr("class", "x-axis-label")
+		.attr("x", (width - margin.left - margin.right) / 2)
+		.attr("y", height - margin.bottom / 2 ) // Thêm khoảng cách dưới trục X
+		.style("text-anchor", "middle")
+		.style("font-size", "14px")
+		.text("Country");
+
 		// Truncate long x-axis labels and add tooltips
 		xAxis.selectAll("text")
 			.text(d => d.length > 5 ? d.slice(0, 5) + "..." : d) // Shorten if > 5 characters
 			.append("title") 
+			.attr("dy", "1em")
 			.style("font-size", "14px")
 			.text(d => d);
 			// .selectAll("text")
@@ -144,6 +153,16 @@ class BarChart extends HTMLElement {
 		// Y-axis
 		svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
 		
+		 // Thêm nhãn cho trục Y
+		 svg.append("text")
+		 .attr("class", "y-axis-label")
+		 .attr("x", - (height - margin.top - margin.bottom) / 2)
+		 .attr("y", - margin.left + 10) // Thêm khoảng cách trái của trục Y
+		 .style("text-anchor", "middle")
+		 .style("font-size", "14px")
+		 .text("Population")
+		 .attr("transform", "rotate(-90)");
+
 		// Draw bars on the chart
 		this.bars = svg.selectAll("rect")
 			.data(data)
@@ -152,9 +171,9 @@ class BarChart extends HTMLElement {
 			.attr("y", d => y(d.y))  // Position each bar based on data.y
 			.attr("height", d => y(0) - y(d.y)) // Calculate height of each bar
 			.attr("width", x.bandwidth()) //Set width of each bar
-			.attr("fill", d => d.c ? this.colorScale(d.c) : "steelblue") // Fill color based on category
+			.attr("fill", d => d.c || this.colorScale(d.x)) // Fill color based on category
 			// .attr("fill", d => d.color || this.colorScale(d.x))
-			
+
 			.on("click", (event, d) => this.showInfoPopup(d)) // Popup bar click
 
 			// Tooltip
@@ -179,14 +198,14 @@ class BarChart extends HTMLElement {
 					.text(d.y);
 			})
 			.on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + width/2) + "px";
-        		tooltip.style.top = (d3.pointer(event)[1] + height/2) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + width/3 - 100) + "px";
+        		tooltip.style.top = (d3.pointer(event)[1] + height/3 - 100) + "px";
 			})
 			.on("mouseout", (event, d) => {
 				tooltip.style.opacity = 0;
 			
 				d3.select(event.target)
-					.attr("fill", d.c ? this.colorScale(d.c) : "steelblue") // Quay lại màu ban đầu
+					.attr("fill", d => d.c || this.colorScale(d.x)) // Quay lại màu ban đầu
 					.style("stroke", "none")
 					.style("opacity", 1);
 			
@@ -225,11 +244,11 @@ class BarChart extends HTMLElement {
 	
 	// Render color pickers for each bar based on data
 	renderColorPickers(data) {
-	  const container = this.shadowRoot.querySelector(".color-picker-container");
-	  container.innerHTML = data.map((d, index) => `
+	  	const container = this.shadowRoot.querySelector(".color-picker-container");
+	  	container.innerHTML = data.map((d, index) => `
 		<div class="color-item">
 		  <label>${d.x}</label>
-		  <input type="color" value="${d.color || this.colorScale(d.x)}" data-index="${index}">
+		  <input type="color" value="${d.c || this.colorScale(d.x)}" data-index="${index}">
 		</div>
 	  `).join("");
   
