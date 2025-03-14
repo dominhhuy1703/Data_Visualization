@@ -38,16 +38,30 @@ class PieChart extends HTMLElement {
           position: relative; 
         }
 
-        .container {
-          display: flex; 
+        .main-container {
+          display: flex;
           flex-direction: column;
-          justify-content: center; 
-          align-items: center; 
-          width: 100%; 
-          height: 100%; 
-          position: relative; 
+          align-items: center;
+          width: 100%;
+          height: 100%;
         }
 
+        .content {
+          display: flex;
+          flex-direction: row; /* Xếp biểu đồ và controls theo hàng ngang */
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+        }
+
+        .chart-container {
+          display: flex;
+          flex-direction: column; /* Biểu đồ trên, description dưới */
+          align-items: center;
+        }
+
+          
         .popup { 
           display: none; 
           position: fixed; 
@@ -138,46 +152,75 @@ class PieChart extends HTMLElement {
         }
 
         .controls {
-          margin-top: 10px;
+          width: 250px;
           display: flex;
-          flex-direction: column; /* Đổi từ 'row' sang 'column' để sắp xếp theo chiều dọc */
-          gap: 10px;
-          justify-content: flex-start; /* Đảm bảo các điều khiển bắt đầu từ trên cùng */
+          flex-direction: column;
+          gap: 5px;
+          align-items: flex-start;
         }
-        .controls label { font-size: 14px; font-weight: bold; }
-        .controls input { width: 80px; }
-        .sort-btn { padding: 5px 10px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
-        .sort-btn:hover { background: #0056b3; }
+
+        .controls label {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 200px; /* Đảm bảo label và input không bị quá dài */
+        }
+
+        .controls input[type="range"] {
+          flex-grow: 1; /* Slider sẽ giãn theo label */
+          margin-left: 10px;
+        }
+
+        .sort-container {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 200px;
+          padding: 5px 0;
+        }
+
+        .sort-container label {
+          flex-grow: 1;
+        }
+          
+        .sort-container input {
+          margin-left: 10px;
+        }
 
         .description {
           text-align: center;
           font-size: 22px;
           font-weight: bold;
-          margin-bottom: 20px;
+          margin-bottom: 40px;
           display: block;
           width: 100%;
         }
 
       </style>
-      <div class="container">
-        <svg></svg>
-        <div class="description"></div>
-        <div class="controls">
-          <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="0" data-param="startAngle"></label>
-          <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="6.29" data-param="endAngle"></label>
-          <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="0" data-param="padAngle"></label>
-          <label>Inner Radius: <input type="range" min="0" max="180" step="1" value="0" data-param="innerRadius"></label>
-          <label>Corner Radius: <input type="range" min="0" max="20" step="0.5" value="0" data-param="cornerRadius"></label>
-          <label>
-            <input type="checkbox" id="sort-toggle"> Sort
-          </label>
+      <div class="main-container">
+        <div class="content">
+          <div class="chart-container">
+            <svg></svg> <!-- Biểu đồ -->
+            <div class="description">Biểu đồ Pie Chart</div>
           </div>
-        <div class="tooltip"></div>
-        <button class="change-color-btn">Change Color</button>
-        <div class="overlay"></div>
-        <div class="popup">
-          <div class="color-picker-container"></div>
-          <button class="close-popup">Close</button>
+          <div class="controls">
+            <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="0" data-param="startAngle"></label>
+            <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="6.29" data-param="endAngle"></label>
+            <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="0" data-param="padAngle"></label>
+            <label>Inner Radius: <input type="range" min="0" max="180" step="1" value="0" data-param="innerRadius"></label>
+            <label>Corner Radius: <input type="range" min="0" max="20" step="0.5" value="0" data-param="cornerRadius"></label>
+            <div class="sort-container">
+              <label for="sort-toggle">Sort</label>
+              <input type="checkbox" id="sort-toggle">
+            </div>
+            </div>
+          <div class="tooltip"></div>
+          <button class="change-color-btn">Change Color</button>
+          <div class="overlay"></div>
+          <div class="popup">
+            <div class="color-picker-container"></div>
+            <button class="close-popup">Close</button>
+          </div>
         </div>
       </div>
     `;
