@@ -1,56 +1,66 @@
+// Function to find the highest z-index among all window-chart elements
 function findHighestZIndex()
 {
     const allWindows = document.querySelectorAll('window-chart');
-    let highestZIndex = 1;
+    let highestZIndex = 1; // Initialize with a low z-index
     allWindows.forEach(window => {
+        // Get the z-index of the .window element inside each window-chart
         const zIndex = parseInt(window.shadowRoot.querySelector('.window').style.zIndex, 10);
         if (zIndex > highestZIndex) {
-            highestZIndex = zIndex;
+            highestZIndex = zIndex; // Update if a higher z-index is found
         }
     });
-    return highestZIndex;
+    return highestZIndex; // Return the highest z-index found
 };
 
+// Define the custom WindowChart element class
 class WindowChart extends HTMLElement {
 
-    #dataValue = "";
+    #dataValue = ""; // Private property to hold the chart data
 
     constructor() {
         super();
-        this.attachShadow({ mode: 'open' });
+        this.attachShadow({ mode: 'open' }); // Attach shadow DOM to the custom element
         this.render();
-        this.mover = this.shadowRoot.querySelector('#window-header');
-        this.cont = this.shadowRoot.querySelector('#window-container');
-        this.graph = null;
+        this.mover = this.shadowRoot.querySelector('#window-header'); // Get the header element for dragging
+        this.cont = this.shadowRoot.querySelector('#window-container'); // Get the container element for window position
+        this.graph = null; // Initialize graph variable to hold the chart
     }
 
+    // Observe changes to 'data' and 'chart-type' attributes
     static get observedAttributes() {
         return ['data', 'chart-type'];
     }
 
+    // Called when the element is added to the DOM
     connectedCallback() {
+        // Create the appropriate chart type element (e.g., pie, bar)
         this.graph = document.createElement(this.getAttribute("chart-type"));
-        this.shadowRoot.querySelector('.content').appendChild(this.graph);
+        this.shadowRoot.querySelector('.content').appendChild(this.graph); // Append the chart to the content
 
-        this.graph.setAttribute('data', this.dataValue);
+        this.graph.setAttribute('data', this.dataValue); // Set the data attribute on the chart
 
         // Add event: 'Close Window'
         this.shadowRoot.querySelector('.close-btn').addEventListener('click', () => {
             this.remove();
         });
+
+        // Set the window title based on chart type
         this.shadowRoot.querySelector('#title-text').textContent = this.getChartTitle(this.getAttribute("chart-type"));
         makeDraggable(this.cont);
-        this.cont.style.zIndex = findHighestZIndex();
+        this.cont.style.zIndex = findHighestZIndex(); // Set the z-index to bring the window to the front
     }
 
+    // Called when an observed attribute changes
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === "data" && newValue != null){
-            this.#dataValue = newValue; 
-            this.removeAttribute("data");
+            this.#dataValue = newValue; // Update the data value when the data attribute changes
+            this.removeAttribute("data"); // Remove the attribute after processing
         }
         // this.render();
     }
 
+    // Render the window chart's HTML structure
     render() {
         this.shadowRoot.innerHTML = `
             <style>
@@ -112,6 +122,7 @@ class WindowChart extends HTMLElement {
         `;
     }
 
+    // Return a title based on the chart type
     getChartTitle(type) {
         switch (type) {
             case 'pie-chart': return 'Pie Chart';
@@ -122,19 +133,23 @@ class WindowChart extends HTMLElement {
         }
     };
 
+    // Getter
     get dataValue() {
         return this.#dataValue;
     }
 
+    // Setter
     set dataValue(data){
         this.#dataValue = data;
     }
 }
+
+// Function make an element draggable
 function makeDraggable (element) {
     // Make an element draggable (or if it has a .window-top class, drag based on the .window-top element)
     let currentPosX = 0, currentPosY = 0, previousPosX = 0, previousPosY = 0;
 
-    const windowChart = element.closest('window-chart');
+    const windowChart = element.closest('window-chart'); // Find the closest window-chart parent element
 
 		// If there is a window-top classed element, attach to that element instead of full window
     if (element.querySelector('#window-header')) {
