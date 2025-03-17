@@ -1,5 +1,16 @@
 const scale_d3 = {'ordinal': d3.scaleOrdinal} //Define scale type using D3.js
 
+//function to convert rgb object to hex color
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r, g, b) {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+// PieChart Class
 class PieChart extends HTMLElement {
   #dataValue = ''; // Store the chart data as a JSON string
   #originalData = null; // Store a copy of the original data for resetting
@@ -7,9 +18,15 @@ class PieChart extends HTMLElement {
   constructor() {
     super();
     this.data = null;
+    this.startAngle = 0;
+    this.endAngle = 2 * Math.PI;
+    this.padAngle = 0;
+    this.innerRadius = 0;
+    this.cornerRadius = 0;
     this.attachShadow({ mode: "open" });
   }
 
+  //Specify the properties to track changes
   static get observedAttributes() {
     return ["data"];
   }
@@ -48,92 +65,57 @@ class PieChart extends HTMLElement {
 
         .content {
           display: flex;
-          flex-direction: row; /* Xếp biểu đồ và controls theo hàng ngang */
+          flex-direction: row; 
           align-items: center;
           justify-content: center;
-          gap: 10px;
+          gap: 20px;
           width: 100%;
         }
 
         .chart-container {
           display: flex;
-          flex-direction: column; /* Biểu đồ trên, description dưới */
+          flex-direction: column; 
           align-items: center;
         }
 
-          
-        .popup { 
-          display: none; 
-          position: fixed; 
-          top: 50%; 
-          left: 50%; 
-          transform: translate(-50%, -50%); 
-          background: white; 
-          padding: 20px; 
-          border-radius: 10px; 
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); 
-          z-index: 11; 
-        }
-
-        .popup.show { display: block; }
-        .overlay { 
-          display: none; 
-          position: fixed; 
-          width: 100%; 
-          height: 100%; 
-          background: rgba(0, 0, 0, 0.5); 
-          z-index: 10; 
-        }
-
-        .overlay.show { display: block; }
         .color-picker-container { 
           display: flex; 
-          flex-direction: column; 
+          flex-direction: column;
+          align-items: center;
+          width: 250px;
+          gap: 5px;
+          margin-left: 20px;
         }
-
+          
+        .legend-title {
+          font-weight: bold;
+          font-size: 16px;
+          margin-bottom: 10px;
+          text-align: left;
+          color: black; 
+          padding: 5px; 
+        }
+          
         .color-item { 
           display: flex; 
           align-items: center; 
           font-size: 14px; 
+          gap: 10px;
           margin-bottom: 5px; 
         }
 
         .color-item label { 
-          min-width: 100px; 
+          min-width: 150px; 
           font-weight: bold; 
+          text-align: left;
         }
 
         .color-item input { 
-          width: 35px; 
-          height: 35px; 
+          width: 30px; 
+          height: 30px; 
           border: none; 
-          cursor: pointer; 
-        }
-
-        .change-color-btn { 
-          position: absolute; 
-          top: 10px; 
-          right: 10px; 
-          padding: 8px 12px; 
-          background: #007bff; 
-          color: white; 
-          border: none; 
-          cursor: pointer; 
-          border-radius: 5px; 
-          font-weight: bold; 
-        }
-
-        .change-color-btn:hover { background: #0056b3; }
-
-        .close-popup { 
-          margin-top: 10px; 
-          padding: 8px 12px; 
-          background: #dc3545; 
-          color: white; 
-          border: none; 
-          cursor: pointer; 
-          border-radius: 5px; 
-          font-weight: bold; 
+          border: 1px solid #ccc;
+          cursor: pointer;
         }
 
         .close-popup:hover { background: #c82333; }
@@ -163,11 +145,11 @@ class PieChart extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          width: 200px; /* Đảm bảo label và input không bị quá dài */
+          width: 200px; 
         }
 
         .controls input[type="range"] {
-          flex-grow: 1; /* Slider sẽ giãn theo label */
+          flex-grow: 1; 
           margin-left: 10px;
         }
 
@@ -199,34 +181,43 @@ class PieChart extends HTMLElement {
       </style>
       <div class="main-container">
         <div class="content">
+          <div class="color-picker-container">
+            <div class="legend-title">Legend</div>
+          </div>
+
           <div class="chart-container">
-            <svg></svg> <!-- Biểu đồ -->
+            <svg></svg>
             <div class="description">Biểu đồ Pie Chart</div>
           </div>
+          
           <div class="controls">
-            <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="0" data-param="startAngle"></label>
-            <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="6.29" data-param="endAngle"></label>
-            <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="0" data-param="padAngle"></label>
-            <label>Inner Radius: <input type="range" min="0" max="180" step="1" value="0" data-param="innerRadius"></label>
-            <label>Corner Radius: <input type="range" min="0" max="20" step="0.5" value="0" data-param="cornerRadius"></label>
+            <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="${this.startAngle}" data-param="startAngle"></label>
+            <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="${this.endAngle}" data-param="endAngle"></label>
+            <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="${this.padAngle}" data-param="padAngle"></label>
+            <label>Inner Radius: <input type="range" min="0" max="180" step="1" value="${this.innerRadius}" data-param="innerRadius"></label>
+            <label>Corner Radius: <input type="range" min="0" max="20" step="0.5" value="${this.cornerRadius}" data-param="cornerRadius"></label>
             <div class="sort-container">
               <label for="sort-toggle">Sort</label>
               <input type="checkbox" id="sort-toggle">
             </div>
             </div>
           <div class="tooltip"></div>
-          <button class="change-color-btn">Change Color</button>
-          <div class="overlay"></div>
-          <div class="popup">
-            <div class="color-picker-container"></div>
-            <button class="close-popup">Close</button>
-          </div>
+          <!-- <button class="change-color-btn">Change Color</button> -->
+          <!-- <div class="overlay"></div> -->
+          <!--<div class="popup"> -->
+          <!-- <div class="color-picker-container"> -->
+          <!--  <button class="close-popup">Close</button> -->
+          <!-- </div> -->
         </div>
       </div>
     `;
+
+    // Add event listener to change value on slider
     this.shadowRoot.querySelectorAll(".controls input").forEach(input => {
       input.addEventListener("input", (event) => this.updateParams(event));
     });
+
+    // Add event for data sort button
     this.shadowRoot.querySelector("#sort-toggle").addEventListener("change", (event) => {
       if (event.target.checked) {
         this.sortData(); // If chose, call sortData
@@ -234,9 +225,9 @@ class PieChart extends HTMLElement {
         this.restoreData(); // Else, call restoreData
       }
     });
-    this.shadowRoot.querySelector(".change-color-btn").addEventListener("click", () => this.togglePopup(true));
-    this.shadowRoot.querySelector(".close-popup").addEventListener("click", () => this.togglePopup(false));
-    this.shadowRoot.querySelector(".overlay").addEventListener("click", () => this.togglePopup(false));
+    // this.shadowRoot.querySelector(".change-color-btn").addEventListener("click", () => this.togglePopup(true));
+    // this.shadowRoot.querySelector(".close-popup").addEventListener("click", () => this.togglePopup(false));
+    // this.shadowRoot.querySelector(".overlay").addEventListener("click", () => this.togglePopup(false));
   }
 
   // initInputPanelValues(element){
@@ -260,25 +251,16 @@ class PieChart extends HTMLElement {
   //   this.drawChart();
   // }
 
+  // Update parameters when user changes slider
   updateParams(event) {
-    console.log("Updating params:", event.target.dataset.param, event.target.value);
     this[event.target.dataset.param] = parseFloat(event.target.value);
-  
-    // Update value in coreData.signals
-    let coreData = JSON.parse(this.#dataValue);
-    let signal = coreData.signals.find(element => element.name === event.target.dataset.param);
-    if (signal) {
-      signal.value = this[event.target.dataset.param];  // Update new value to signals
-    }
-  
-    this.#dataValue = JSON.stringify(coreData); // Update dataValue with new value
-    this.drawChart(); 
+    this.drawChart();
   }
 
   // Sort the data in descending order
   sortData() {
     let coreData = JSON.parse(this.#dataValue);
-    coreData.data[0].values.sort((a, b) => b.y - a.y);
+    coreData.data[0].values.sort((a, b) => b.population - a.population);
     this.#dataValue = JSON.stringify(coreData);
     this.drawChart();
   }  
@@ -302,60 +284,66 @@ class PieChart extends HTMLElement {
     let data = coreData.data[0].values; // Extract values from the dataset
     const width = coreData.width, height = coreData.height;
     const radius = Math.min(width, height) / 2;
-    console.log("Radius:", radius)
     const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
-
-
-    // Extract chart parameters from the dataset
-    let startAngle = coreData.signals.find(element => element.name === "startAngle")?.value;
-    console.log("AAAA", startAngle)
-    let endAngle = coreData.signals.find(element => element.name === "endAngle")?.value;
-    console.log("BBBBB", endAngle)
-    let padAngle = coreData.signals.find(element => element.name === "padAngle")?.value;
-    console.log("CCC", padAngle)
-    let innerRadius = coreData.signals.find(element => element.name === "innerRadius")?.value;
-    console.log("Updated innerRadius:", innerRadius);
-    let cornerRadius = coreData.signals.find(element => element.name === "cornerRadius")?.value;
-    console.log("Drawing chart with params:", startAngle, endAngle, padAngle, innerRadius, cornerRadius);
-    
+    const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
+    legendContainer.innerHTML = '<div class="legend-title">Legend</div>';
+    const hasLanguage = data.some(d => d.colorVariable); // Kiểm tra xem có dữ liệu nào có 'language' không
+    const defaultColor = "#cccccc";
+    const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
     // Initialize color scale
+    // let colorScale = coreData.scales.find((element) => element.name == "color");
+    // if (colorScale) {
+    //   this.colorScale = scale_d3[colorScale.type]();
+    // }
+    // else {
+    //   this.colorScale = d3.scaleOrdinal();
+    // }
+
+    // let a = coreData.scales.find(element => element.name === "color")?.domain.field;
+
+    // const truthCheckCollection = (collection, pre) =>
+    //   collection.every(obj => obj[pre]);
+    // console.log(truthCheckCollection(data, "c"));
+
+    // const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
+    // const listLanguage = [...new Set(data.map((material) => material.language))];
+    // this.colorScale
+    //   .domain(data.map(d => d.language)) // Use `x` values for colors
+    //   // .range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
+    //   //.range(["#ff6347"]);
+    //   .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), listLanguage.length).reverse());
+
     let colorScale = coreData.scales.find((element) => element.name == "color");
+    console.log("colorScale:", colorScale)
+    console.log("colorVariable:", colorVariable)
     if (colorScale) {
       this.colorScale = scale_d3[colorScale.type]();
     }
     else {
       this.colorScale = d3.scaleOrdinal();
     }
+    if (hasLanguage) {
+      let uniqueLanguages = [...new Set(data.map(d => d.colorVariable))];
+      colorScale.domain(uniqueLanguages)
+        .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueLanguages.length));
+    }
 
-
-    // const truthCheckCollection = (collection, pre) =>
-    //   collection.every(obj => obj[pre]);
-    // console.log(truthCheckCollection(data, "c"));
-
-    this.colorScale
-      .domain(data.map(d => d.x)) // Use `x` values for colors
-      .range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
-      //.range(["#ff6347"]);
-    
 
     // Define arc shape
-    // const arcShape = d3.arc().innerRadius(radius * 0.4).outerRadius(radius - 0.9);
     const arcShape = d3.arc()
-      .innerRadius(innerRadius)
+      .innerRadius(this.innerRadius)
       .outerRadius(radius - 0.9)
-      .cornerRadius(cornerRadius);
-      console.log("arcShape innerRadius:", arcShape.innerRadius()());
-      console.log("arcShape cornerRadius:", arcShape.cornerRadius()());
+      .cornerRadius(this.cornerRadius);
     const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
     
     // Define pie data structure
     const pieDataStructure = d3.pie()
       .sort(null)
-      .startAngle(startAngle)
-      .endAngle(endAngle)
-      .padAngle(padAngle)
-      .value(d => d.y)(data); // Use `y` values as the pie segment sizes
+      .startAngle(this.startAngle)
+      .endAngle(this.endAngle)
+      .padAngle(this.padAngle)
+      .value(d => d.population)(data); // Use `y` values as the pie segment sizes
 
     // Create SVG element and position the chart in the center
     const svg = d3.select(svgElement)
@@ -366,13 +354,13 @@ class PieChart extends HTMLElement {
     this.paths = svg.selectAll("path")
       .data(pieDataStructure)
       .join("path")
-      .attr("fill", d => d.data.c || this.colorScale(d.data.x)) // Use provided color or generate one
+      .attr("fill", d => hasLanguage ? colorScale(d.data.language) : defaultColor) // Use provided color or generate one
       .attr("d", arcShape)
       .attr("stroke", "white")
-      .on("click", (event, d) => alert(`Clicked on: ${d.data.x}, ${d.data.y}`))
+      .on("click", (event, d) => alert(`Clicked on: ${d.data.name}, ${d.data.population}`))
       .on("mouseover", (event, d) => {
         tooltip.style.opacity = 1;
-        tooltip.innerHTML = `<strong>${d.data.x}</strong>: ${d.data.y.toFixed(1)}`;
+        tooltip.innerHTML = `<strong>${d.data.name}</strong>: ${d.data.population}`;
         d3.select(event.target).style("stroke", "black").style("opacity", 1);
       })
       .on("mousemove", (event) => {
@@ -404,7 +392,7 @@ class PieChart extends HTMLElement {
       })
       .each(function(d) {
         const textElement = d3.select(this);
-        const originalText = d.data.x;
+        const originalText = d.data.name;
         const displayText = originalText.length > 5 ? originalText.slice(0, 5) + "..." : originalText; 
 
         textElement.append("tspan")
@@ -415,22 +403,50 @@ class PieChart extends HTMLElement {
         textElement.append("tspan")
           .attr("x", "0")
           .attr("dy", "1.2em")
-          .text(d.data.y);
+          .text(d.data.population);
       });
 
-    this.renderColorPickers(data);
+      if (hasLanguage) {
+        this.renderColorPickers(data, colorScale);
+      } else {
+        legendContainer.style.display = "none"; // Ẩn legend nếu không có language
+      }
   }
 
-  renderColorPickers(data) {
-    const container = this.shadowRoot.querySelector(".color-picker-container");
-    container.innerHTML = data.map((d, index) => `
-      <div class="color-item">
-        <label>${d.x}</label>
-        <input type="color" value="${d.color || this.colorScale(d.x)}" data-index="${index}">
-      </div>
-    `).join("");
+  // renderColorPickers(data) {
+  //   const container = this.shadowRoot.querySelector(".color-picker-container");
+  //   console.log(container);
+  //   container.innerHTML = data.map((d, index) => `
+  //     <div class="color-item">
+  //       <label>${d.language}</label>
+  //       <input type="color" value="${d.color ||d3.color(this.colorScale(d.language)).formatHex()}" data-index="${index}">
+  //     </div>
+  //   `).join("");
 
-    container.querySelectorAll("input[type='color']").forEach(input => {
+  //   container.querySelectorAll("input[type='color']").forEach(input => {
+  //     input.addEventListener("input", (event) => this.updateColor(event, data));
+  //   });
+  // }
+  renderColorPickers(data, colorScale) {
+    const container = this.shadowRoot.querySelector(".color-picker-container");
+    container.style.display = "block"; // Hiện lại legend nếu có language
+  
+    data.forEach((d, index) => {
+      const colorItem = document.createElement("div");
+      colorItem.classList.add("color-item");
+  
+      const label = document.createElement("label");
+      label.textContent = d.colorVariable;
+  
+      const input = document.createElement("input");
+      input.type = "color";
+      input.value = d3.color(colorScale(d.colorVariable)).formatHex();
+      input.setAttribute("data-index", index);
+  
+      colorItem.appendChild(label);
+      colorItem.appendChild(input);
+      container.appendChild(colorItem);
+  
       input.addEventListener("input", (event) => this.updateColor(event, data));
     });
   }
