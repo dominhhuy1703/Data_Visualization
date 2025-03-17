@@ -10,6 +10,14 @@ function rgbToHex(r, g, b) {
   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
+function getAllIndexes(arr, val) {
+  var indexes = [], i;
+  for(i = 0; i < arr.length; i++)
+      if (arr[i] === val)
+          indexes.push(i);
+  return indexes;
+}
+
 // PieChart Class
 class PieChart extends HTMLElement {
   #dataValue = ''; // Store the chart data as a JSON string
@@ -202,12 +210,6 @@ class PieChart extends HTMLElement {
             </div>
             </div>
           <div class="tooltip"></div>
-          <!-- <button class="change-color-btn">Change Color</button> -->
-          <!-- <div class="overlay"></div> -->
-          <!--<div class="popup"> -->
-          <!-- <div class="color-picker-container"> -->
-          <!--  <button class="close-popup">Close</button> -->
-          <!-- </div> -->
         </div>
       </div>
     `;
@@ -286,11 +288,15 @@ class PieChart extends HTMLElement {
     const radius = Math.min(width, height) / 2;
     const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
+    
     const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
     legendContainer.innerHTML = '<div class="legend-title">Legend</div>';
-    const hasLanguage = data.some(d => d.colorVariable); // Kiểm tra xem có dữ liệu nào có 'language' không
+    
+    const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field; // attribute colorVariable
+    
+    const hasLanguage = data.some(d => d[colorVariable]); // Check if data has "language"
     const defaultColor = "#cccccc";
-    const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
+
     // Initialize color scale
     // let colorScale = coreData.scales.find((element) => element.name == "color");
     // if (colorScale) {
@@ -313,19 +319,23 @@ class PieChart extends HTMLElement {
     //   // .range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
     //   //.range(["#ff6347"]);
     //   .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), listLanguage.length).reverse());
-
+    
+    // Color scale
     let colorScale = coreData.scales.find((element) => element.name == "color");
-    console.log("colorScale:", colorScale)
-    console.log("colorVariable:", colorVariable)
+
     if (colorScale) {
       this.colorScale = scale_d3[colorScale.type]();
     }
     else {
       this.colorScale = d3.scaleOrdinal();
     }
+    
+    // Create uniqueLanguage
+    let uniqueLanguages = [];
     if (hasLanguage) {
-      let uniqueLanguages = [...new Set(data.map(d => d.colorVariable))];
-      colorScale.domain(uniqueLanguages)
+      uniqueLanguages = [...new Set(data.map(d => d[colorVariable]))];
+      this.colorScale
+        .domain(uniqueLanguages)
         .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueLanguages.length));
     }
 
@@ -354,7 +364,7 @@ class PieChart extends HTMLElement {
     this.paths = svg.selectAll("path")
       .data(pieDataStructure)
       .join("path")
-      .attr("fill", d => hasLanguage ? colorScale(d.data.language) : defaultColor) // Use provided color or generate one
+      .attr("fill", d => hasLanguage ? this.colorScale(d.data.language) : defaultColor) // Use provided color or generate one
       .attr("d", arcShape)
       .attr("stroke", "white")
       .on("click", (event, d) => alert(`Clicked on: ${d.data.name}, ${d.data.population}`))
@@ -406,62 +416,55 @@ class PieChart extends HTMLElement {
           .text(d.data.population);
       });
 
+      // Check hasLanguage
       if (hasLanguage) {
-        this.renderColorPickers(data, colorScale);
+        this.renderColorPickers(uniqueLanguages);
       } else {
-        legendContainer.style.display = "none"; // Ẩn legend nếu không có language
+        legendContainer.style.display = "none";
       }
   }
 
-  // renderColorPickers(data) {
-  //   const container = this.shadowRoot.querySelector(".color-picker-container");
-  //   console.log(container);
-  //   container.innerHTML = data.map((d, index) => `
-  //     <div class="color-item">
-  //       <label>${d.language}</label>
-  //       <input type="color" value="${d.color ||d3.color(this.colorScale(d.language)).formatHex()}" data-index="${index}">
-  //     </div>
-  //   `).join("");
-
-  //   container.querySelectorAll("input[type='color']").forEach(input => {
-  //     input.addEventListener("input", (event) => this.updateColor(event, data));
-  //   });
-  // }
-  renderColorPickers(data, colorScale) {
+  // Render Color Picker
+  renderColorPickers(uniqueLanguages) {
+    let coreData = JSON.parse(this.#dataValue);
     const container = this.shadowRoot.querySelector(".color-picker-container");
-    container.style.display = "block"; // Hiện lại legend nếu có language
-  
-    data.forEach((d, index) => {
+    const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
+    container.style.display = "block"; // Ensure the color picker container is visible
+    uniqueLanguages.forEach((d, index) => {
       const colorItem = document.createElement("div");
       colorItem.classList.add("color-item");
   
       const label = document.createElement("label");
-      label.textContent = d.colorVariable;
+      label.textContent = d; // Set the text label to the unique language name
   
       const input = document.createElement("input");
-      input.type = "color";
-      input.value = d3.color(colorScale(d.colorVariable)).formatHex();
-      input.setAttribute("data-index", index);
+      input.type = "color"; // Create a color input element
+      input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
+      input.setAttribute("data-index", index); // Store index data for reference
   
-      colorItem.appendChild(label);
+      colorItem.appendChild(label); // Append to color item container
       colorItem.appendChild(input);
       container.appendChild(colorItem);
-  
-      input.addEventListener("input", (event) => this.updateColor(event, data));
+      
+      // Add event listener to handle color changes
+      input.addEventListener("input", (event) => this.updateColor(event, coreData, colorVariable, d));
     });
   }
 
-  updateColor(event, data) {
-    const index = event.target.dataset.index;
-    const newColor = event.target.value;
-    data[index].color = newColor;
-
-    const path = this.shadowRoot.querySelectorAll("path")[index];
-    d3.select(path)
-      .transition()
-      .duration(300)
-      .attr("fill", newColor);
-
+  // Update Color
+  updateColor(event, coreData, colorVariable, label) {
+    let data = coreData.data[0].values
+    let listColorCriteria = data.map(d => d[colorVariable]) // Get list of color-related data attributes
+    const indexs = getAllIndexes(listColorCriteria, label); // Find all indexes of the current label
+    for (const index of indexs) {
+      const newColor = event.target.value; // Get the new color selected by the user
+      data[index].color = newColor; // Update color in dataset
+      const path = this.shadowRoot.querySelectorAll("path")[index]; // Get the corresponding pie chart segment
+      d3.select(path)
+        .transition()
+        .duration(300)
+        .attr("fill", newColor);
+    }
     this.#dataValue = JSON.stringify(data); // Update data
   }
 
