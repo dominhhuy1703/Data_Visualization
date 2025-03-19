@@ -70,16 +70,16 @@ class BarChart extends HTMLElement {
 				display: flex; 
 				flex-direction: column;
 				align-items: center;
-				width: 250px;
+				width: 220px;
 				gap: 5px;
 				margin-left: 20px;
 			}
 			
 			.legend-title {
 				font-weight: bold;
-				font-size: 16px;
+				font-size: 20px;
 				margin-bottom: 10px;
-				text-align: left;
+				text-align: center;
 				color: black; 
 				padding: 5px; 
 			}
@@ -155,12 +155,15 @@ class BarChart extends HTMLElement {
 		let coreData = JSON.parse(this.#dataValue); // Parse the JSON data
 		const data = coreData.data[0].values; // Extract the values from the parsed data
 		const width = coreData.width, height = coreData.height;
-		const margin = { top: 20, right: 0, bottom: 70, left: 20 };
+		const margin = { top: 20, right: 0, bottom: 70, left: 30 };
 		const svgElement = this.shadowRoot.querySelector('svg');
 		d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
+		
+		const countryVariable = coreData.scales.find(element => element.name === "country")?.domain.field; // attribute countryVariable
+    	const populationVariable = coreData.scales.find(element => element.name === "population")?.domain.field; // attribute populationVariable
 
 		const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
-		legendContainer.innerHTML = '<div class="legend-title">Legend</div>';
+		legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
 		const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
 		const hasLanguage = data.some(d => d[colorVariable]);
 		const defaultColor = "#cccccc";
@@ -169,8 +172,6 @@ class BarChart extends HTMLElement {
 		// Define color scale for bars based on data categories (color or other attributes)
 		let colorScale = coreData.scales.find((element) => element.name == "color");
 
-		console.log("colorScale:", colorScale)
-		console.log("colorVariable:", colorVariable)
 		if (colorScale) {
 			this.colorScale = scale_d3[colorScale.type]();
 		}
@@ -180,7 +181,6 @@ class BarChart extends HTMLElement {
 
 		// Create uniqueLanguage
 		let uniqueLanguages = [];
-		console.log("HasLan", hasLanguage)
 		if (hasLanguage) {
 			uniqueLanguages = [...new Set(data.map(d => d[colorVariable]))];
 			this.colorScale
@@ -194,12 +194,15 @@ class BarChart extends HTMLElement {
 		// 	.range(["#4682b4"]);
 
 		// Set up scales for X and Y axes
-		const x = d3.scaleBand().domain(data.map(d => d.name)).range([margin.left, width - margin.right]).padding(0.5);
-		const y = d3.scaleLinear().domain([0, d3.max(data, d => d.population)]).nice().range([height - margin.bottom, margin.top]);
+		const x = d3.scaleBand().domain(data.map(d => d[countryVariable])).range([margin.left, width - margin.right]).padding(0.5);
+		const y = d3.scaleLinear()
+			.domain([0, d3.max(data, d => d[populationVariable] / 1_000_000)]) // Divide into 1 million
+			.nice()
+			.range([height - margin.bottom, margin.top]);
 		
 		// Append axes to the SVG
 		const svg = d3.select(svgElement)
-			.attr("width", width).attr("height", height).style("margin", "30px")
+			.attr("width", width).attr("height", height).style("margin", "20px")
 			.append("g")
 			.attr("transform",
 				"translate(" + margin.left + "," + margin.top + ")");;
@@ -215,18 +218,16 @@ class BarChart extends HTMLElement {
 		.attr("x", (width - margin.left - margin.right) / 2)
 		.attr("y", height - margin.bottom / 2 ) // 
 		.style("text-anchor", "middle")
-		.style("font-size", "14px")
+		.style("font-size", "18px")
 		.text("Country");
 		
 		// Truncate long x-axis labels and add tooltips
 		xAxis.selectAll("text")
+			.style("font-size", "12px") 
 			.text(d => d.length > 5 ? d.slice(0, 5) + "..." : d) // Shorten if > 5 characters
 			.append("title") 
 			.attr("dy", "1em")
-			.style("font-size", "14px")
 			.text(d => d);
-			// .selectAll("text")
-			// .style("font-size", "14px");
 		
 		// Y-axis
 		svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
@@ -235,18 +236,23 @@ class BarChart extends HTMLElement {
 		 svg.append("text")
 		 .attr("class", "y-axis-label")
 		 .attr("x", - (height - margin.top - margin.bottom) / 2)
-		 .attr("y", - margin.left + 10) 
+		 .attr("y", - margin.left + 20) 
 		 .style("text-anchor", "middle")
-		 .style("font-size", "14px")
-		 .text("Population")
+		 .style("font-size", "18px")
+		 .text("Population (Millions)")
 		 .attr("transform", "rotate(-90)");
+
 		// Draw bars on the chart
 		this.bars = svg.selectAll("rect")
 			.data(data)
 			.join("rect")
-			.attr("x", d => x(d.name))  // Position each bar based on data.x
-			.attr("y", d => y(d.population))  // Position each bar based on data.y
-			.attr("height", d => y(0) - y(d.population)) // Calculate height of each bar
+			.attr("x", d => x(d[countryVariable]))  // Position each bar based on data.x
+			.attr("y", d => y(d[populationVariable] / 1_000_000))  // Position each bar based on data.y
+			.attr("height", d => {
+				let heightValue = Math.max(0, y(0) - y(d[populationVariable] / 1_000_000));
+				return heightValue;
+			})   // Calculate height of each bar
+			
 			.attr("width", x.bandwidth()) //Set width of each bar
 			.attr("fill", d => hasLanguage ? this.colorScale(d[colorVariable]) : defaultColor) // Fill color based on category
 			// .attr("fill", d => d.color || this.colorScale(d.x))
@@ -255,12 +261,12 @@ class BarChart extends HTMLElement {
 			
 			.on("mouseover", (event, d) => {
 				tooltip.style.opacity = 1;
-				tooltip.innerHTML = `<strong>${d.name}</strong>: ${d.population}`;
+				tooltip.innerHTML = `<strong>${d[countryVariable]}</strong>: ${d[populationVariable]}`;
 				d3.select(event.target).style("stroke", "black").style("opacity", 1);
 			  })
 			  .on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + width/2  + 70) + "px";
-				tooltip.style.top = (d3.pointer(event)[1] + height/2 + 70) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + width/2 + 100) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + height/3 - 70) + "px";
 			  })
 			  .on("mouseout", (event) => {
 				tooltip.style.opacity = 0;
@@ -308,8 +314,8 @@ class BarChart extends HTMLElement {
 			.data(data)
 			.join("text")
 			.attr("class", "bar-value")
-			.attr("x", d => x(d.name) + x.bandwidth() / 2)
-			.attr("y", d => y(d.population) - 10)
+			.attr("x", d => x(d[countryVariable]) + x.bandwidth() / 2)
+			.attr("y", d => y(d[populationVariable]) - 10)
 			.attr("text-anchor", "middle")
 			.attr("fill", "black")
 			.style("font-size", "16px")
@@ -318,7 +324,6 @@ class BarChart extends HTMLElement {
 		// Display chart description
 		const chartDescription = this.shadowRoot.querySelector(".description");
 		chartDescription.textContent = coreData.description;
-
 		if (hasLanguage) {
 			this.renderColorPickers(uniqueLanguages);
 		  } else {
@@ -330,8 +335,8 @@ class BarChart extends HTMLElement {
 	showInfoPopup(d) {
 	  const infoPopup = this.shadowRoot.querySelector(".info-popup");
 	  infoPopup.innerHTML = `
-		<div>Tag: ${d.name}</div>
-		<div>Value: ${d.population}</div>
+		<div>Tag: ${d[countryVariable]}</div>
+		<div>Value: ${[populationVariable]}</div>
 		<button class="close-popup">Close</button>
 	  `;
 	  infoPopup.classList.add("show");
@@ -339,7 +344,7 @@ class BarChart extends HTMLElement {
 	}
 	
 	// Render color pickers for each bar based on data
-	renderColorPickers(uniqueLanguages) {console.log(uniqueLanguages)
+	renderColorPickers(uniqueLanguages) {
 		let coreData = JSON.parse(this.#dataValue);
 		const container = this.shadowRoot.querySelector(".color-picker-container");
 		const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
@@ -395,7 +400,6 @@ class BarChart extends HTMLElement {
 		let data = coreData.data[0].values
 		let listColorCriteria = data.map(d => d[colorVariable]) // Get list of color-related data attributes
 		const indexs = getAllIndexes(listColorCriteria, label); // Find all indexes of the current label
-		console.log("indexs:", indexs)
 		for (const index of indexs) {
 		  const newColor = event.target.value; // Get the new color selected by the user
 		  data[index].color = newColor; // Update color in dataset
