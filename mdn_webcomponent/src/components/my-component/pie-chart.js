@@ -41,15 +41,27 @@ class PieChart extends HTMLElement {
 
   connectedCallback() {
     this.render(); //Render the component when it's added to the DOM
-    // Initialize input values with signal values
   }
+
+  // attributeChangedCallback(name, oldValue, newValue) {
+  //   if (name === "data" && newValue != null) {
+  //     this.#dataValue = newValue;
+  //     this.#originalData = JSON.parse(newValue); // Save the original data for potential resets
+  //     this.removeAttribute("data"); // Remove the attribute
+  //     this.drawChart();
+  //   }
+  // }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === "data" && newValue != null) {
-      this.#dataValue = newValue;
-      this.#originalData = JSON.parse(newValue); // Save the original data for potential resets
-      this.removeAttribute("data"); // Remove the attribute
-      this.drawChart();
+      try {
+        this.#dataValue = newValue;
+        this.#originalData = JSON.parse(newValue); // Save original data
+        this.removeAttribute("data"); // Remove the attribute
+        this.drawChart();
+      } catch (error) {
+        console.error("Error parsing data attribute:", error);
+      }
     }
   }
 
@@ -90,16 +102,16 @@ class PieChart extends HTMLElement {
           display: flex; 
           flex-direction: column;
           align-items: center;
-          width: 250px;
+          width: 220px;
           gap: 5px;
           margin-left: 20px;
         }
           
         .legend-title {
           font-weight: bold;
-          font-size: 16px;
+          font-size: 20px;
           margin-bottom: 10px;
-          text-align: left;
+          text-align: center;
           color: black; 
           padding: 5px; 
         }
@@ -190,7 +202,7 @@ class PieChart extends HTMLElement {
       <div class="main-container">
         <div class="content">
           <div class="color-picker-container">
-            <div class="legend-title">Legend</div>
+            <div class="legend-title">Language of the country</div>
           </div>
 
           <div class="chart-container">
@@ -227,31 +239,7 @@ class PieChart extends HTMLElement {
         this.restoreData(); // Else, call restoreData
       }
     });
-    // this.shadowRoot.querySelector(".change-color-btn").addEventListener("click", () => this.togglePopup(true));
-    // this.shadowRoot.querySelector(".close-popup").addEventListener("click", () => this.togglePopup(false));
-    // this.shadowRoot.querySelector(".overlay").addEventListener("click", () => this.togglePopup(false));
   }
-
-  // initInputPanelValues(element){
-  //   element.min = 
-  //   element.max = 
-  //   element.step = 
-  //   element.value = 
-  //   this.shadowRoot.querySelector(".sort-btn").min = 
-  //   this.shadowRoot.querySelector(".sort-btn").min = 
-    
-  // }
-
-  // initParams(event) {
-  //   let coreData = JSON.parse(this.#dataValue);
-  //   let signal = coreData.signals.find(element => element.name === event.target.dataset.param);
-  //   if (signal) {
-  //     signal.value = this[event.target.dataset.param];  // Cập nhật giá trị mới vào signals
-  //   }
-  
-  //   this.#dataValue = JSON.stringify(coreData);
-  //   this.drawChart();
-  // }
 
   // Update parameters when user changes slider
   updateParams(event) {
@@ -288,9 +276,11 @@ class PieChart extends HTMLElement {
     const radius = Math.min(width, height) / 2;
     const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
-    
+    const countryVariable = coreData.transform.find(element => element.name === "country")?.domain.field; // attribute countryVariable
+    const populationVariable = coreData.transform.find(element => element.name === "population")?.domain.field; // attribute populationVariable
+
     const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
-    legendContainer.innerHTML = '<div class="legend-title">Legend</div>';
+    legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
     
     const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field; // attribute colorVariable
     
@@ -364,18 +354,18 @@ class PieChart extends HTMLElement {
     this.paths = svg.selectAll("path")
       .data(pieDataStructure)
       .join("path")
-      .attr("fill", d => hasLanguage ? this.colorScale(d.data.language) : defaultColor) // Use provided color or generate one
+      .attr("fill", d => hasLanguage ? this.colorScale(d.data[colorVariable]) : defaultColor) // Use provided color or generate one
       .attr("d", arcShape)
       .attr("stroke", "white")
-      .on("click", (event, d) => alert(`Clicked on: ${d.data.name}, ${d.data.population}`))
+      .on("click", (event, d) => alert(`Clicked on: ${d.data[countryVariable]}, ${d.data[populationVariable]}`))
       .on("mouseover", (event, d) => {
         tooltip.style.opacity = 1;
-        tooltip.innerHTML = `<strong>${d.data.name}</strong>: ${d.data.population}`;
+        tooltip.innerHTML = `<strong>${d.data[countryVariable]}</strong>: ${d.data[populationVariable]}`;
         d3.select(event.target).style("stroke", "black").style("opacity", 1);
       })
       .on("mousemove", (event) => {
-        tooltip.style.left = (d3.pointer(event)[0] + width/2  + 70) + "px";
-        tooltip.style.top = (d3.pointer(event)[1] + height/2 + 70) + "px";
+        tooltip.style.left = (d3.pointer(event)[0] + width) + "px";
+        tooltip.style.top = (d3.pointer(event)[1] + height - 100) + "px";
       })
       .on("mouseout", (event) => {
         tooltip.style.opacity = 0;
@@ -389,7 +379,7 @@ class PieChart extends HTMLElement {
 
     const textGroup = svg.append("g")
       .attr("font-family", "arial")
-      .attr("font-size", 12)
+      .attr("font-size", 14)
       .attr("font-weight", 550)
       .attr("text-anchor", "middle");
 
@@ -402,7 +392,7 @@ class PieChart extends HTMLElement {
       })
       .each(function(d) {
         const textElement = d3.select(this);
-        const originalText = d.data.name;
+        const originalText = d.data[countryVariable];
         const displayText = originalText.length > 5 ? originalText.slice(0, 5) + "..." : originalText; 
 
         textElement.append("tspan")
@@ -413,7 +403,7 @@ class PieChart extends HTMLElement {
         textElement.append("tspan")
           .attr("x", "0")
           .attr("dy", "1.2em")
-          .text(d.data.population);
+          .text((d.data[populationVariable] / 1_000_000).toFixed(1) + " M");
       });
 
       // Check hasLanguage
