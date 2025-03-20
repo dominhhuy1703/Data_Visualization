@@ -159,23 +159,22 @@ class BarChart extends HTMLElement {
 		const svgElement = this.shadowRoot.querySelector('svg');
 		d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
 		
-		const countryVariable = coreData.scales.find(element => element.name === "country")?.domain.field; // attribute countryVariable
-    	const populationVariable = coreData.scales.find(element => element.name === "population")?.domain.field; // attribute populationVariable
+		const countryVariable = coreData.encoding.find(element => element.country)?.country.field; // attribute countryVariable
+		const populationVariable = coreData.encoding.find(element => element.population)?.population.field; // attribute populationVariable
 
 		const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
 		legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
-		const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
+	
+		const colorVariable = coreData.encoding.find(element => element.color)?.color.field; // attribute colorVariable
+
 		const hasLanguage = data.some(d => d[colorVariable]);
 		const defaultColor = "#cccccc";
 		
 
 		// Define color scale for bars based on data categories (color or other attributes)
-		let colorScale = coreData.scales.find((element) => element.name == "color");
+		let colorScale = coreData.encoding.find((element) => element.color);
 
 		if (colorScale) {
-			this.colorScale = scale_d3[colorScale.type]();
-		}
-		else {
 			this.colorScale = d3.scaleOrdinal();
 		}
 
@@ -188,11 +187,6 @@ class BarChart extends HTMLElement {
 				.range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueLanguages.length));
 		}
 
-		// Set domain and range for color scale
-		// this.colorScale
-		// 	.domain(data.map(d => d.x))
-		// 	.range(["#4682b4"]);
-
 		// Set up scales for X and Y axes
 		const x = d3.scaleBand().domain(data.map(d => d[countryVariable])).range([margin.left, width - margin.right]).padding(0.5);
 		const y = d3.scaleLinear()
@@ -202,7 +196,7 @@ class BarChart extends HTMLElement {
 		
 		// Append axes to the SVG
 		const svg = d3.select(svgElement)
-			.attr("width", width).attr("height", height).style("margin", "20px")
+			.attr("width", width).attr("height", height).style("margin", "50px")
 			.append("g")
 			.attr("transform",
 				"translate(" + margin.left + "," + margin.top + ")");;
@@ -214,12 +208,12 @@ class BarChart extends HTMLElement {
 		
 		// title for x axis
 		svg.append("text")
-		.attr("class", "x-axis-label")
-		.attr("x", (width - margin.left - margin.right) / 2)
-		.attr("y", height - margin.bottom / 2 ) // 
-		.style("text-anchor", "middle")
-		.style("font-size", "18px")
-		.text("Country");
+			.attr("class", "x-axis-label")
+			.attr("x", (width - margin.left - margin.right) / 2)
+			.attr("y", height - margin.bottom / 2 ) // 
+			.style("text-anchor", "middle")
+			.style("font-size", "18px")
+			.text("Country");
 		
 		// Truncate long x-axis labels and add tooltips
 		xAxis.selectAll("text")
@@ -272,43 +266,6 @@ class BarChart extends HTMLElement {
 				tooltip.style.opacity = 0;
 				d3.select(event.target).style("stroke", "white").style("opacity", 1);
 			  });
-			
-			// Tooltip
-			// .on("mouseover", (event, d) => {
-			// 	tooltip.style.opacity = 1;
-			// 	tooltip.innerHTML = `<strong>${d.name}</strong>: ${d.population}`;
-				
-			// 	// Highlight on hover
-			// 	d3.select(event.target)
-			// 		.attr("fill", "red") // Red
-			// 		.style("stroke", "black")
-			// 		.style("opacity", 1);
-			
-			// 	// Display the value
-			// 	svg.append("text")
-			// 		.attr("class", "hover-value")
-			// 		.attr("x", x(d.name) + x.bandwidth() / 2)
-			// 		.attr("y", y(d.population) - 10)
-			// 		.attr("text-anchor", "middle")
-			// 		.attr("fill", "black")
-			// 		.style("font-size", "16px")
-			// 		.text(d.y);
-			// })
-			// .on("mousemove", (event) => {
-			// 	tooltip.style.left = (d3.pointer(event)[0] + width/3 - 100) + "px";
-        	// 	tooltip.style.top = (d3.pointer(event)[1] + height/3 - 100) + "px";
-			// })
-			// .on("mouseout", (event, d) => {
-			// 	tooltip.style.opacity = 0;
-			
-			// 	d3.select(event.target)
-			// 		// .attr("fill", d => d.c || this.colorScale(d.x)) // Quay lại màu ban đầu
-			// 		.style("stroke", "none")
-			// 		.style("opacity", 1);
-			
-			// 	// Remove value when hovering out
-			// 	svg.selectAll(".hover-value").remove();
-			// });
 	
 		svg.selectAll(".bar-value")
 			.data(data)
@@ -347,7 +304,7 @@ class BarChart extends HTMLElement {
 	renderColorPickers(uniqueLanguages) {
 		let coreData = JSON.parse(this.#dataValue);
 		const container = this.shadowRoot.querySelector(".color-picker-container");
-		const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
+		const colorVariable = coreData.encoding.find(element => element.color)?.color.field;
 		container.style.display = "block"; // Ensure the color picker container is visible
 		uniqueLanguages.forEach((d, index) => {
 		  const colorItem = document.createElement("div");
@@ -369,30 +326,6 @@ class BarChart extends HTMLElement {
 		  input.addEventListener("input", (event) => this.updateColor(event, coreData, colorVariable, d));
 		});
 	  }
-
-	// renderColorPickers(data, colorScale) {
-	// 	const container = this.shadowRoot.querySelector(".color-picker-container");
-	// 	container.style.display = "block";
-	  
-	// 	data.forEach((d, index) => {
-	// 		const colorItem = document.createElement("div");
-	// 		colorItem.classList.add("color-item");
-		
-	// 		const label = document.createElement("label");
-	// 		label.textContent = d.colorVariable;
-		
-	// 		const input = document.createElement("input");
-	// 		input.type = "color";
-	// 		input.value = d3.color(colorScale(d.colorVariable)).formatHex();
-	// 		input.setAttribute("data-index", index);
-		
-	// 		colorItem.appendChild(label);
-	// 		colorItem.appendChild(input);
-	// 		container.appendChild(colorItem);
-		
-	// 		input.addEventListener("input", (event) => this.updateColor(event, data));
-	// 	});
-	// }
 	
 	// Add event listeners to update color
 	updateColor(event, coreData, colorVariable, label) {
@@ -411,20 +344,6 @@ class BarChart extends HTMLElement {
 		}
 		this.#dataValue = JSON.stringify(data); // Update data
 	  }
-	// updateColor(event, data) {
-	//   const index = event.target.dataset.index;
-	//   const newColor = event.target.value;
-	//   data[index].color = newColor;
-  
-	//   // Find column and update color
-	//   const bar = this.shadowRoot.querySelectorAll("rect")[index];
-	//   d3.select(bar)
-	// 	.transition()
-	// 	.duration(300)
-	// 	.attr("fill", newColor);
-  
-	//   this.#dataValue = JSON.stringify(data); // Update data
-	// }
 	
 	// Getter
 	get dataValue() {
