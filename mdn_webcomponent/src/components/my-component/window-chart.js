@@ -66,18 +66,25 @@ class WindowChart extends HTMLElement {
             <style>
                 window-chart {
                     display: block;
-                    position: absolute;
+                    width: 100%;
+                    height: 100%;
                 }
                 .window {
                     background: white;
                     border-radius: 10px;
                     box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
-                    // overflow: hidden;
                     border: 1px solid #ccc;
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                    height: 100%;
+                }
+                .content {
+                    flex-grow: 1;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    overflow: hidden;
                 }
                 .title-bar {
                     display: flex;
@@ -96,21 +103,8 @@ class WindowChart extends HTMLElement {
                     border-radius: 50%;
                     cursor: pointer;
                 }
-                .content {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100%;
-                    width: 100%;
-                    position: relative;
-                }
-                svg {
-                    position: absolute;
-                    left: 50%;
-                    top: 50%;
-                    transform: translate(-50%, -50%);
-                }
             </style>
+
             
             <div class="window" id='window-container'>
                 <div class="title-bar" id='window-header'>
