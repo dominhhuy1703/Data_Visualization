@@ -276,13 +276,13 @@ class PieChart extends HTMLElement {
     const radius = Math.min(width, height) / 2;
     const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
-    const countryVariable = coreData.transform.find(element => element.name === "country")?.domain.field; // attribute countryVariable
-    const populationVariable = coreData.transform.find(element => element.name === "population")?.domain.field; // attribute populationVariable
+    const countryVariable = coreData.encoding.find(element => element.country)?.country.field; // attribute countryVariable
+    const populationVariable = coreData.encoding.find(element => element.population)?.population.field; // attribute populationVariable
 
     const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
     legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
     
-    const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field; // attribute colorVariable
+    const colorVariable = coreData.encoding.find(element => element.color)?.color.field; // attribute colorVariable
     
     const hasLanguage = data.some(d => d[colorVariable]); // Check if data has "language"
     const defaultColor = "#cccccc";
@@ -311,12 +311,9 @@ class PieChart extends HTMLElement {
     //   .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), listLanguage.length).reverse());
     
     // Color scale
-    let colorScale = coreData.scales.find((element) => element.name == "color");
+    let colorScale = coreData.encoding.find((element) => element.color);
 
     if (colorScale) {
-      this.colorScale = scale_d3[colorScale.type]();
-    }
-    else {
       this.colorScale = d3.scaleOrdinal();
     }
     
@@ -418,7 +415,7 @@ class PieChart extends HTMLElement {
   renderColorPickers(uniqueLanguages) {
     let coreData = JSON.parse(this.#dataValue);
     const container = this.shadowRoot.querySelector(".color-picker-container");
-    const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
+    const colorVariable = coreData.encoding.find(element => element.color)?.color.field;
     container.style.display = "block"; // Ensure the color picker container is visible
     uniqueLanguages.forEach((d, index) => {
       const colorItem = document.createElement("div");
