@@ -9,7 +9,6 @@
     <script src="components/my-component/window-chart.js"></script>
     <script src="components/my-component/pie-chart.js"></script>
     <script src="components/my-component/bar-chart.js"></script>
-    <script src="components/my-component/horizontal-bar-chart.js"></script>
     <script src="components/my-component/nodelink-chart.js"></script>
     <script src="components/my-component/map-chart.js"></script>
     <link rel="stylesheet" href="index.css">
@@ -19,6 +18,7 @@
   </head>
   <body>
     <div class="container">
+        <!-- Using chart-selector to choose what chart-->
         <!-- <div class="chart-selector">
             <h4>Select Chart</h4>
             <label><input type="radio" name="chartType" value="pie-chart" checked> Pie Chart</label><br>
@@ -28,6 +28,11 @@
             <label><input type="radio" name="chartType" value="map-chart"> Map Chart</label><br>
             <button id="run">Run</button>
         </div> -->
+        <bar-chart id="barChart1"></bar-chart>
+        <pie-chart id="pieChart"></pie-chart>
+        <nodelink-chart id="nodeLinkChart"></nodelink-chart>
+        <bar-chart id="barChart2"></bar-chart>
+        <bar-chart id="barChart3"></bar-chart>
     </div>
     <script>
 
@@ -101,52 +106,45 @@
 
                     FILTER(langMatches(lang(?bandName), "en") && langMatches(lang(?memberName), "en"))
                 }
-                LIMIT 5
+                LIMIT 10
             `;
 
             const endpointUrl = "https://dbpedia.org/sparql";
-            const url = `${endpointUrl}?query=${encodeURIComponent(query)}&format=xml`;
+            const url = `${endpointUrl}?query=${encodeURIComponent(query)}&format=application/json`;
 
             try {
                 const response = await fetch(url);
-                const text = await response.text();
-                return parseNodeLinkXML(text);
+                const jsonData = await response.json();
+                return parseNodeLinkJSON(jsonData);
             } catch (error) {
                 console.error("Error fetching SPARQL data for node-link:", error);
                 return [];
             }
         }
 
-        // Function to parse node-link data from XML
-        function parseNodeLinkXML(xmlText) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(xmlText, "text/xml");
-            const results = xml.getElementsByTagName("result");
-
+        // Function to parse node-link data from JSON
+        function parseNodeLinkJSON(jsonData) {
             let nodes = new Map();
             let links = [];
 
-            for (let result of results) {
-                const bandNode = result.getElementsByTagName("binding")[1]?.getElementsByTagName("literal")[0];
-                const memberNode = result.getElementsByTagName("binding")[3]?.getElementsByTagName("literal")[0];
+            for (let result of jsonData.results.bindings) {
+                const bandName = result.bandName.value;
+                const memberName = result.memberName.value;
 
-                if (bandNode && memberNode) {
-                    const bandName = bandNode.textContent.trim();
-                    const memberName = memberNode.textContent.trim();
+                if (!nodes.has(bandName)) nodes.set(bandName, { id: nodes.size + 1, name: bandName });
+                if (!nodes.has(memberName)) nodes.set(memberName, { id: nodes.size + 1, name: memberName });
 
-                    if (!nodes.has(bandName)) nodes.set(bandName, { id: nodes.size + 1, name: bandName });
-                    if (!nodes.has(memberName)) nodes.set(memberName, { id: nodes.size + 1, name: memberName });
-
-                    links.push({
-                        source: nodes.get(bandName).id,
-                        target: nodes.get(memberName).id
-                    });
-                }
+                links.push({
+                    source: nodes.get(bandName).id,
+                    target: nodes.get(memberName).id
+                });
             }
 
             return { nodes: Array.from(nodes.values()), links };
         }
 
+
+        /*** Using chart-selector to transfer data to window-chart***/
 
         // // Function to update the chart based on user selection
         // async function updateChart() {
@@ -252,97 +250,190 @@
         // // Attach event listener to the Run button
         // document.querySelector('#run').addEventListener('click', updateChart);
 
-        // Function to update the chart based on user selection
-        async function updateChart(chartType) {
-            let chartData;
-            if (chartType === 'nodelink-chart') {
-                chartData = await fetchNodeLinkData();
-            } else if (chartType === 'map-chart') {
-                chartData = await fetchMapData();
-            } else {
-                chartData = await fetchSPARQLData();
+        /*** Remove chart-selector, transfer data to window-chart***/
+
+        // // Function to update the chart based on user selection
+        // async function updateChart(chartType) {
+        //     let chartData;
+        //     if (chartType === 'nodelink-chart') {
+        //         chartData = await fetchNodeLinkData();
+        //     } else if (chartType === 'map-chart') {
+        //         chartData = await fetchMapData();
+        //     } else {
+        //         chartData = await fetchSPARQLData();
+        //     }
+
+        //     if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
+        //         alert("No data retrieved from SPARQL query.");
+        //         return;
+        //     }
+
+        //     // create component window-chart
+        //     let windowChart = document.createElement('window-chart');
+        //     // let pieChart = document.createElement('pie-chart');
+        //     // let barChart = document.createElement('bar-chart');
+        //     // let horizontalBarChart = document.createElement('horizontal-bar-chart');
+        //     // let nodelinkChart = document.createElement('noddlink-chart');
+
+        //     if (chartType === 'nodelink-chart') {
+        //         windowChart.setAttribute('data', JSON.stringify(chartData));
+        //     } else if (chartType === 'map-chart') {
+        //         windowChart.setAttribute('data', JSON.stringify(chartData));
+        //     } else if (chartType === 'bar-chart') {
+        //         const barData = {
+        //             description: "Bar chart - Countries with the largest population",
+        //             width: 400,
+        //             height: 400,
+        //             direction: "vertical", // Xác định hướng
+        //             data: [
+        //                 {
+        //                     values: chartData.map(d => ({
+        //                         x: d.name.value,
+        //                         y: d.population.value,
+        //                         language: d.randomLang.value
+        //                     }))
+        //                 }
+        //             ],
+        //             encoding: [
+        //                 { country: { "field": "x" } },
+        //                 { population: { "field": "y" } },
+        //                 { color: { "field": "language" } }
+        //             ],
+        //         };
+        //         windowChart.setAttribute('data', JSON.stringify(barData));
+        //     } else if (chartType === 'pie-chart') {
+        //         const pieData = {
+        //             description: "Pie chart - Countries with the largest population",
+        //             width: 400,
+        //             height: 400,
+        //             data: [
+        //                 {
+        //                     values: chartData.map(d => ({ name: d.name.value, population: d.population.value , language: d.randomLang.value }))
+        //                 },
+        //             ],
+        //             encoding: [
+        //                 { country: {"field": "name"} },
+        //                 { population: {"field": "population"} },
+        //                 { color: {"field": "language"} }
+        //             ],
+        //         };
+        //         windowChart.setAttribute('data', JSON.stringify(pieData));
+        //     }
+
+        //     windowChart.setAttribute('chart-type', chartType);
+        //     document.querySelector(".container").append(windowChart);
+        // }
+
+        // // Automatically call updateChart for each chart type when the page loads
+        // window.onload = async function() {
+        //     const chartTypes = ['pie-chart', 'bar-chart', 'nodelink-chart'];
+        //     for (const chartType of chartTypes) {
+        //         await updateChart(chartType);
+        //     }
+        // }
+        
+
+        window.onload = async function () {
+            const chartData = await fetchSPARQLData();
+            const nodeLinkData = await fetchNodeLinkData();
+
+            function updateChartData(chartId, data) {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement) {
+                    chartElement.setAttribute("data", JSON.stringify(data));
+                }
             }
 
-            if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
-                alert("No data retrieved from SPARQL query.");
-                return;
-            }
-
-            // create component window-chart
-            let windowChart = document.createElement('window-chart');
-            // let pieChart = document.createElement('pie-chart');
-            // let barChart = document.createElement('bar-chart');
-            // let horizontalBarChart = document.createElement('horizontal-bar-chart');
-            // let nodelinkChart = document.createElement('noddlink-chart');
-
-            if (chartType === 'nodelink-chart') {
-                windowChart.setAttribute('data', JSON.stringify(chartData));
-            } else if (chartType === 'map-chart') {
-                windowChart.setAttribute('data', JSON.stringify(chartData));
-            } else if (chartType === 'bar-chart') {
-                const barData = {
-                    description: "Bar chart - Countries with the largest population",
-                    width: 400,
-                    height: 400,
-                    data: [
-                        {
-                            values: chartData.map(d => ({ x: d.name.value, y: d.population.value, language: d.randomLang.value}))
-                        }
-                    ],
-                    encoding: [
-                        { country: {"field": "x"} },
-                        { population: {"field": "y"} },
-                        { color: {"field": "language"} }
-                    ],
-                };
-                windowChart.setAttribute('data', JSON.stringify(barData));
-            } else if (chartType === 'horizontal-bar-chart') {
-                const horizontalData = {
-                    description: "Horizontal Bar chart - Countries with the largest population",
-                    width: 400,
-                    height: 400,
-                    data: [
-                        {
-                            values: chartData.map(d => ({ x: d.name.value, y: d.population.value, language: d.randomLang.value}))
-                        }
-                    ],
-                    encoding: [
-                        { country: {"field": "x"} },
-                        { population: {"field": "y"} },
-                        { color: {"field": "language"} }
-                    ],
-                };
-                windowChart.setAttribute('data', JSON.stringify(horizontalData));
-            } else if (chartType === 'pie-chart') {
+            if (chartData.length > 0) {
                 const pieData = {
                     description: "Pie chart - Countries with the largest population",
                     width: 400,
                     height: 400,
-                    data: [
-                        {
-                            values: chartData.map(d => ({ name: d.name.value, population: d.population.value , language: d.randomLang.value }))
-                        },
-                    ],
+                    data: [{ values: chartData.map(d => ({ name: d.name.value, population: d.population.value, language: d.randomLang.value })) }],
                     encoding: [
-                        { country: {"field": "name"} },
-                        { population: {"field": "population"} },
-                        { color: {"field": "language"} }
-                    ],
+                        { id: { "field": "name" } },
+                        { theta: { "field": "population" } },
+                        // { color: { "field": "language" } }
+                    ]
                 };
-                windowChart.setAttribute('data', JSON.stringify(pieData));
+                console.log("PIE", JSON.stringify(pieData, null, 2));
+
+                const barData1 = {
+                    description: "Bar chart 1 - Vertical Bar Chart",
+                    width: 400,
+                    height: 400,
+                    direction: "vertical",
+                    data: [{ values: chartData.map(d => ({ 
+                        country: d.name.value, 
+                        population: d.population.value, 
+                        language: d.randomLang.value,
+                        c: Math.random() < 0.5 ? 0 : 1})) }],
+                    encoding: [
+                        { x: { "field": "country" } },
+                        { y: { "field": "population" } },
+                        // { color: { "field": "language" } },
+                        { stacked: { "field": "c"}}
+                    ]
+                };
+                console.log("BAR-1", JSON.stringify(barData1, null, 2));
+
+                const barData2 = {
+                    description: "Bar chart 2 - Horizontal Bar Chart",
+                    width: 400,
+                    height: 400,
+                    direction: "horizontal",
+                    data: [{ values: chartData.map(d => ({ 
+                        country: d.name.value, 
+                        population: d.population.value, 
+                        language: d.randomLang.value,
+                        c: Math.random() < 0.5 ? 0 : 1})) }],
+                    encoding: [
+                        { x: { "field": "country" } },
+                        { y: { "field": "population" } },
+                        { color: { "field": "language" } },
+                        // { stacked: { "field": "c"}}
+                    ]
+                };
+                console.log("BAR-2", JSON.stringify(barData2, null, 2));
+
+                const barData3 = {
+                    description: "Bar chart 3 - Stack Bar Chart",
+                    width: 400,
+                    height: 400,
+                    stack: "true",
+                    direction: "vertical",
+                    data: [{values: [
+                        {"country": "A", "population": 28, "c": 0}, {"country": "A", "population": 55, "c": 1},
+                        {"country": "B", "population": 43, "c": 0}, {"country": "B", "population": 91, "c": 1},
+                        {"country": "C", "population": 81, "c": 0}, {"country": "C", "population": 53, "c": 1},
+                        {"country": "D", "population": 19, "c": 0}, {"country": "D", "population": 87, "c": 1},
+                        {"country": "E", "population": 52, "c": 0}, {"country": "E", "population": 48, "c": 1},
+                        {"country": "F", "population": 24, "c": 0}, {"country": "F", "population": 49, "c": 1},
+                        {"country": "G", "population": 87, "c": 0}, {"country": "G", "population": 66, "c": 1},
+                        {"country": "H", "population": 17, "c": 0}, {"country": "H", "population": 27, "c": 1},
+                        {"country": "I", "population": 68, "c": 0}, {"country": "I", "population": 16, "c": 1},
+                        {"country": "K", "population": 49, "c": 0}, {"country": "K", "population": 15, "c": 1}
+                    ]}],
+                    encoding: [
+                        { x: { "field": "country" } },
+                        { y: { "field": "population" } },
+                        { stacked: {"field": "c"}}
+                    ]
+                };
+                console.log("BAR-3", JSON.stringify(barData3, null, 2));
+
+                // Chỉ cập nhật nếu phần tử tồn tại
+                updateChartData("pieChart", pieData);
+                updateChartData("barChart1", barData1);
+                updateChartData("barChart2", barData2);
+                updateChartData("barChart3", barData3);
             }
 
-            windowChart.setAttribute('chart-type', chartType);
-            document.querySelector(".container").append(windowChart);
-        }
+            // Cập nhật node-link chart nếu có trong DOM
+            updateChartData("nodeLinkChart", nodeLinkData.nodes.length > 0 ? nodeLinkData : null);
+        };
 
-        // Automatically call updateChart for each chart type when the page loads
-        window.onload = async function() {
-            const chartTypes = ['pie-chart', 'bar-chart', 'horizontal-bar-chart', 'nodelink-chart'];
-            for (const chartType of chartTypes) {
-                await updateChart(chartType);
-            }
-        }
+
         
     </script>
   </body>
