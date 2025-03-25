@@ -1,5 +1,6 @@
 // const scale_d3 = {'ordinal': d3.scaleOrdinal}
 
+
 //function to convert rgb object to hex color
 function componentToHex(c) {
 	var hex = c.toString(16);
@@ -10,13 +11,21 @@ function rgbToHex(r, g, b) {
 	return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
+// Function to truncate long labels
+function truncateLabel(label, maxLength = 5) {
+	return label.length > maxLength ? label.slice(0, maxLength) + "..." : label;
+}
 
 class BarChart extends HTMLElement {
 	#dataValue = '';
+	#coreData = null;
+	#width = 400;
+	#height = 400;
   
 	constructor() {
 	  super();
 	  this.data = null;
+	  this.margin = { top: 20, right: 40, bottom: 70, left: 40 };
 	  this.attachShadow({ mode: 'open' });
 	}
   
@@ -31,6 +40,8 @@ class BarChart extends HTMLElement {
 	attributeChangedCallback(name, oldValue, newValue) {
 	  if (name === "data" && newValue != null) {
 		this.#dataValue = newValue;
+		this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
+		this.#width = this.#coreData.width, this.#height = this.#coreData.height;
 		this.removeAttribute("data");
 		this.drawChart();
 	  }
@@ -129,7 +140,7 @@ class BarChart extends HTMLElement {
 		<div class="main-container">
 			<div class="content">
 				<div class="color-picker-container">
-					<div class="legend-title">Legend</div>
+					<div class="legend-title">Language of the country</div>
 				</div>
 
 				<div class="chart-container">
@@ -148,32 +159,124 @@ class BarChart extends HTMLElement {
 	  const popup = this.shadowRoot.querySelector(".popup");
 	  popup.classList.toggle("show", show);
 	}
+
+	// Function to draw Axes based on provided data
+	drawAxis(data, xVariable, yVariable, isHorizontal=false, isStacked=false, maxLabelLength=5) {
+		// Define scales based on direction
+		let x, y;
+		if (isHorizontal) {
+			x = d3.scaleLinear()
+				.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
+				.range([this.margin.left, this.#width - this.margin.right]);
+	
+			y = d3.scaleBand()
+				.domain(data.map(d => d[xVariable]))
+				.range([this.margin.top, this.#height - this.margin.bottom])
+				.padding(0.1);
+		} else {
+			x = d3.scaleBand()
+				.domain(data.map(d => d[xVariable]))
+				.range([this.margin.left, this.#width - this.margin.right])
+				.padding(0.4);
+	
+			y = d3.scaleLinear()
+				.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
+				.nice()
+				.range([this.#height - this.margin.bottom, this.margin.top]);
+		}
+		if (isStacked) {
+			var result = [];
+
+			data.reduce(function(res, value) {
+			if (!res[value[xVariable]]) {
+				res[value[xVariable]] = { x: value[xVariable], y: 0 };
+				result.push(res[value[xVariable]])
+			}
+			res[value[xVariable]].y += parseInt(value[yVariable]);
+			return res;
+			}, {});
+			y = d3.scaleLinear()
+			.domain([0, d3.max(result, d => d.y)])
+			.range([this.#height - this.margin.bottom, this.margin.top]);
+		}
+	
+		// Append axes to the SVG
+		const svgElement = this.shadowRoot.querySelector('svg');
+		const svg = d3.select(svgElement)
+			.attr("width", this.#width).attr("height", this.#height).style("margin", "30px")
+			.append("g")
+			.attr("transform",
+				 "translate(" + this.margin.left + "," + this.margin.top + ")");
+	
+		const xAxis = isHorizontal? d3.axisBottom(x).tickFormat(function(d){return d < 1000000 ? d : d/1000000 +"  M"}) : d3.axisBottom(x).tickFormat(function(d){return d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d});
+		svg.append("g")
+			.attr("transform", `translate(0, ${this.#height - this.margin.bottom})`)
+			.call(xAxis)
+			.selectAll("text")
+			.style("font-size", "10px")
+			// .text(d => truncateLabel(d))
+				
+		var yAxis = isHorizontal? d3.axisLeft(y).tickFormat(function(d){return d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d}) : d3.axisLeft(y).tickFormat(function(d){return d < 1000000 ? d : d/1000000  + "  M"});
+		svg.append("g")
+			.attr("transform", `translate(${this.margin.left}, 0)`)
+			.call(yAxis)
+			.selectAll("text")
+			.style("font-size", "10px")
+			// .text(d => truncateLabel(d))
+	
+		// Title for X and Y axes
+		svg.append("text")
+			.attr("class", "x-axis-label")
+			.attr("x", isHorizontal ? (this.#width - this.margin.left - this.margin.right) / 2 : (this.#width - this.margin.left - this.margin.right) / 2)
+			.attr("y", this.#height - this.margin.bottom / 2)
+			.style("text-anchor", "middle")
+			.style("font-size", "18px")
+			.text(isHorizontal ? "Population" : "Country");
+	
+		svg.append("text")
+			.attr("class", "y-axis-label")
+			.attr("x", isHorizontal ? -(this.#height - this.margin.top - this.margin.bottom) / 2 : - (this.#height - this.margin.top - this.margin.bottom) / 2)
+			.attr("y", -this.margin.left + 20)
+			.style("text-anchor", "middle")
+			.style("font-size", "18px")
+			.text(isHorizontal ? "Country" : "Population")
+			.attr("transform", "rotate(-90)");
+
+		return [svg, x, y];
+
+	}
 	
 	// Draw chart
 	drawChart() {
 		const tooltip = this.shadowRoot.querySelector(".tooltip");
-		let coreData = JSON.parse(this.#dataValue); // Parse the JSON data
-		const data = coreData.data[0].values; // Extract the values from the parsed data
-		const width = coreData.width, height = coreData.height;
-		const margin = { top: 20, right: 0, bottom: 70, left: 30 };
+		let coreData = JSON.parse(this.#dataValue); // Parse JSON data
+		const data = coreData.data[0].values; // Extract values
+		// const width = coreData.width, height = coreData.height;
+		// const margin = { top: 20, right: 40, bottom: 70, left: 40 };
 		const svgElement = this.shadowRoot.querySelector('svg');
 		d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
 		
-		const countryVariable = coreData.encoding.find(element => element.country)?.country.field; // attribute countryVariable
-		const populationVariable = coreData.encoding.find(element => element.population)?.population.field; // attribute populationVariable
+		// Get the direction (default is vertical)
+		const isHorizontal = coreData.direction === "horizontal";
+		
+		// Add the stacked option
+		const isStacked = coreData.stack === "true"; // Check if stacked is true, otherwise default to false
 
-		const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
-		legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
-	
-		const colorVariable = coreData.encoding.find(element => element.color)?.color.field; // attribute colorVariable
+		// Get attributes
+		const xVariable = coreData.encoding.find(element => element.x)?.x.field;
+		const yVariable = coreData.encoding.find(element => element.y)?.y.field;
+		this.xVariable = xVariable;
+		this.yVariable = yVariable;
+		
+		// Create stackVariable
+		const stackVariable = coreData.encoding.find(element => element.stacked)?.stacked.field;
 
+		// Set up color scale
+		const colorVariable = coreData.encoding.find(element => element.color)?.color.field;
 		const hasLanguage = data.some(d => d[colorVariable]);
 		const defaultColor = "#cccccc";
 		
-
-		// Define color scale for bars based on data categories (color or other attributes)
 		let colorScale = coreData.encoding.find((element) => element.color);
-
 		if (colorScale) {
 			this.colorScale = d3.scaleOrdinal();
 		}
@@ -187,113 +290,152 @@ class BarChart extends HTMLElement {
 				.range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueLanguages.length));
 		}
 
-		// Set up scales for X and Y axes
-		const x = d3.scaleBand().domain(data.map(d => d[countryVariable])).range([margin.left, width - margin.right]).padding(0.5);
-		const y = d3.scaleLinear()
-			.domain([0, d3.max(data, d => d[populationVariable] / 1_000_000)]) // Divide into 1 million
-			.nice()
-			.range([height - margin.bottom, margin.top]);
-		
-		// Append axes to the SVG
-		const svg = d3.select(svgElement)
-			.attr("width", width).attr("height", height).style("margin", "50px")
-			.append("g")
-			.attr("transform",
-				"translate(" + margin.left + "," + margin.top + ")");;
-		
-		// X-axis
-		const xAxis = svg.append("g")
-			.attr("transform", `translate(0,${height - margin.bottom})`)
-			.call(d3.axisBottom(x));
-		
-		// title for x axis
-		svg.append("text")
-			.attr("class", "x-axis-label")
-			.attr("x", (width - margin.left - margin.right) / 2)
-			.attr("y", height - margin.bottom / 2 ) // 
-			.style("text-anchor", "middle")
-			.style("font-size", "18px")
-			.text("Country");
-		
-		// Truncate long x-axis labels and add tooltips
-		xAxis.selectAll("text")
-			.style("font-size", "12px") 
-			.text(d => d.length > 5 ? d.slice(0, 5) + "..." : d) // Shorten if > 5 characters
-			.append("title") 
-			.attr("dy", "1em")
-			.text(d => d);
-		
-		// Y-axis
-		svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
-		
-		 // title for y axis
-		 svg.append("text")
-		 .attr("class", "y-axis-label")
-		 .attr("x", - (height - margin.top - margin.bottom) / 2)
-		 .attr("y", - margin.left + 20) 
-		 .style("text-anchor", "middle")
-		 .style("font-size", "18px")
-		 .text("Population (Millions)")
-		 .attr("transform", "rotate(-90)");
+		const [svg, x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked);
 
-		// Draw bars on the chart
-		this.bars = svg.selectAll("rect")
-			.data(data)
-			.join("rect")
-			.attr("x", d => x(d[countryVariable]))  // Position each bar based on data.x
-			.attr("y", d => y(d[populationVariable] / 1_000_000))  // Position each bar based on data.y
-			.attr("height", d => {
-				let heightValue = Math.max(0, y(0) - y(d[populationVariable] / 1_000_000));
-				return heightValue;
-			})   // Calculate height of each bar
+		// If stack
+		if (isStacked && stackVariable) {
+			const stackKeys = [...new Set(data.map(d => d[stackVariable]))]; 
+			// const stackKeys = d3.union(data.map(d => d[stackVariable]))
 			
-			.attr("width", x.bandwidth()) //Set width of each bar
-			.attr("fill", d => hasLanguage ? this.colorScale(d[colorVariable]) : defaultColor) // Fill color based on category
-			// .attr("fill", d => d.color || this.colorScale(d.x))
+			const stack = d3.stack()
+				.keys(d3.union(data.map(d => d[stackVariable])))
+				.value(([, d], key) => d.get(key)[yVariable])
+				(d3.index(data, d => d[xVariable], d => d[stackVariable]));
+				// .value((d, key) => d[key])
+				// .order(d3.stackOrderNone)
+				// .offset(d3.stackOffsetNone);
+			const stackColorScale = d3.scaleOrdinal()
+				.domain(stackKeys)
+				.range(d3.schemeCategory10); 
 
-			.on("click", (event, d) => this.showInfoPopup(d)) // Popup bar click
-			
-			.on("mouseover", (event, d) => {
-				tooltip.style.opacity = 1;
-				tooltip.innerHTML = `<strong>${d[countryVariable]}</strong>: ${d[populationVariable]}`;
-				d3.select(event.target).style("stroke", "black").style("opacity", 1);
-			  })
-			  .on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + width/2 + 100) + "px";
-				tooltip.style.top = (d3.pointer(event)[1] + height/3 - 70) + "px";
-			  })
-			  .on("mouseout", (event) => {
-				tooltip.style.opacity = 0;
-				d3.select(event.target).style("stroke", "white").style("opacity", 1);
-			  });
-	
-		svg.selectAll(".bar-value")
-			.data(data)
-			.join("text")
-			.attr("class", "bar-value")
-			.attr("x", d => x(d[countryVariable]) + x.bandwidth() / 2)
-			.attr("y", d => y(d[populationVariable]) - 10)
-			.attr("text-anchor", "middle")
-			.attr("fill", "black")
-			.style("font-size", "16px")
-			.text(d => d.y);
-		
+			// svg.selectAll("g.layer")
+			//     .data(stack)
+			//     .enter().append("g")
+			//     .attr("class", "layer")
+			//     .attr("fill", d => stackColorScale(d.key)) 
+			//     .selectAll("rect")
+			//     .data(d => d)
+			//     .enter().append("rect")
+			//     .attr(isHorizontal ? "x" : "y", d => isHorizontal ? x(0) : y(d.data[xVariable]))
+			//     .attr(isHorizontal ? "y" : "x", d => isHorizontal ? y(d.data[xVariable]) : x(d.data[xVariable]))
+			//     .attr(isHorizontal ? "width" : "height", d => isHorizontal ? x(d[1]) - x(d[0]) : y(0) - y(d[1]))
+			//     .attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth())
+			//     .on("click", (event, d) => this.showInfoPopup(d))
+			//     .on("mouseover", (event, d) => {
+			//         tooltip.style.opacity = 1;
+			//         tooltip.innerHTML = `<strong>${d.data[xVariable]}</strong>: ${d.data[yVariable]}`;
+			//         d3.select(event.target).style("stroke", "black").style("opacity", 1);
+			//     })
+			//     .on("mousemove", (event) => {
+			//         tooltip.style.left = (d3.pointer(event)[0] + width / 2 + 120) + "px";
+			//         tooltip.style.top = (d3.pointer(event)[1] + height / 3 - 50) + "px";
+			//     })
+			//     .on("mouseout", (event) => {
+			//         tooltip.style.opacity = 0;
+			//         d3.select(event.target).style("stroke", "white").style("opacity", 1);
+			//     });
+			svg.append("g")
+				.selectAll("g")
+				.data(stack)
+				.join("g")
+					.attr("fill", d => stackColorScale(d.key))
+				.selectAll("rect")
+				.data(D => D)
+				.join("rect")
+				.attr("x", d => x(d.data[0]))
+				.attr("y", d => y(d[1]))
+				.attr("height", d => y(d[0]) - y(d[1]))
+				.attr("width", x.bandwidth())
+				// .on("click", (event, d) => this.showInfoPopup(d))
+				// .on("mouseover", (event, d) => {
+				// 	tooltip.style.opacity = 1;
+				// 	tooltip.innerHTML = `<strong>${d.data[xVariable]}</strong>: ${d.data[yVariable]}`;
+				// 	d3.select(event.target).style("stroke", "black").style("opacity", 1);
+				// })
+				// .on("mousemove", (event) => {
+				// 	tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
+				// 	tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
+				// })
+				// .on("mouseout", (event) => {
+				// 	tooltip.style.opacity = 0;
+				// 	d3.select(event.target).style("stroke", "white").style("opacity", 1);
+				// });
+
+				// .attr(isHorizontal ? "x" : "y", d => isHorizontal ? x(0) : y(d.data[xVariable]))
+				// .attr(isHorizontal ? "y" : "x", d => isHorizontal ? y(d.data[xVariable]) : x(d.data[xVariable]))
+				// .attr(isHorizontal ? "width" : "height", d => isHorizontal ? x(d[1]) - x(d[0]) : y(0) - y(d[1]))
+				// .attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth());
+		// svg.selectAll("g")
+		//     .data(stack)
+		//     .enter().append("g")
+		//     .attr("class", "layer")
+		//     .attr("fill", d => stackColorScale(d.key)) 
+		//     .selectAll("rect")
+		//     .data(d => d)
+		//     .enter().append("rect")
+		//     .attr(isHorizontal ? "x" : "y", d => isHorizontal ? x(0) : y(d.data[xVariable]))
+		//     .attr(isHorizontal ? "y" : "x", d => isHorizontal ? y(d.data[xVariable]) : x(d.data[xVariable]))
+		//     .attr(isHorizontal ? "width" : "height", d => isHorizontal ? x(d[1]) - x(d[0]) : y(0) - y(d[1]))
+		//     .attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth())
+		//     .on("click", (event, d) => this.showInfoPopup(d))
+		//     .on("mouseover", (event, d) => {
+		//         tooltip.style.opacity = 1;
+		//         tooltip.innerHTML = `<strong>${d.data[xVariable]}</strong>: ${d.data[yVariable]}`;
+		//         d3.select(event.target).style("stroke", "black").style("opacity", 1);
+		//     })
+		//     .on("mousemove", (event) => {
+		//         tooltip.style.left = (d3.pointer(event)[0] + width / 2 + 120) + "px";
+		//         tooltip.style.top = (d3.pointer(event)[1] + height / 3 - 50) + "px";
+		//     })
+		//     .on("mouseout", (event) => {
+		//         tooltip.style.opacity = 0;
+		//         d3.select(event.target).style("stroke", "white").style("opacity", 1);
+		//     });
+	}
+	else {
+        // Draw normal bars if not stacked
+        this.bars = svg.selectAll("rect")
+            .data(data)
+            .join("rect")
+            .attr(isHorizontal ? "x" : "y", d => isHorizontal ? x(0) : y(d[yVariable]))
+            .attr(isHorizontal ? "y" : "x", d => isHorizontal ? y(d[xVariable])  : x(d[xVariable]))
+            .attr(isHorizontal ? "width" : "height", d => isHorizontal ? x(d[yVariable]) - x(0) : y(0) - y(d[yVariable]))
+            .attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth())
+            .attr("fill", d => hasLanguage ? this.colorScale(d[colorVariable]) : defaultColor)
+            .on("click", (event, d) => this.showInfoPopup(d))
+            .on("mouseover", (event, d) => {
+                tooltip.style.opacity = 1;
+                tooltip.innerHTML = `<strong>${d[xVariable]}</strong>: ${d[yVariable]}`;
+                d3.select(event.target).style("stroke", "black").style("opacity", 1);
+            })
+            .on("mousemove", (event) => {
+                tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
+                tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
+            })
+            .on("mouseout", (event) => {
+                tooltip.style.opacity = 0;
+                d3.select(event.target).style("stroke", "none").style("opacity", 1);
+            });
+    }
+
+		// Update color pickers
+		if (hasLanguage) {
+			this.renderColorPickers(uniqueLanguages);
+		} else {
+			this.shadowRoot.querySelector(".color-picker-container").style.display = "none";
+		}
+
 		// Display chart description
 		const chartDescription = this.shadowRoot.querySelector(".description");
 		chartDescription.textContent = coreData.description;
-		if (hasLanguage) {
-			this.renderColorPickers(uniqueLanguages);
-		  } else {
-			legendContainer.style.display = "none";
-		  } // Render color pickers for bars
 	}
 	
 	// Show information popup with data details when a bar is clicked
 	showInfoPopup(d) {
 	  const infoPopup = this.shadowRoot.querySelector(".info-popup");
 	  infoPopup.innerHTML = `
-		<div>Tag: ${d[countryVariable]}</div>
-		<div>Value: ${[populationVariable]}</div>
+		<div>Tag: ${d[this.xVariable]}</div>
+		<div>Value: ${d[this.yVariable]}</div>
 		<button class="close-popup">Close</button>
 	  `;
 	  infoPopup.classList.add("show");
