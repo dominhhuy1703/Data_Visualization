@@ -42,6 +42,7 @@ class PieChart extends HTMLElement {
   connectedCallback() {
     this.render(); //Render the component when it's added to the DOM
   }
+  
 
   // attributeChangedCallback(name, oldValue, newValue) {
   //   if (name === "data" && newValue != null) {
@@ -210,7 +211,7 @@ class PieChart extends HTMLElement {
             <div class="description">Biểu đồ Pie Chart</div>
           </div>
           
-          <div class="controls">
+          <!-- <div class="controls">
             <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="${this.startAngle}" data-param="startAngle"></label>
             <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="${this.endAngle}" data-param="endAngle"></label>
             <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="${this.padAngle}" data-param="padAngle"></label>
@@ -220,25 +221,25 @@ class PieChart extends HTMLElement {
               <label for="sort-toggle">Sort</label>
               <input type="checkbox" id="sort-toggle">
             </div>
-            </div>
+          </div> -->
           <div class="tooltip"></div>
         </div>
       </div>
     `;
 
-    // Add event listener to change value on slider
-    this.shadowRoot.querySelectorAll(".controls input").forEach(input => {
-      input.addEventListener("input", (event) => this.updateParams(event));
-    });
+    // // Add event listener to change value on slider
+    // this.shadowRoot.querySelectorAll(".controls input").forEach(input => {
+    //   input.addEventListener("input", (event) => this.updateParams(event));
+    // });
 
-    // Add event for data sort button
-    this.shadowRoot.querySelector("#sort-toggle").addEventListener("change", (event) => {
-      if (event.target.checked) {
-        this.sortData(); // If chose, call sortData
-      } else {
-        this.restoreData(); // Else, call restoreData
-      }
-    });
+    // // Add event for data sort button
+    // this.shadowRoot.querySelector("#sort-toggle").addEventListener("change", (event) => {
+    //   if (event.target.checked) {
+    //     this.sortData(); // If chose, call sortData
+    //   } else {
+    //     this.restoreData(); // Else, call restoreData
+    //   }
+    // });
   }
 
   // Update parameters when user changes slider
@@ -250,7 +251,7 @@ class PieChart extends HTMLElement {
   // Sort the data in descending order
   sortData() {
     let coreData = JSON.parse(this.#dataValue);
-    coreData.data[0].values.sort((a, b) => b.population - a.population);
+    coreData.data[0].values.sort((a, b) => b[populationVariable] - a[populationVariable]);
     this.#dataValue = JSON.stringify(coreData);
     this.drawChart();
   }  
@@ -276,8 +277,8 @@ class PieChart extends HTMLElement {
     const radius = Math.min(width, height) / 2;
     const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
-    const countryVariable = coreData.encoding.find(element => element.country)?.country.field; // attribute countryVariable
-    const populationVariable = coreData.encoding.find(element => element.population)?.population.field; // attribute populationVariable
+    const countryVariable = coreData.encoding.find(element => element.id)?.id.field; // attribute countryVariable
+    const populationVariable = coreData.encoding.find(element => element.theta)?.theta.field; // attribute populationVariable
 
     const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
     legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
@@ -340,7 +341,7 @@ class PieChart extends HTMLElement {
       .startAngle(this.startAngle)
       .endAngle(this.endAngle)
       .padAngle(this.padAngle)
-      .value(d => d.population)(data); // Use `y` values as the pie segment sizes
+      .value(d => d[populationVariable])(data); // Use `y` values as the pie segment sizes
 
     // Create SVG element and position the chart in the center
     const svg = d3.select(svgElement)
@@ -376,7 +377,7 @@ class PieChart extends HTMLElement {
 
     const textGroup = svg.append("g")
       .attr("font-family", "arial")
-      .attr("font-size", 14)
+      .attr("font-size", "12px")
       .attr("font-weight", 550)
       .attr("text-anchor", "middle");
 
