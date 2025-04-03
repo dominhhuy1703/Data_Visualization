@@ -34,7 +34,6 @@ class NodeLinkChart extends HTMLElement {
         </style>
         <svg></svg>
         <div class="tooltip" id="tooltip"></div>
-        
       `;
     }
   
@@ -42,7 +41,9 @@ class NodeLinkChart extends HTMLElement {
       const data = JSON.parse(this.getAttribute('data'));
       const svgElement = this.shadowRoot.querySelector('svg');
       const tooltip = this.shadowRoot.querySelector('#tooltip');
-      const width = 800, height = 800;
+      const container = this.shadowRoot.host.getBoundingClientRect();
+      const width = container.width || 400;
+      const height = container.height || 400;
   
       d3.select(svgElement).selectAll("g").remove();
   
@@ -138,8 +139,8 @@ class NodeLinkChart extends HTMLElement {
         d3.select(event.target).style("stroke", "black").style("opacity", 1); // Use direct manipulation for visibility
       })
       .on("mousemove", (event) => {
-        tooltip.style.left = (d3.pointer(event)[0] + width/4) + "px";
-        tooltip.style.top = (d3.pointer(event)[1] + height/4) + "px";
+        tooltip.style.left = (d3.pointer(event)[0] + width/5) + "px";
+        tooltip.style.top = (d3.pointer(event)[1] + height) + "px";
       })
       .on("mouseout", (event) => {
           // Hide the tooltip when mouseout
