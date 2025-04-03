@@ -1,4 +1,4 @@
-const scale_d3 = {'ordinal': d3.scaleOrdinal} //Define scale type using D3.js
+const scale_d3 = {'ordinal': d3.scaleOrdinal, 'quantitative': d3.scaleLinear, 'nominal': d3.scaleBand} //Define scale type using D3.js
 
 //function to convert rgb object to hex color
 function componentToHex(c) {
@@ -203,12 +203,12 @@ class PieChart extends HTMLElement {
       <div class="main-container">
         <div class="content">
           <div class="color-picker-container">
-            <div class="legend-title">Language of the country</div>
+            <div class="legend-title">Language</div>
           </div>
 
           <div class="chart-container">
             <svg></svg>
-            <div class="description">Biểu đồ Pie Chart</div>
+					  <div class="description"></div>
           </div>
           
           <!-- <div class="controls">
@@ -277,11 +277,11 @@ class PieChart extends HTMLElement {
     const radius = Math.min(width, height) / 2;
     const svgElement = this.shadowRoot.querySelector("svg");
     d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
-    const countryVariable = coreData.encoding.find(element => element.id)?.id.field; // attribute countryVariable
+    const countryVariable = coreData.encoding.find(element => element.text)?.text.field; // attribute countryVariable
     const populationVariable = coreData.encoding.find(element => element.theta)?.theta.field; // attribute populationVariable
 
-    const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
-    legendContainer.innerHTML = '<div class="legend-title">Language of the country</div>';
+    // const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
+    // legendContainer.innerHTML = '<div class="legend-title">Language</div>';
     
     const colorVariable = coreData.encoding.find(element => element.color)?.color.field; // attribute colorVariable
     
