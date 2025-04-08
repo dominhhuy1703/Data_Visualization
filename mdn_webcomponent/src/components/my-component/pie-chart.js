@@ -329,12 +329,33 @@ class PieChart extends HTMLElement {
 
 
     // Define arc shape
+    // const arcShape = d3.arc()
+    //   .innerRadius(this.innerRadius)
+    //   .outerRadius(radius - 0.9)
+    //   .cornerRadius(this.cornerRadius);
+
+    const radiusVariable = coreData.encoding.find(element => element.radius)?.radius.field;
+    const scaleRadius = d3.scaleSqrt()
+      .domain(d3.extent(data, d => +d[radiusVariable])) // Convert to numeric
+      .range([radius * 0.4, radius - 5]); // Min, max
+
     const arcShape = d3.arc()
       .innerRadius(this.innerRadius)
-      .outerRadius(radius - 0.9)
+      .outerRadius(d => {
+        if (radiusVariable) {
+          return scaleRadius(+d.data[radiusVariable]);
+        } else {
+          return radius - 5;
+        }
+      })
       .cornerRadius(this.cornerRadius);
-    const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
-    
+      
+    // const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
+    const arcShapeLabels = d3.arc()
+      .outerRadius(radius * 0.85)
+      .innerRadius(radius * 0.6);
+
+      
     // Define pie data structure
     const pieDataStructure = d3.pie()
       .sort(null)
