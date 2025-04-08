@@ -351,6 +351,9 @@ class BarChart extends HTMLElement {
 		// Add the stacked option
 		const isStacked = coreData.stack === "true"; // Check if stacked is true, otherwise default to false
 
+		// Add the variable to define grouped bar chart
+		const isGrouped = coreData.encoding.find(element => element.xOffset)?.xOffset.field;
+		console.log("isGrouped:", isGrouped)
 		// Get attributes
 		const xVariable = coreData.encoding.find(element => element.x)?.x.field;
 		const yVariable = coreData.encoding.find(element => element.y)?.y.field;
@@ -366,11 +369,12 @@ class BarChart extends HTMLElement {
 
 		// Set up color scale
 		const colorVariable = coreData.encoding.find(element => element.colors)?.colors.field;
+		console.log("ColorVarialbe:", colorVariable)
 		const colorRange = coreData.encoding.find(element => element.colors)?.colors.scale;
 		console.log("ColorRange:", colorRange)
+		console.log("Data:", data);
 
 		const hasColors = data.some(d => d[colorVariable]);
-		const hasStackColors = data.some(d => d[stackVariable]);
 
 		const defaultColor = "#cccccc";
 
@@ -544,6 +548,130 @@ class BarChart extends HTMLElement {
 			// 	.attr("y", d => isHorizontal ? y(d.data[0]) : y(d[1]))
 			// 	.attr("width", d => isHorizontal ? x(d[1]) - x(d[0]) : x.bandwidth())
 			// 	.attr("height", d => isHorizontal ? y.bandwidth() : y(d[0]) - y(d[1]));
+			}
+		
+		// Grouped bar chart
+		} else if (isGrouped) {
+			// // Get the subgroups
+			// const subgroups = [...new Set(data.map(d => d[isGrouped]))];
+
+			// // Create groupColorScale
+			// const groupColorScale = d3.scaleOrdinal()
+			// 	.domain(subgroups)
+			// 	.range(colorRange && colorRange.length === subgroups.length ? colorRange : d3.schemeCategory10);
+		
+			// // Create scale for subgroups of each category
+			// const xSubgroup = d3.scaleBand()
+			// 	.domain(subgroups)
+			// 	.range([0, x.bandwidth()])
+			// 	.padding(0.05);
+		
+			// // Draw bar
+			// svg.append("g")
+			// 	.selectAll("g")
+			// 	// Enter in data = loop group per group
+			// 	.data(data)
+			// 	.join("g")
+			// 	.attr("transform", d => `translate(${x(d[xVariable])}, 0)`) // Transform with category
+			// 	.selectAll("rect")
+			// 	.data(d => [d]) // Giữ nguyên cấu trúc dữ liệu
+			// 	.join("rect")
+			// 	.attr("x", d => xSubgroup(d[isGrouped])) // Dịch chuyển từng group
+			// 	.attr("y", d => y(d[yVariable])) // Chiều cao của cột
+			// 	.attr("width", xSubgroup.bandwidth()) // Độ rộng của từng nhóm
+			// 	.attr("height", d => y(0) - y(d[yVariable])) // Vẽ từ trục x lên
+			// 	.attr("fill", d => groupColorScale(d[isGrouped])) // Màu theo group
+				
+			// 	.on("mouseover", (event, d) => {
+			// 		tooltip.style.opacity = 1;
+			// 		tooltip.innerHTML = `<strong>${d[xVariable]} - ${d[isGrouped]}</strong>: ${d[yVariable]}`;
+			// 		d3.select(event.target).style("stroke", "black").style("opacity", 1);
+			// 	})
+			// 	.on("mousemove", (event) => {
+			// 		tooltip.style.left = (event.pageX + 10) + "px";
+			// 		tooltip.style.top = (event.pageY - 20) + "px";
+			// 	})
+			// 	.on("mouseout", (event) => {
+			// 		tooltip.style.opacity = 0;
+			// 		d3.select(event.target).style("stroke", "none").style("opacity", 1);
+			// 	});
+		
+			// // // Render legend
+			// // this.renderStackLegend(subgroups, groupColorScale);
+			
+			// Get the subgroups
+			const subgroups = [...new Set(data.map(d => d[isGrouped]))];
+
+			const groupColorScale = d3.scaleOrdinal()
+				.domain(subgroups)
+				.range(colorRange && colorRange.length === subgroups.length ? colorRange : d3.schemeCategory10);
+
+			if (isHorizontal) {
+				// scaleBand cho nhóm trong mỗi hàng
+				const ySubgroup = d3.scaleBand()
+					.domain(subgroups)
+					.range([0, y.bandwidth()])
+					.padding(0.05);
+
+				svg.append("g")
+					.selectAll("g")
+					.data(data)
+					.join("g")
+					.attr("transform", d => `translate(0, ${y(d[xVariable])})`)
+					.selectAll("rect")
+					.data(d => [d])
+					.join("rect")
+					.attr("x", x(0))
+					.attr("y", d => ySubgroup(d[isGrouped]))
+					.attr("height", ySubgroup.bandwidth())
+					.attr("width", d => x(d[yVariable]) - x(0))
+					.attr("fill", d => groupColorScale(d[isGrouped]))
+					.on("mouseover", (event, d) => {
+						tooltip.style.opacity = 1;
+						tooltip.innerHTML = `<strong>${d[xVariable]} - ${d[isGrouped]}</strong>: ${d[yVariable]}`;
+						d3.select(event.target).style("stroke", "black").style("opacity", 1);
+					})
+					.on("mousemove", (event) => {
+						tooltip.style.left = (event.pageX + 10) + "px";
+						tooltip.style.top = (event.pageY - 20) + "px";
+					})
+					.on("mouseout", (event) => {
+						tooltip.style.opacity = 0;
+						d3.select(event.target).style("stroke", "none").style("opacity", 1);
+					});
+			} else {
+				// scaleBand cho nhóm trong mỗi cột
+				const xSubgroup = d3.scaleBand()
+					.domain(subgroups)
+					.range([0, x.bandwidth()])
+					.padding(0.05);
+
+				svg.append("g")
+					.selectAll("g")
+					.data(data)
+					.join("g")
+					.attr("transform", d => `translate(${x(d[xVariable])}, 0)`)
+					.selectAll("rect")
+					.data(d => [d])
+					.join("rect")
+					.attr("x", d => xSubgroup(d[isGrouped]))
+					.attr("y", d => y(d[yVariable]))
+					.attr("width", xSubgroup.bandwidth())
+					.attr("height", d => y(0) - y(d[yVariable]))
+					.attr("fill", d => groupColorScale(d[isGrouped]))
+					.on("mouseover", (event, d) => {
+						tooltip.style.opacity = 1;
+						tooltip.innerHTML = `<strong>${d[xVariable]} - ${d[isGrouped]}</strong>: ${d[yVariable]}`;
+						d3.select(event.target).style("stroke", "black").style("opacity", 1);
+					})
+					.on("mousemove", (event) => {
+						tooltip.style.left = (event.pageX + 10) + "px";
+						tooltip.style.top = (event.pageY - 20) + "px";
+					})
+					.on("mouseout", (event) => {
+						tooltip.style.opacity = 0;
+						d3.select(event.target).style("stroke", "none").style("opacity", 1);
+					});
 			}
 			
 		} else {
