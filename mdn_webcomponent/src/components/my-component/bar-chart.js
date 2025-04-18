@@ -205,35 +205,7 @@ class BarChart extends HTMLElement {
 				.nice()
 				.range([this.#height - this.margin.bottom, this.margin.top]);
 		}
-		// if (isStacked) {
-		// 	// Prepare aggregated data for stacked chart
-		// 	let result = [];			
-		// 	data.reduce(function(res, value) {
-		// 		if (!res[value[xVariable]]) {
-		// 			res[value[xVariable]] = { x: value[xVariable], y: 0 };
-		// 			result.push(res[value[xVariable]])
-		// 		}
-		// 		res[value[xVariable]].y += value[yVariable] ? parseInt(value[yVariable]) : 0;
-		// 		return res;
-		// 		}, {});
-		// 	if (isHorizontal) {
-		// 		// Horizontal stacked scale
-		// 		x = d3.scaleLinear()
-		// 			.domain([0, d3.max(result, d => d.y)])
-		// 			.range([this.margin.left, this.#width - this.margin.right])
-		// 		y = d3.scaleBand()
-		// 			.domain(result.map(d => d.x))
-		// 			.range([this.margin.top, this.#height - this.margin.bottom])
-		// 			.padding(0.1);
-
-		// 	} else {
-		// 		// Vertical stacked scale
-		// 		y = d3.scaleLinear()
-		// 			.domain([0, d3.max(result, d => d.y)])
-		// 			.range([this.#height - this.margin.bottom, this.margin.top])
-		// 	}
-		// }
-
+		
 		if (isStacked) {
 			let result = [];
 			const grouped = data.reduce((res, value) => {
@@ -267,48 +239,6 @@ class BarChart extends HTMLElement {
 					.range([this.#height - this.margin.bottom, this.margin.top]);
 			}
 		}
-
-		// // Configure X Axis with custom tick formatting
-		// const xAxis = isHorizontal ? d3.axisBottom(x).tickFormat(function(d){return d < 1000000 ? d : d/1000000 +"  M"}) : d3.axisBottom(x).tickFormat(function(d){return d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d});
-		// // Append axes to the SVG
-		// this.#svg.append("g")
-		// 	.attr("transform", `translate(0, ${this.#height - this.margin.bottom})`)
-		// 	.call(xAxis)
-		// 	.selectAll("text")
-		// 	.style("font-size", "10px")
-		// 	// .text(d => truncateLabel(d))
-		
-		// // Configure Y Axis with custom tick formatting
-		// var yAxis = isHorizontal ? d3.axisLeft(y).tickFormat(function(d) { return d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d}) : d3.axisLeft(y).tickFormat(function(d){return d < 1000000 ? d : d/1000000  + "  M"});
-
-		// this.#svg.append("g")
-		// 	.attr("transform", `translate(${this.margin.left}, 0)`)
-		// 	.call(yAxis)
-		// 	.selectAll("text")
-		// 	.style("font-size", "10px")
-		// 	// .text(d => truncateLabel(d))
-		
-		// // Add X axis title
-		// this.#svg.append("text")
-		// 	.attr("class", "x-axis-label")
-		// 	.attr("x", (this.#width - this.margin.left - this.margin.right) / 2)
-		// 	.attr("y", this.#height - this.margin.bottom / 2)
-		// 	.style("text-anchor", "middle")
-		// 	.style("font-size", "18px")
-		// 	.text(isHorizontal ? yVariable : xVariable);
-
-		// // Add Y axis title
-		// this.#svg.append("text")
-		// 	.attr("class", "y-axis-label")
-		// 	.attr("x", -(this.#height - this.margin.top - this.margin.bottom) / 2 )
-		// 	.attr("y", -this.margin.left + 20)
-		// 	.style("text-anchor", "middle")
-		// 	.style("font-size", "18px")
-		// 	.text(isHorizontal ? xVariable : yVariable)
-		// 	.attr("transform", "rotate(-90)");
-
-		// // return [this.#svg, x, y];
-		// return [x, y];
 
 		// X Axis
 		const xAxis = isHorizontal
@@ -369,35 +299,29 @@ class BarChart extends HTMLElement {
 				 "translate(" + this.margin.left + "," + this.margin.top + ")");
 	
 		const isHorizontal = coreData.encoding.direction === "horizontal";
-		const isNormalized = coreData.encoding.stack === "normalize";
-		console.log("Normailize", isNormalized)
-		const isStacked = isNormalized || coreData.encoding.stack === "true";
+		const stackOption = coreData.encoding.stack;
+		const isNormalized = stackOption === "normalize";
+		const isStacked = stackOption === true || isNormalized;
+		const isGrouped = stackOption === false;
 
-		// const isGrouped = coreData.encoding.find(element => element.xOffset)?.xOffset.field;
-	
-		// const xVariable = coreData.encoding.find(element => element.x)?.x.field;
-		// const yVariable = coreData.encoding.find(element => element.y)?.y.field;
-			
-		const isGrouped = coreData.encoding.stack === "false";
 		const xVariable = coreData.encoding.x?.field;
 		const yVariable = coreData.encoding.y?.field;
-
-		// const xVariableType = coreData.encoding.find(element => element.x)?.x.type;
-		// const yVariableType = coreData.encoding.find(element => element.y)?.y.type;
 	
 		this.xVariable = xVariable;
 		this.yVariable = yVariable;
 	
 		const colorVariable = coreData.encoding.color?.field;
-		// const colorVariable = coreData.encoding.find(element => element.colors)?.colors.field;
-		const colorRange = coreData.encoding.color?.scale;
+		// let colorRange = coreData.encoding.color?.scale;
+		let colorScaleObj = coreData.encoding.color?.scale;
+		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : null;
+		let colorRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
+		
+		this.colorRange = colorRange;
+		console.log("hasColor", colorDomain)
+
 		const hasColors = data.some(d => d[colorVariable]);
 		const defaultColor = "#cccccc";
 		let uniqueColors = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
-		
-		// if (colorRange && colorRange.length < uniqueColors.length) {
-		// 	console.warn("Warning: colorRange does not contain enough colors for the data! Colors will be repeated.");
-		// }
 		
 		// Color Scale
 		let finalColors;
@@ -416,14 +340,27 @@ class BarChart extends HTMLElement {
 		finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueColors.length);
 		}
 
-		this.colorScale = d3.scaleOrdinal()
-			.domain(uniqueColors)
-			.range(finalColors);
+		// this.colorScale = d3.scaleOrdinal()
+		// 	.domain(uniqueColors)
+		// 	.range(finalColors);
+
+		if (colorDomain && colorRange) {
+			this.colorScale = d3.scaleOrdinal()
+			  .domain(colorDomain)
+			  .range(colorRange);
+		  } else {
+			this.colorScale = d3.scaleOrdinal()
+			  .domain(uniqueColors)
+			  .range(finalColors);
+		  }
+		  
 
 
 	
 		if (isStacked) {
 			data = this.fillMissingStackData(data, coreData, xVariable, yVariable);
+		} else if (isGrouped){
+			data = this.fillMissingGroupedData(data, xVariable, yVariable, colorVariable)
 		}
 	
 		const [x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked, isNormalized);
@@ -480,13 +417,29 @@ class BarChart extends HTMLElement {
 	
 		return completeData;
 	}
+	fillMissingGroupedData(data, xVariable, yVariable, colorVariable) {
+		const groupedData = d3.group(data, d => d[xVariable]);
+		const completeData = [];
+	
+		for (const [xVal, entries] of groupedData.entries()) {
+			const validGroups = entries.filter(d => d[yVariable] !== 0);
+			if (validGroups.length > 0) {
+				completeData.push(...validGroups);
+			}
+		}
+		return completeData;
+	}
 	
 
 	drawStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip) {
 		const stackVariable = coreData.encoding.color?.field;
 		const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
-		const stackRange = coreData.encoding.color?.scale;
-	
+		// const stackRange = coreData.encoding.color?.scale;
+		const colorScaleObj = coreData.encoding.color?.scale;
+		const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : null;
+		const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : null;
+
+
 		const stack = d3.stack()
 			.keys(d3.union(data.map(d => d[stackVariable])))
 			.value(([, d], key) => d.get(key)[yVariable])
@@ -506,9 +459,16 @@ class BarChart extends HTMLElement {
 				}
 				return colorRange;
 			  }
+			// const stackColorScale = d3.scaleOrdinal()
+			//   .domain(stackKeys)
+			//   .range(getSafeColors(stackKeys, stackRange, d3.schemeCategory10));
+
 			const stackColorScale = d3.scaleOrdinal()
-			  .domain(stackKeys)
-			  .range(getSafeColors(stackKeys, stackRange, d3.schemeCategory10));
+				.domain(stackDomain || stackKeys)
+				.range(getSafeColors(stackDomain || stackKeys, stackRange, d3.schemeCategory10)
+			);
+
+
 			// const stackColorScale = d3.scaleOrdinal()
 			// .domain(stackKeys)
 			// .range(stackRange && stackRange.length > 0
@@ -556,7 +516,10 @@ class BarChart extends HTMLElement {
 	drawNormalizedStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip) {
 		const stackVariable = coreData.encoding.color?.field;
 		const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
-	
+		const colorScaleObj = coreData.encoding.color?.scale;
+		const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : null;
+		const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : null;
+
 		// Normalize the data -> sum of each group must be 100!
 		const grouped = d3.group(data, d => d[xVariable]);
 		const normalizedData = [];
@@ -573,14 +536,15 @@ class BarChart extends HTMLElement {
 				});
 			});
 		}
-	
+		
+		
 		// Stack the data
 		const stackedData = d3.stack()
 			.keys(stackKeys)
 			.value(([, d], key) => d.get(key)?.[yVariable] || 0)
 			(d3.index(normalizedData, d => d[xVariable], d => d[stackVariable]));
-		
-		const colorRange = coreData.encoding.color?.scale;
+
+		// const colorRange = coreData.encoding.color?.scale;
 		function getSafeColors(domain, colorRange, defaultColors) {
 			if (!colorRange || colorRange.length === 0) {
 			  return defaultColors || d3.schemeCategory10;
@@ -596,8 +560,8 @@ class BarChart extends HTMLElement {
 			return colorRange;
 		  }
 		const stackColorScale = d3.scaleOrdinal()
-			.domain(stackKeys)
-			.range(getSafeColors(stackKeys, colorRange, d3.schemeCategory10));
+			.domain(stackDomain || stackKeys)
+			.range(getSafeColors(stackDomain || stackKeys, stackRange, d3.schemeCategory10));
 	
 		this.renderStackLegend(stackKeys, stackColorScale);
 	
@@ -639,49 +603,67 @@ class BarChart extends HTMLElement {
 	
 	
 	drawGroupedChart(data, coreData, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, defaultColor, tooltip) {
-		// Get the subgroups
 		const groupVariable = coreData.encoding.color?.field;
 		const subgroups = [...new Set(data.map(d => d[groupVariable]))];
+		const groups = [...new Set(data.map(d => d[xVariable]))];
+		
 
-		// const groupColorScale = d3.scaleOrdinal()
-		// 	.domain(subgroups)
-		// 	.range(colorRange && colorRange.length === subgroups.length ? colorRange : d3.schemeCategory10);
+		// Create scale for main group (x0, y0)
+		const x0 = isHorizontal ? null : d3.scaleBand()
+			.domain(groups)
+			.range([this.margin.left, this.#width - this.margin.right])
+			.padding(0.2);
+	
+		const y0 = isHorizontal ? d3.scaleBand()
+			.domain(groups)
+			.range([this.margin.top, this.#height - this.margin.bottom])
+			.padding(0.2) : null;
+	
+		// Create scale for subgroups
+		const subgroupScale = d3.scaleBand()
+			.domain(subgroups)
+			.range(isHorizontal ? [0, y0.bandwidth()] : [0, x0.bandwidth()])
+			.padding(0.05);
+	
+		// Group data by main group
+		const groupedData = d3.groups(data, d => d[xVariable]);
 
-			// scaleBand for groups in each row
-			const Subgroup = d3.scaleBand()
-				.domain(subgroups)
-				.range(isHorizontal ? [0, y.bandwidth()] : [0, x.bandwidth()])
-				.padding(0.05);
-
-			this.#svg.append("g")
-				.selectAll("g")
-				.data(data)
-				.join("g")
-				.attr("transform", d => isHorizontal ? `translate(0, ${y(d[xVariable])})` : `translate(${x(d[xVariable])}, 0)`)
-				.selectAll("rect")
-				.data(d => [d])
-				.join("rect")
-				.attr("x", isHorizontal ? x(0) : d => Subgroup(d[groupVariable]))
-				.attr("y", isHorizontal ? d => Subgroup(d[groupVariable]) : d => y(d[yVariable]))
-				.attr("height", isHorizontal ? Subgroup.bandwidth() : d =>  y(0) - y(d[yVariable]))
-				.attr("width", isHorizontal ? d => x(d[yVariable]) - x(0) : Subgroup.bandwidth)
-				// .attr("fill", d => groupColorScale(d[groupVariable]))
-				// .attr("fill", d => this.colorScale(d[groupVariable]))
-				.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
-				.on("mouseover", (event, d) => {
-					tooltip.style.opacity = 1;
-					tooltip.innerHTML = `${xVariable}: ${d[xVariable]}<br>${groupVariable}: ${d[groupVariable]}<br>${yVariable}: ${d[yVariable]}`;
-					d3.select(event.target).style("stroke", "black").style("opacity", 1);
-				})
-				.on("mousemove", (event) => {
-					tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
-                	tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
-				})
-				.on("mouseleave", (event) => {
-					tooltip.style.opacity = 0;
-					d3.select(event.target).style("stroke", "none").style("opacity", 1);
-				});
+		this.#svg.append("g")
+			.selectAll("g")
+			.data(groupedData)
+			.join("g")
+			.attr("transform", ([group]) =>
+				isHorizontal
+					? `translate(0, ${y0(group)})`
+					: `translate(${x0(group)}, 0)`
+			)
+			.selectAll("rect")
+			.data(([, values]) => {
+				console.log("Bar Values:", values);
+				return values;
+			})
+			.join("rect")
+			.attr("x", isHorizontal ? x(0) : d => subgroupScale(d[groupVariable]))
+			.attr("y", isHorizontal ? d => subgroupScale(d[groupVariable]) : d => y(d[yVariable]))
+			.attr("height", isHorizontal ? subgroupScale.bandwidth() : d => y(0) - y(d[yVariable]))
+			.attr("width", isHorizontal ? d => x(d[yVariable]) - x(0) : subgroupScale.bandwidth())
+			.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
+			.on("mouseover", (event, d) => {
+				tooltip.style.opacity = 1;
+				tooltip.innerHTML = `${xVariable}: ${d[xVariable]}<br>${groupVariable}: ${d[groupVariable]}<br>${yVariable}: ${d[yVariable]}`;
+				d3.select(event.target).style("stroke", "black").style("opacity", 1);
+			})
+			.on("mousemove", (event) => {
+				tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
+			})
+			.on("mouseleave", (event) => {
+				tooltip.style.opacity = 0;
+				d3.select(event.target).style("stroke", "none").style("opacity", 1);
+			});
 	}
+	
+	
 
 	drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, defaultColor, tooltip) {
 		this.#svg.append("g")
