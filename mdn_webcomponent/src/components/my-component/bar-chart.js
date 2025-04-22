@@ -180,30 +180,127 @@ class BarChart extends HTMLElement {
 
 
 	// Function to draw Axes based on provided data
-	drawAxis(data, xVariable, yVariable, isHorizontal=false, isStacked=false, isNormalized = false, maxLabelLength=5) 
+	drawAxis(data, xVariable, yVariable, isHorizontal=false, isStacked=false, isNormalized = false, scaleType, maxLabelLength=5) 
 	{
 		// Define scales based on direction
 		let x, y;
-		if (isHorizontal) {
-			// For horizontal bar chart: x is linear (value), y is categorical
-			x = d3.scaleLinear()
-				.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
-				.range([this.margin.left, this.#width - this.margin.right]);
+		// Default y-scale
+		console.log(scaleType?.type)
+		let yScaleType = scaleType?.type || "linear";
+		let exponent = scaleType?.exponent || 1;
+		console.log("YScaleType", yScaleType, exponent)
 
+		
+		// if (isHorizontal) {
+		// 	// For horizontal bar chart: x is linear (value), y is categorical
+		// 	x = d3.scaleLinear()
+		// 		.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
+		// 		.range([this.margin.left, this.#width - this.margin.right]);
+
+		// 	y = d3.scaleBand()
+		// 		.domain(data.map(d => d[xVariable]))
+		// 		.range([this.margin.top, this.#height - this.margin.bottom])
+		// 		.padding(0.1);
+		// } else {
+		// 	// For vertical bar chart: x is categorical, y is linear (value)
+		// 	x = d3.scaleBand()
+		// 		.domain(data.map(d => d[xVariable]))
+		// 		.range([this.margin.left, this.#width - this.margin.right])
+		// 		.padding(0.3);
+		// 	y = d3.scaleLinear()
+		// 		.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
+		// 		.nice()
+		// 		.range([this.#height - this.margin.bottom, this.margin.top]);
+		// }
+
+		// if (isHorizontal) {
+		// 	// For horizontal bar chart: x is linear (value), y is categorical
+		// 	// x = d3.scaleLinear()
+		// 	// 	.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
+		// 	// 	.range([this.margin.left, this.#width - this.margin.right]);
+		// 	if (yScaleType === "pow") {
+		// 		x = d3.scalePow()
+		// 		.exponent(exponent)
+		// 		.domain([0, d3.max(data, d => +d[yVariable])])
+		// 		.range([this.margin.left, this.#width - this.margin.right]);
+		// 	} else {
+		// 		x = d3.scaleLinear()
+		// 		.domain([0, d3.max(data, d => +d[yVariable])])
+		// 		.nice()
+		// 		.range([this.margin.left, this.#width - this.margin.right]);
+		// 	}
+
+		// 	y = d3.scaleBand()
+		// 		.domain(data.map(d => d[xVariable]))
+		// 		.range([this.margin.top, this.#height - this.margin.bottom])
+		// 		.padding(0.1);
+		// } else {
+		// 	// For vertical bar chart: x is categorical, y is linear (value)
+		// 	x = d3.scaleBand()
+		// 		.domain(data.map(d => d[xVariable]))
+		// 		.range([this.margin.left, this.#width - this.margin.right])
+		// 		.padding(0.3);
+		// 	// y = d3.scaleLinear()
+		// 	// 	.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
+		// 	// 	.nice()
+		// 	// 	.range([this.#height - this.margin.bottom, this.margin.top]);
+
+		// 	if (yScaleType === "pow") {
+		// 		y = d3.scalePow()
+		// 		.exponent(exponent)
+		// 		.domain([0, d3.max(data, d => +d[yVariable])])
+		// 		.range([this.#height - this.margin.bottom, this.margin.top]);
+		// 	} else {
+		// 		y = d3.scaleLinear()
+		// 		.domain([0, d3.max(data, d => +d[yVariable])])
+		// 		.nice()
+		// 		.range([this.#height - this.margin.bottom, this.margin.top]);
+		// 	}
+		// }
+		
+		if (isHorizontal) {
+			if (yScaleType === "log") {
+				x = d3.scaleLog()
+					.base(10)
+					.domain([1, d3.max(data, d => +d[yVariable])]) // domain phải > 0
+					.range([this.margin.left, this.#width - this.margin.right]);
+			} else if (yScaleType === "pow") {
+				x = d3.scalePow()
+					.exponent(exponent)
+					.domain([0, d3.max(data, d => +d[yVariable])])
+					.range([this.margin.left, this.#width - this.margin.right]);
+			} else {
+				x = d3.scaleLinear()
+					.domain([0, d3.max(data, d => +d[yVariable])])
+					.nice()
+					.range([this.margin.left, this.#width - this.margin.right]);
+			}
 			y = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
 				.range([this.margin.top, this.#height - this.margin.bottom])
 				.padding(0.1);
 		} else {
-			// For vertical bar chart: x is categorical, y is linear (value)
 			x = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
 				.range([this.margin.left, this.#width - this.margin.right])
 				.padding(0.3);
-			y = d3.scaleLinear()
-				.domain([0, d3.max(data, d => parseInt(d[yVariable]))])
-				.nice()
-				.range([this.#height - this.margin.bottom, this.margin.top]);
+		
+			if (yScaleType === "log") {
+				y = d3.scaleLog()
+					.base(10)
+					.domain([1, d3.max(data, d => +d[yVariable])])
+					.range([this.#height - this.margin.bottom, this.margin.top]);
+			} else if (yScaleType === "pow") {
+				y = d3.scalePow()
+					.exponent(exponent)
+					.domain([0, d3.max(data, d => +d[yVariable])])
+					.range([this.#height - this.margin.bottom, this.margin.top]);
+			} else {
+				y = d3.scaleLinear()
+					.domain([0, d3.max(data, d => +d[yVariable])])
+					.nice()
+					.range([this.#height - this.margin.bottom, this.margin.top]);
+			}
 		}
 		
 		if (isStacked) {
@@ -217,32 +314,131 @@ class BarChart extends HTMLElement {
 				return res;
 			}, {});
 	
+			let maxY = d3.max(result, d => d.y)
 			if (isNormalized) {
 				// Normalize total y to 1
 				result.forEach(d => { d.y = d.y / d3.max(result, d => d.y); });
+				maxY = 1;
 			}
 	
-			const maxY = isNormalized ? 1 : d3.max(result, d => d.y);
+			// const maxY = isNormalized ? 1 : d3.max(result, d => d.y);
 	
+			// if (isHorizontal) {
+			// 	x = d3.scaleLinear()
+			// 		.domain([0, maxY])
+			// 		.range([this.margin.left, this.#width - this.margin.right]);
+	
+			// 	y = d3.scaleBand()
+			// 		.domain(result.map(d => d.x))
+			// 		.range([this.margin.top, this.#height - this.margin.bottom])
+			// 		.padding(0.1);
+			// } else {
+			// 	y = d3.scaleLinear()
+			// 		.domain([0, maxY])
+			// 		.range([this.#height - this.margin.bottom, this.margin.top]);
+			// }
+			// const maxY = isNormalized ? 1 : d3.max(result, d => d.y);
+
+			// if (isHorizontal) {
+			// 	if (yScaleType === "pow") {
+			// 		x = d3.scalePow()
+			// 			.exponent(exponent)
+			// 			.domain([0, maxY])
+			// 			.range([this.margin.left, this.#width - this.margin.right]);
+			// 	} else {
+			// 		x = d3.scaleLinear()
+			// 			.domain([0, maxY])
+			// 			.range([this.margin.left, this.#width - this.margin.right]);
+			// 	}
+
+			// 	y = d3.scaleBand()
+			// 		.domain(result.map(d => d.x))
+			// 		.range([this.margin.top, this.#height - this.margin.bottom])
+			// 		.padding(0.1);
+			// } else {
+			// 	if (yScaleType === "pow") {
+			// 		y = d3.scalePow()
+			// 			.exponent(exponent)
+			// 			.domain([0, maxY])
+			// 			.range([this.#height - this.margin.bottom, this.margin.top]);
+			// 	} else {
+			// 		y = d3.scaleLinear()
+			// 			.domain([0, maxY])
+			// 			.range([this.#height - this.margin.bottom, this.margin.top]);
+			// 	}
+			// }
+
 			if (isHorizontal) {
-				x = d3.scaleLinear()
-					.domain([0, maxY])
-					.range([this.margin.left, this.#width - this.margin.right]);
-	
+				if (yScaleType === "log") {
+					x = d3.scaleLog()
+						.base(10)
+						.domain([1, maxY])
+						.range([this.margin.left, this.#width - this.margin.right]);
+				} else if (yScaleType === "pow") {
+					x = d3.scalePow()
+						.exponent(exponent)
+						.domain([0, maxY])
+						.range([this.margin.left, this.#width - this.margin.right]);
+				} else {
+					x = d3.scaleLinear()
+						.domain([0, maxY])
+						.range([this.margin.left, this.#width - this.margin.right]);
+				}
 				y = d3.scaleBand()
 					.domain(result.map(d => d.x))
 					.range([this.margin.top, this.#height - this.margin.bottom])
 					.padding(0.1);
 			} else {
-				y = d3.scaleLinear()
-					.domain([0, maxY])
-					.range([this.#height - this.margin.bottom, this.margin.top]);
+				if (yScaleType === "log") {
+					y = d3.scaleLog()
+						.base(10)
+						.domain([1, maxY])
+						.range([this.#height - this.margin.bottom, this.margin.top]);
+				} else if (yScaleType === "pow") {
+					y = d3.scalePow()
+						.exponent(exponent)
+						.domain([0, maxY])
+						.range([this.#height - this.margin.bottom, this.margin.top]);
+				} else {
+					y = d3.scaleLinear()
+						.domain([0, maxY])
+						.range([this.#height - this.margin.bottom, this.margin.top]);
+				}
 			}
+			
 		}
 
+		// const formatNumber = d => {
+		// 	if (isNormalized) return `${Math.round(d * 100)}%`;
+		// 	if (yScaleType === "log") return d.toExponential(1);
+		// 	if (yScaleType === "pow" && d < 10) return d.toFixed(2);
+		// 	if (d < 1000) return d;
+		// 	if (d < 1_000_000) return (d / 1000).toFixed(1) + " K";
+		// 	return (d / 1_000_000).toFixed(1) + " M";
+		// };
+		
+		
+		// const xAxis = isHorizontal
+		// 	? d3.axisBottom(x).tickFormat(formatNumber)
+		// 	: d3.axisBottom(x).tickFormat(d =>
+		// 		typeof d === "string" && d.length > maxLabelLength
+		// 			? d.slice(0, maxLabelLength) + "..."
+		// 			: d
+		// 	);
+
+		// const yAxis = isHorizontal
+		// 	? d3.axisLeft(y).tickFormat(d =>
+		// 		typeof d === "string" && d.length > maxLabelLength
+		// 			? d.slice(0, maxLabelLength) + "..."
+		// 			: d
+		// 	)
+		// 	: d3.axisLeft(y).tickFormat(formatNumber);
+
+
+			
 		// X Axis
 		const xAxis = isHorizontal
-		? d3.axisBottom(x).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"))
+		? d3.axisBottom(x).ticks(5).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"))
 		: d3.axisBottom(x).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d);
 
 		this.#svg.append("g")
@@ -254,7 +450,7 @@ class BarChart extends HTMLElement {
 		// Y Axis
 		const yAxis = isHorizontal
 			? d3.axisLeft(y).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d)
-			: d3.axisLeft(y).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"));
+			: d3.axisLeft(y).ticks(5).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"));
 
 		this.#svg.append("g")
 			.attr("transform", `translate(${this.margin.left}, 0)`)
@@ -303,6 +499,9 @@ class BarChart extends HTMLElement {
 		const isNormalized = stackOption === "normalize";
 		const isStacked = stackOption === true || isNormalized;
 		const isGrouped = stackOption === false;
+		
+		const scaleType = coreData.encoding.y?.scale; // Scale Type
+		console.log("ScaleType", scaleType)
 
 		const xVariable = coreData.encoding.x?.field;
 		const yVariable = coreData.encoding.y?.field;
@@ -313,16 +512,22 @@ class BarChart extends HTMLElement {
 		const colorVariable = coreData.encoding.color?.field;
 		// let colorRange = coreData.encoding.color?.scale;
 		let colorScaleObj = coreData.encoding.color?.scale;
-		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : null;
+		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
+		
 		let colorRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
 		
 		this.colorRange = colorRange;
-		console.log("hasColor", colorDomain)
+
 
 		const hasColors = data.some(d => d[colorVariable]);
 		const defaultColor = "#cccccc";
 		let uniqueColors = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
+		console.log("uniqueColor", uniqueColors)
 		
+		// console.log("colordomain", typeof(colorDomain))
+		if (!colorDomain.every(num => uniqueColors.includes(num))) {
+			console.warn(`Color domain is not matched`)
+		} 
 		// Color Scale
 		let finalColors;
 
@@ -363,9 +568,9 @@ class BarChart extends HTMLElement {
 			data = this.fillMissingGroupedData(data, xVariable, yVariable, colorVariable)
 		}
 	
-		const [x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked, isNormalized);
-		console.log("aaaaaaa", this.#svg)
+		const [x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked, isNormalized, scaleType);
 		
+
 		if (isStacked && isNormalized) {
 			this.drawNormalizedStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip);
 		} else if (isStacked) {
@@ -673,8 +878,28 @@ class BarChart extends HTMLElement {
 			// Set position and size based on chart orientation
 			.attr(isHorizontal ? "x" : "y", d => isHorizontal ? x(0) + 0.5 : y(d[yVariable]))
             .attr(isHorizontal ? "y" : "x", d => isHorizontal ? y(d[xVariable]) :  x(d[xVariable]))
-            .attr(isHorizontal ? "width" : "height", d => isHorizontal ? x(d[yVariable]) - x(0) : y(0) - y(d[yVariable]))
-            .attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth())
+            // .attr(isHorizontal ? "width" : "height", d => isHorizontal ? x(d[yVariable]) - x(0) : y(0) - y(d[yVariable]))
+			// .attr(isHorizontal ? "width" : "height", d => {
+			// 	console.log("Y value:", d[yVariable], "Mapped:", y(d[yVariable]));
+			// 	return y(0) - y(d[yVariable]);
+			// })
+			.attr(isHorizontal ? "width" : "height", d => {
+				if (isHorizontal) {
+					const xVal = x(d[yVariable]);
+					if (isNaN(xVal)) return 0;
+					const xZero = x.range()[0];
+					return xVal - xZero;
+				} else {
+					const yVal = y(d[yVariable]);
+					if (isNaN(yVal)) return 0;
+					const yZero = y.range()[0]; 
+					return yZero - yVal;
+				}
+			})
+			
+			
+			
+			.attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth())
 			// Set bar color using color variable or fallback color
 			.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
 			// Tooltip mouse events
