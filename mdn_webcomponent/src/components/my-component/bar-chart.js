@@ -524,40 +524,70 @@ class BarChart extends HTMLElement {
 		let uniqueColors = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
 		console.log("uniqueColor", uniqueColors)
 		
-		// console.log("colordomain", typeof(colorDomain))
-		if (!colorDomain.every(num => uniqueColors.includes(num))) {
-			console.warn(`Color domain is not matched`)
-		} 
-		// Color Scale
+		// // console.log("colordomain", typeof(colorDomain))
+		// if (!colorDomain.every(num => uniqueColors.includes(num))) {
+		// 	console.warn(`Color domain is not matched`)
+		// } 
+		// // Color Scale
+		// let finalColors;
+
+		// if (colorRange && !isStacked) {
+		// if (colorRange.length < uniqueColors.length) {
+		// 	console.warn(`Color range (${colorRange.length}) is fewer than unique colors (${uniqueColors.length}). Colors will repeat.`);
+		// 	finalColors = uniqueColors.map((_, i) => colorRange[i % colorRange.length]);
+		// } else if (colorRange.length > uniqueColors.length) {
+		// 	console.warn(`Color range (${colorRange.length}) is more than unique colors (${uniqueColors.length}). Extra colors will be ignored.`);
+		// 	finalColors = colorRange.slice(0, uniqueColors.length);
+		// } else {
+		// 	finalColors = colorRange;
+		// }
+		// } else {
+		// finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueColors.length);
+		// }
+		
 		let finalColors;
 
+		// Kiểm tra xem có đủ thông tin về color scale không
 		if (colorRange && !isStacked) {
-		if (colorRange.length < uniqueColors.length) {
-			console.warn(`Color range (${colorRange.length}) is fewer than unique colors (${uniqueColors.length}). Colors will repeat.`);
-			finalColors = uniqueColors.map((_, i) => colorRange[i % colorRange.length]);
-		} else if (colorRange.length > uniqueColors.length) {
-			console.warn(`Color range (${colorRange.length}) is more than unique colors (${uniqueColors.length}). Extra colors will be ignored.`);
-			finalColors = colorRange.slice(0, uniqueColors.length);
-		} else {
-			finalColors = colorRange;
-		}
-		} else {
-		finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueColors.length);
-		}
+			const isValidColorDomain = Array.isArray(colorDomain) && colorDomain.every(d => uniqueColors.includes(d));
+			console.log(isValidColorDomain)
+			if (isValidColorDomain) {
+					// Nếu số màu trong range < số phần tử trong domain, lặp lại
+					if (colorRange.length < colorDomain.length) {
+						console.warn(`Color range (${colorRange.length}) is fewer than color domain (${colorDomain.length}). Colors will repeat.`);
+						finalColors = colorDomain.map((_, i) => colorRange[i % colorRange.length]);
+					} else if (colorRange.length > colorDomain.length) {
+						console.warn(`Color range (${colorRange.length}) is more than color domain (${colorDomain.length}). Extra colors will be ignored.`);
+						finalColors = colorRange.slice(0, colorDomain.length);
+					} else {
+						finalColors = colorRange;
+					}
 
-		// this.colorScale = d3.scaleOrdinal()
-		// 	.domain(uniqueColors)
-		// 	.range(finalColors);
+				} else {
+					console.warn("Color domain is not matched with data. Using default colors.");
+					finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueColors.length);
+				}
+			} else {
+				// Nếu không có colorRange, dùng default color
+				finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueColors.length);
+				
+			}
 
-		if (colorDomain && colorRange) {
-			this.colorScale = d3.scaleOrdinal()
-			  .domain(colorDomain)
-			  .range(colorRange);
-		  } else {
-			this.colorScale = d3.scaleOrdinal()
-			  .domain(uniqueColors)
-			  .range(finalColors);
-		  }
+
+
+		this.colorScale = d3.scaleOrdinal()
+			.domain(uniqueColors)
+			.range(finalColors);
+
+		// if (colorDomain && colorRange) {
+		// 	this.colorScale = d3.scaleOrdinal()
+		// 	  .domain(colorDomain)
+		// 	  .range(colorRange);
+		//   } else {
+		// 	this.colorScale = d3.scaleOrdinal()
+		// 	  .domain(uniqueColors)
+		// 	  .range(finalColors);
+		//   }
 		  
 
 
