@@ -1,6 +1,5 @@
 // const scale_d3 = {'ordinal': d3.scaleOrdinal}
 
-
 //function to convert rgb object to hex color
 function componentToHex(c) {
 	var hex = c.toString(16);
@@ -32,6 +31,238 @@ function hexToRgb(hex) {
 function truncateLabel(label, maxLength = 5) {
 	return label.length > maxLength ? label.slice(0, maxLength) + "..." : label;
 }
+
+// function parseD3ColorScheme(input) {
+// 	const regex = /^([a-zA-Z]+)(\[(\d+)\])?$/;
+// 	const match = input.match(regex);
+
+// 	if (!match) return null;
+
+// 	const rawName = match[1]; // User input, e.g. "BuGn"
+// 	const index = match[3] ? parseInt(match[3], 10) : null;
+
+// 	const interpolateSchemes = Object.keys(d3).filter(k => k.startsWith('interpolate'));
+// 	const colorSchemes = Object.keys(d3).filter(k => k.startsWith('scheme'));
+
+// 	const fullInterpolate = `interpolate${rawName}`;
+// 	const fullScheme = `scheme${rawName}`;
+
+// 	if (interpolateSchemes.includes(fullInterpolate)) {
+// 		return d3[fullInterpolate];
+// 	} else if (colorSchemes.includes(fullScheme)) {
+// 		return index !== null ? d3[fullScheme][index] : d3[fullScheme];
+// 	} else {
+// 		console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
+// 		return null;
+// 	}
+// }
+
+// function parseD3ColorScheme(input) {
+// 	const regex = /^([a-zA-Z0-9]+)(?:\[(\d+)\])?$/;
+// 	const match = input.match(regex);
+
+// 	if (!match) return null;
+
+// 	const rawName = match[1];
+// 	const index = match[2] ? parseInt(match[2], 10) : null;
+
+// 	const fullInterpolate = `interpolate${rawName}`;
+// 	const fullScheme = `scheme${rawName}`;
+
+// 	// Case 1: Continuous interpolator
+// 	if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
+// 		return {
+// 			type: "interpolate",
+// 			value: d3[fullInterpolate],
+// 			raw: rawName,
+// 		};
+// 	}
+
+// 	// Case 2: Discrete color scheme
+// 	if (fullScheme in d3) {
+// 		const scheme = d3[fullScheme];
+
+// 		if (Array.isArray(scheme)) {
+// 			return {
+// 				type: "scheme",
+// 				value: scheme,
+// 				raw: rawName,
+// 			};
+// 		} else if (typeof scheme === "object" && index !== null) {
+// 			return {
+// 				type: "scheme",
+// 				value: scheme[index] || null,
+// 				raw: rawName,
+// 			};
+// 		} else {
+// 			console.warn(`Index required for scheme: ${fullScheme}`);
+// 			return null;
+// 		}
+// 	}
+
+// 	console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
+// 	return null;
+// }
+
+function parseD3ColorScheme(input) {
+	const regex = /^([a-zA-Z0-9]+)(?:\[(\d+)\])?$/;
+	const match = input.match(regex);
+
+	if (!match) return null;
+
+	const rawName = match[1];
+	const index = match[2] ? parseInt(match[2], 10) : null;
+
+	const fullInterpolate = `interpolate${rawName}`;
+	const fullScheme = `scheme${rawName}`;
+
+	// // Nếu có index -> Ưu tiên dùng scheme
+	// if (index !== null && fullScheme in d3) {
+	// 	const scheme = d3[fullScheme];
+	// 	if (Array.isArray(scheme)) {
+	// 		// Một số scheme như schemeCategory10 là mảng cố định không có index
+	// 		return {
+	// 			type: "scheme",
+	// 			value: scheme,
+	// 			raw: rawName,
+	// 		};
+	// 	} else if (typeof scheme === "object") {
+	// 		return {
+	// 			type: "scheme",
+	// 			value: scheme[index] || null,
+	// 			raw: rawName,
+	// 		};
+	// 	}
+	// }
+
+	// // Nếu không có index, thử interpolate
+	// if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
+	// 	return {
+	// 		type: "interpolate",
+	// 		value: d3[fullInterpolate],
+	// 		raw: rawName,
+	// 	};
+	// }
+
+	// // Nếu không có interpolate nhưng có scheme
+	// if (fullScheme in d3) {
+	// 	const scheme = d3[fullScheme];
+	// 	if (Array.isArray(scheme)) {
+	// 		return {
+	// 			type: "scheme",
+	// 			value: scheme,
+	// 			raw: rawName,
+	// 		};
+	// 	} else if (typeof scheme === "object" && index !== null) {
+	// 		return {
+	// 			type: "scheme",
+	// 			value: scheme[index] || null,
+	// 			raw: rawName,
+	// 		};
+	// 	}
+	// }
+
+	// Check index, use d3.scheme with index (Ex: d3.schemeReds[5])
+	if (index !== null && fullScheme in d3) {
+		const scheme = d3[fullScheme];
+		if (Array.isArray(scheme)) {
+			// Check scheme[index] is exist
+			const schemeWithIndex = scheme[index];
+			if (Array.isArray(schemeWithIndex)) {
+				return {
+					type: "scheme",
+					value: schemeWithIndex,
+					raw: rawName,
+				};
+			}
+		} else if (typeof scheme === "object") {
+			return {
+				type: "scheme",
+				value: scheme[index] || null,
+				raw: rawName,
+			};
+		}
+	}
+
+	// If index is not exist, use interpolate (Ex: d3.interpolateReds)
+	if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
+		return {
+			type: "interpolate",
+			value: d3[fullInterpolate],
+			raw: rawName,
+		};
+	}
+
+	// If it's not interpolate but a scheme attached to an index (Ex: d3.schemeCategory10)
+	if (fullScheme in d3) {
+		const scheme = d3[fullScheme];
+		if (Array.isArray(scheme)) {
+			return {
+				type: "scheme",
+				value: scheme,
+				raw: rawName,
+			};
+		}
+	}
+
+	console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
+	return null;
+}
+
+
+// function parseD3ColorScheme(input) {
+// 	const regex = /^([a-zA-Z0-9]+)(?:\[(\d+)\])?$/;
+// 	const match = input.match(regex);
+  
+// 	if (!match) return null;
+  
+// 	const rawName = match[1];
+// 	const index = match[2] ? parseInt(match[2], 10) : null;
+  
+// 	const fullInterpolate = `interpolate${rawName}`;
+// 	const fullScheme = `scheme${rawName}`;
+  
+// 	// Case 1: Color scheme (e.g. schemeBlues, schemeReds, etc.)
+// 	if (fullScheme in d3) {
+// 	  const scheme = d3[fullScheme];
+  
+// 	  // Nếu scheme là một object (như d3.schemeBlues), cần kiểm tra index
+// 	  if (typeof scheme === 'object') {
+// 		if (index !== null && scheme[index]) {
+// 		  return {
+// 			type: "scheme",
+// 			value: scheme[index], // Trả về màu tương ứng với index
+// 			raw: `${rawName}[${index}]`,
+// 		  };
+// 		} else {
+// 		  console.warn(`[Color Error] scheme ${rawName}[${index}] không tồn tại. Các giá trị hợp lệ cho ${rawName} là ${Object.keys(scheme).join(", ")}`);
+// 		  return null;
+// 		}
+// 	  }
+  
+// 	  // Nếu scheme là mảng, trả về giá trị mảng đó (mặc định không có index)
+// 	  return {
+// 		type: "scheme",
+// 		value: scheme,
+// 		raw: rawName,
+// 	  };
+// 	}
+  
+// 	// Case 2: Continuous interpolator
+// 	if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
+// 	  return {
+// 		type: "interpolate",
+// 		value: d3[fullInterpolate],
+// 		raw: rawName,
+// 	  };
+// 	}
+  
+// 	console.warn(`D3 không có scheme hoặc interpolate với tên "${rawName}".`);
+// 	return null;
+//   }
+  
+
+
 
 class BarChart extends HTMLElement {
 	#dataValue = '';
@@ -367,18 +598,80 @@ class BarChart extends HTMLElement {
 		this.yVariable = yVariable;
 	
 		const colorVariable = coreData.encoding.color?.field;
-		// let colorRange = coreData.encoding.color?.scale;
-		let colorScaleObj = coreData.encoding.color?.scale;
-		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
-		
-		let colorRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
-		
-		this.colorRange = colorRange;
-
 
 		const hasColors = data.some(d => d[colorVariable]);
 		const defaultColor = "#cccccc";
 		let uniqueColors = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
+		
+		// let colorRange = coreData.encoding.color?.scale;
+		let colorScaleObj = coreData.encoding.color?.scale;
+		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
+		
+		// let colorRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
+		console.log("Blues", d3.schemeReds);
+
+		let rawColorRange = colorScaleObj?.range;
+		let colorRange;
+		console.log("rawColor", rawColorRange)
+		if (typeof rawColorRange === 'string') {
+			// colorRange = parseD3ColorScheme(rawColorRange);
+			const parsedColor = parseD3ColorScheme(rawColorRange);
+			if (parsedColor) {
+				if (parsedColor.type === "interpolate") {
+					const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
+					colorRange = d3.quantize(parsedColor.value, domainSize);
+					console.info(`[Color Info] Using D3 interpolator "${parsedColor.raw}", quantizing it to ${domainSize} steps.`);
+
+				} else if (parsedColor.type === "scheme") {
+					colorRange = parsedColor.value;
+				}
+			}
+
+			console.log("colorRange", colorRange)
+			// Nếu là hàm nội suy thì cần chuyển thành mảng màu
+			if (typeof colorRange === 'function') {
+				const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
+				colorRange = d3.quantize(colorRange, domainSize);
+			}
+		} else if (Array.isArray(rawColorRange)) {
+			colorRange = rawColorRange;
+		} else {
+			colorRange = rawColorRange;
+		}
+
+		
+		this.colorRange = colorRange;
+
+// 		let rawColorRange = colorScaleObj?.range;
+// 		let colorRange;
+// 		console.log("rawColor", rawColorRange);
+// 		if (typeof rawColorRange === 'string') {
+// 		const parsedColor = parseD3ColorScheme(rawColorRange);
+// 		if (parsedColor) {
+// 			if (parsedColor.type === "interpolate") {
+// 			const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
+// 			colorRange = d3.quantize(parsedColor.value, domainSize);
+// 			console.info(`[Color Info] Using D3 interpolator "${parsedColor.raw}", quantizing it to ${domainSize} steps.`);
+// 			} else if (parsedColor.type === "scheme") {
+// 			colorRange = parsedColor.value;
+// 			}
+// 		}
+
+//   console.log("colorRange", colorRange);
+//   // Nếu là hàm nội suy thì cần chuyển thành mảng màu
+//   if (typeof colorRange === 'function') {
+//     const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
+//     colorRange = d3.quantize(colorRange, domainSize);
+//   }
+// } else if (Array.isArray(rawColorRange)) {
+//   colorRange = rawColorRange;
+// } else {
+//   colorRange = rawColorRange;
+// }
+
+// this.colorRange = colorRange;
+
+	
 		
 		let finalColors;
 
@@ -470,8 +763,6 @@ class BarChart extends HTMLElement {
 				.domain(uniqueColors)
 				.range(finalColors);
 		}
-
-
 
 
 		if (isStacked) {
