@@ -2,19 +2,38 @@
 <html dir="ltr" lang="en">
   <head>
     <link rel="icon" href="data:,">
-    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <!-- Folder components/my-component-->
     <script src="components/my-component/window-chart.js"></script>
     <script src="components/my-component/pie-chart.js"></script>
     <script src="components/my-component/bar-chart.js"></script>
     <script src="components/my-component/nodelink-chart.js"></script>
     <script src="components/my-component/map-chart.js"></script>
+    <!-- Folder prototype-->
+    <script src="prototype/pie_chart.js"></script>
+    <script src="prototype/vertical_bar_chart.js"></script>
+    <script src="prototype/group_vertical_bar_chart.js"></script>
+    <script src="prototype/normalized_stacked_bar_chart.js"></script>
+    <script src="prototype/stacked_bar_chart.js"></script>
+    <script src="prototype/choropleth_map.js"></script>
+    <script src="prototype/connection_map.js"></script>
+    <script src="prototype/bubble_map.js"></script>
+    <script src="prototype/hexbin_map.js"></script>
+    <!-- Folder sql-->
+    <script src="sql/pie_data.js"></script>
+    <script src="sql/bar_data.js"></script>
+    <script src="sql/stacked_bar_data.js"></script>
+    <script src="sql/map_data.js"></script>
+    <script src="sql/node_link_data.js"></script>
+
+
     <link rel="stylesheet" href="index.css">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-    <title>MDN Example</title>
+    <title>Internship's Project</title>
   </head>
   <body>
     <div class="container">
@@ -28,413 +47,69 @@
             <label><input type="radio" name="chartType" value="map-chart"> Map Chart</label><br>
             <button id="run">Run</button>
         </div> -->
-        <bar-chart id="barChart1"></bar-chart>
-        <pie-chart id="pieChart"></pie-chart>
-        <nodelink-chart id="nodeLinkChart"></nodelink-chart>
-        <bar-chart id="barChart2"></bar-chart>
-        <bar-chart id="barChart3"></bar-chart>
+
+        <!-- <pie-chart id="pieChart"></pie-chart> -->
+        <!-- <nodelink-chart id="nodeLinkChart"></nodelink-chart> -->
+
+        <bar-chart id="verticalChart"></bar-chart>
+        <bar-chart id="stackedBarChart"></bar-chart>
+        <bar-chart id="normalizedStackedBarChart"></bar-chart>
+        <bar-chart id="groupedVerticalChart"></bar-chart>
+
+        <!-- <map-chart id="choroplethMapData"></map-chart> -->
+        <!-- <map-chart id="connectionMapData"></map-chart> -->
+        <!-- <map-chart id="bubbleMapData"></map-chart> -->
+        <!-- <map-chart id="hexbinMapData"></map-chart> -->
+
     </div>
     <script>
 
-        // Function make query for Pie, BarData
-        async function fetchSPARQLData() {
-            const query = `
-                PREFIX dbpprop: <http://dbpedia.org/property/>
-                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                PREFIX yago: <http://dbpedia.org/class/yago/>
-                PREFIX dbo: <http://dbpedia.org/ontology/>
-                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        // Function to update Chart
+        async function updateCharts() {
 
-                SELECT DISTINCT ?name ?population (SAMPLE(?lang) AS ?randomLang)
-                WHERE {
-                ?country a dbo:Country ;
-                        rdfs:label ?enName ;
-                        dbo:language [ rdfs:label ?lang ] .
-                
-                OPTIONAL { ?country dbpprop:populationEstimate ?popEstimate. }
-                OPTIONAL { ?country dbpprop:populationCensus ?popCensus. }
-                BIND(coalesce(?popEstimate, ?popCensus) AS ?populationRaw)
-                
-                FILTER (
-                    EXISTS { ?country (dbpprop:iso3166code|dbpprop:iso31661Alpha|dbpprop:countryCode) ?code }
-                    || EXISTS { ?country a yago:MemberStatesOfTheUnitedNations }
-                )
-                
-                FILTER(langMatches(lang(?enName), "en"))
-                
-                BIND(
-                    IF(datatype(?populationRaw) = xsd:integer,
-                    ?populationRaw,
-                    xsd:integer(?populationRaw)
-                    ) AS ?population
-                )
-                FILTER(BOUND(?population))
-                
-                BIND(str(?enName) AS ?name)
-                }
-                GROUP BY ?name ?population
-                LIMIT 10
-            `;
-            const endpointUrl = "https://dbpedia.org/sparql";
-            const url = `${endpointUrl}?query=${encodeURIComponent(query)}`;
-            try {
-                const response = await fetch(url, {method: 'GET', headers: { 'Accept': 'application/sparql-results+json' }});
-
-                console.log(response)
-                const text = await response.json();
-                return text.results.bindings;
-            } catch (error) {
-                console.error("Error fetching SPARQL data:", error);
-                return [];
-            }
-        }
-        
-        // Funtion to make query for Node link
-        async function fetchNodeLinkData() {
-            const query = `
-                PREFIX dbo: <http://dbpedia.org/ontology/>
-                PREFIX dbr: <http://dbpedia.org/resource/>
-                PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-                SELECT ?band ?bandName ?member ?memberName WHERE {
-                    ?band dbo:genre dbr:Punk_rock ;
-                        foaf:name ?bandName ;
-                        dbo:bandMember ?member .
-
-                    ?member foaf:name ?memberName .
-
-                    FILTER(langMatches(lang(?bandName), "en") && langMatches(lang(?memberName), "en"))
-                }
-                LIMIT 10
-            `;
-
-            const endpointUrl = "https://dbpedia.org/sparql";
-            const url = `${endpointUrl}?query=${encodeURIComponent(query)}&format=application/json`;
-
-            try {
-                const response = await fetch(url);
-                const jsonData = await response.json();
-                return parseNodeLinkJSON(jsonData);
-            } catch (error) {
-                console.error("Error fetching SPARQL data for node-link:", error);
-                return [];
-            }
-        }
-
-        // Function to parse node-link data from JSON
-        function parseNodeLinkJSON(jsonData) {
-            let nodes = new Map();
-            let links = [];
-
-            for (let result of jsonData.results.bindings) {
-                const bandName = result.bandName.value;
-                const memberName = result.memberName.value;
-
-                if (!nodes.has(bandName)) nodes.set(bandName, { id: nodes.size + 1, name: bandName });
-                if (!nodes.has(memberName)) nodes.set(memberName, { id: nodes.size + 1, name: memberName });
-
-                links.push({
-                    source: nodes.get(bandName).id,
-                    target: nodes.get(memberName).id
-                });
-            }
-
-            return { nodes: Array.from(nodes.values()), links };
-        }
-
-
-        /*** Using chart-selector to transfer data to window-chart***/
-
-        // // Function to update the chart based on user selection
-        // async function updateChart() {
-        //     const selectedChart = document.querySelector('input[name="chartType"]:checked').value;
-
-        //     let chartData;
-        //     if (selectedChart === 'nodelink-chart') {
-        //         chartData = await fetchNodeLinkData(); // Call node-link query
-        //     } else if (selectedChart === 'map-chart') {
-        //         chartData = await fetchMapData(); // Call map query
-        //     } else {
-        //         chartData = await fetchSPARQLData(); // Call bar/pie chart query 
-        //         console.log("data = ", chartData)
-        //     }
-
-        //     if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
-        //         alert("No data retrieved from SPARQL query.");
-        //         return;
-        //     }
-
-        //     // create component window-chart
-        //     let windowChart = document.createElement('window-chart');
-
-        //     // Nodelink Data
-        //     if (selectedChart === 'nodelink-chart') {
-        //         windowChart.setAttribute('data', JSON.stringify(chartData));
-        //     } else if (selectedChart === 'map-chart') {
-        //         windowChart.setAttribute('data', JSON.stringify(chartData));
-        //     // Data structure for barChart
-        //     } else if (selectedChart === 'bar-chart') {
-        //         const barData = {
-        //             description: "Bar chart - Countries with the largest population",
-        //             width: 600,
-        //             height: 600,
-        //             data: [
-        //                 {
-        //                     values: chartData.map(d => ({ x: d.name.value, y: d.population.value, language: d.randomLang.value}))
-        //                 }
-        //             ],
-        //             encoding: [
-        //                 { country: {"field": "x"} },
-
-        //                 { population: {"field": "y"} },
-
-        //                 { color: {"field": "language"} }
-        //             ],
-        //         };
-        //         console.log("bar", JSON.stringify(barData, null, 2)); // Check bar data
-        //         windowChart.setAttribute('data', JSON.stringify(barData));
-        //     } 
-
-        //     else if (selectedChart === 'horizontal-bar-chart') {
-        //         const horizontalData = {
-        //             description: "Bar chart - Countries with the largest population",
-        //             width: 600,
-        //             height: 600,
-        //             data: [
-        //                 {
-        //                     values: chartData.map(d => ({ x: d.name.value, y: d.population.value, language: d.randomLang.value}))
-        //                 }
-        //             ],
-        //             encoding: [
-        //                 { country: {"field": "x"} },
-
-        //                 { population: {"field": "y"} },
-
-        //                 { color: {"field": "language"} }
-        //             ],
-        //         };
-        //         console.log("bar", JSON.stringify(horizontalData, null, 2)); // Check bar data
-        //         windowChart.setAttribute('data', JSON.stringify(horizontalData));
-        //     } 
+            // // Pie Chart
+            // const pieChartData = await fetchPieData();
+            // drawPieChart(pieChartData);
             
-        //     // Data structure for Pie Chart
-        //     else if (selectedChart === 'pie-chart') {
-        //         const pieData = {
-        //             description: "Pie chart - Countries with the largest population",
-        //             width: 600,
-        //             height: 600,
-                    
-        //             data: [
-        //                 {
-        //                     values: chartData.map(d => ({ name: d.name.value, population: d.population.value , language: d.randomLang.value }))
-        //                 },
-        //             ],
-        //             encoding: [
-        //                 { country: {"field": "name"} },
-
-        //                 { population: {"field": "population"} },
-
-        //                 { color: {"field": "language"} }
-        //             ],
-        //         };
-        //         console.log("pie", JSON.stringify(pieData, null, 2)); // Check bar data
-        //         windowChart.setAttribute('data', JSON.stringify(pieData));
-        //     }
-
-        //     windowChart.setAttribute('chart-type', selectedChart);
-        //     document.querySelector(".container").append(windowChart);
-        // }
-
-        
-        // // Attach event listener to the Run button
-        // document.querySelector('#run').addEventListener('click', updateChart);
-
-        /*** Remove chart-selector, transfer data to window-chart***/
-
-        // // Function to update the chart based on user selection
-        // async function updateChart(chartType) {
-        //     let chartData;
-        //     if (chartType === 'nodelink-chart') {
-        //         chartData = await fetchNodeLinkData();
-        //     } else if (chartType === 'map-chart') {
-        //         chartData = await fetchMapData();
-        //     } else {
-        //         chartData = await fetchSPARQLData();
-        //     }
-
-        //     if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
-        //         alert("No data retrieved from SPARQL query.");
-        //         return;
-        //     }
-
-        //     // create component window-chart
-        //     let windowChart = document.createElement('window-chart');
-        //     // let pieChart = document.createElement('pie-chart');
-        //     // let barChart = document.createElement('bar-chart');
-        //     // let horizontalBarChart = document.createElement('horizontal-bar-chart');
-        //     // let nodelinkChart = document.createElement('noddlink-chart');
-
-        //     if (chartType === 'nodelink-chart') {
-        //         windowChart.setAttribute('data', JSON.stringify(chartData));
-        //     } else if (chartType === 'map-chart') {
-        //         windowChart.setAttribute('data', JSON.stringify(chartData));
-        //     } else if (chartType === 'bar-chart') {
-        //         const barData = {
-        //             description: "Bar chart - Countries with the largest population",
-        //             width: 400,
-        //             height: 400,
-        //             direction: "vertical", // Xác định hướng
-        //             data: [
-        //                 {
-        //                     values: chartData.map(d => ({
-        //                         x: d.name.value,
-        //                         y: d.population.value,
-        //                         language: d.randomLang.value
-        //                     }))
-        //                 }
-        //             ],
-        //             encoding: [
-        //                 { country: { "field": "x" } },
-        //                 { population: { "field": "y" } },
-        //                 { color: { "field": "language" } }
-        //             ],
-        //         };
-        //         windowChart.setAttribute('data', JSON.stringify(barData));
-        //     } else if (chartType === 'pie-chart') {
-        //         const pieData = {
-        //             description: "Pie chart - Countries with the largest population",
-        //             width: 400,
-        //             height: 400,
-        //             data: [
-        //                 {
-        //                     values: chartData.map(d => ({ name: d.name.value, population: d.population.value , language: d.randomLang.value }))
-        //                 },
-        //             ],
-        //             encoding: [
-        //                 { country: {"field": "name"} },
-        //                 { population: {"field": "population"} },
-        //                 { color: {"field": "language"} }
-        //             ],
-        //         };
-        //         windowChart.setAttribute('data', JSON.stringify(pieData));
-        //     }
-
-        //     windowChart.setAttribute('chart-type', chartType);
-        //     document.querySelector(".container").append(windowChart);
-        // }
-
-        // // Automatically call updateChart for each chart type when the page loads
-        // window.onload = async function() {
-        //     const chartTypes = ['pie-chart', 'bar-chart', 'nodelink-chart'];
-        //     for (const chartType of chartTypes) {
-        //         await updateChart(chartType);
-        //     }
-        // }
-        
-
-        window.onload = async function () {
-            const chartData = await fetchSPARQLData();
-            const nodeLinkData = await fetchNodeLinkData();
-
-            function updateChartData(chartId, data) {
-                const chartElement = document.getElementById(chartId);
-                if (chartElement) {
-                    chartElement.setAttribute("data", JSON.stringify(data));
-                }
-            }
-
-            if (chartData.length > 0) {
-                const pieData = {
-                    description: "Pie chart - Countries with the largest population",
-                    width: 400,
-                    height: 400,
-                    data: [{ values: chartData.map(d => ({ name: d.name.value, population: d.population.value, language: d.randomLang.value })) }],
-                    encoding: [
-                        { id: { "field": "name" } },
-                        { theta: { "field": "population" } },
-                        // { color: { "field": "language" } }
-                    ]
-                };
-                console.log("PIE", JSON.stringify(pieData, null, 2));
-
-                const barData1 = {
-                    description: "Bar chart 1 - Vertical Bar Chart",
-                    width: 400,
-                    height: 400,
-                    direction: "vertical",
-                    data: [{ values: chartData.map(d => ({ 
-                        country: d.name.value, 
-                        population: d.population.value, 
-                        language: d.randomLang.value,
-                        c: Math.random() < 0.5 ? 0 : 1})) }],
-                    encoding: [
-                        { x: { "field": "country" } },
-                        { y: { "field": "population" } },
-                        // { color: { "field": "language" } },
-                        { stacked: { "field": "c"}}
-                    ]
-                };
-                console.log("BAR-1", JSON.stringify(barData1, null, 2));
-
-                const barData2 = {
-                    description: "Bar chart 2 - Horizontal Bar Chart",
-                    width: 400,
-                    height: 400,
-                    direction: "horizontal",
-                    data: [{ values: chartData.map(d => ({ 
-                        country: d.name.value, 
-                        population: d.population.value, 
-                        language: d.randomLang.value,
-                        c: Math.random() < 0.5 ? 0 : 1})) }],
-                    encoding: [
-                        { x: { "field": "country" } },
-                        { y: { "field": "population" } },
-                        { color: { "field": "language" } },
-                        // { stacked: { "field": "c"}}
-                    ]
-                };
-                console.log("BAR-2", JSON.stringify(barData2, null, 2));
-
-                const barData3 = {
-                    description: "Bar chart 3 - Stack Bar Chart",
-                    width: 400,
-                    height: 400,
-                    stack: "true",
-                    direction: "vertical",
-                    data: [{values: [
-                        {"country": "A", "population": 28, "c": 0}, {"country": "A", "population": 55, "c": 1},
-                        {"country": "B", "population": 43, "c": 0}, {"country": "B", "population": 91, "c": 1},
-                        {"country": "C", "population": 81, "c": 0}, {"country": "C", "population": 53, "c": 1},
-                        {"country": "D", "population": 19, "c": 0}, {"country": "D", "population": 87, "c": 1},
-                        {"country": "E", "population": 52, "c": 0}, {"country": "E", "population": 48, "c": 1},
-                        {"country": "F", "population": 24, "c": 0}, {"country": "F", "population": 49, "c": 1},
-                        {"country": "G", "population": 87, "c": 0}, {"country": "G", "population": 66, "c": 1},
-                        {"country": "H", "population": 17, "c": 0}, {"country": "H", "population": 27, "c": 1},
-                        {"country": "I", "population": 68, "c": 0}, {"country": "I", "population": 16, "c": 1},
-                        {"country": "K", "population": 49, "c": 0}, {"country": "K", "population": 15, "c": 1}
-                    ]}],
-                    encoding: [
-                        { x: { "field": "country" } },
-                        { y: { "field": "population" } },
-                        { stacked: {"field": "c"}}
-                    ]
-                };
-                console.log("BAR-3", JSON.stringify(barData3, null, 2));
-
-                // Chỉ cập nhật nếu phần tử tồn tại
-                updateChartData("pieChart", pieData);
-                updateChartData("barChart1", barData1);
-                updateChartData("barChart2", barData2);
-                updateChartData("barChart3", barData3);
-            }
-
-            // Cập nhật node-link chart nếu có trong DOM
-            updateChartData("nodeLinkChart", nodeLinkData.nodes.length > 0 ? nodeLinkData : null);
-        };
+            // Single vertical bar chart
+            const verticalChartData = await fetchBarData();
+            drawVerticalChart(verticalChartData);
+            // console.log("BAR-1", JSON.stringify(verticalChartData, null, 2));
 
 
-        
+            // Stacked vertical bar chart
+            const stackedBarChartData = await fetchStackedBarData();
+            drawStackedBarChart(stackedBarChartData);
+
+
+            // Percentage Stacked bar chart
+            const normalizedStackedBarData = await fetchStackedBarData();
+            drawNormalizedStackedBarChart(normalizedStackedBarData);
+            
+
+            //  Grouped Vertical Bar Chart
+            const groupedVerticalChartData = await fetchStackedBarData();
+            drawGroupedVerticalChart(groupedVerticalChartData);
+            
+            // // Choropleth Map
+            // const choroplethMapData = await fetchMapData();
+            // drawChoroplethMap(choroplethMapData);
+
+            // // Connection Map
+            // const connectionMapData = await fetchMapData();
+            // drawConnectionMap(connectionMapData);
+
+            // // Bubble Map
+            // const bubbleMapData = await fetchMapData();
+            // drawBubbleMap(bubbleMapData);
+
+            // // Hexbin Map
+            // const hexbinMapData = await fetchMapData();
+            // drawHexbinMap(hexbinMapData);
+        }
+        // Call updateCharts() when the page is loaded
+        document.addEventListener('DOMContentLoaded', updateCharts);
+                
     </script>
   </body>
 </html>
