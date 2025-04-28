@@ -1,269 +1,3 @@
-// const scale_d3 = {'ordinal': d3.scaleOrdinal}
-
-//function to convert rgb object to hex color
-function componentToHex(c) {
-	var hex = c.toString(16);
-	return hex.length == 1 ? "0" + hex : hex;
-}
-
-function rgbToHex(r, g, b) {
-	return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
-
-function hexToRgb(hex) {
-	// Remove the "#" character if present
-	hex = hex.replace(/^#/, '');
-
-	// Convert from short form (3 characters) to full form (6 characters)
-	if (hex.length === 3) {
-		hex = hex.split('').map(c => c + c).join('');
-	}
-
-	// Convert to RGB values
-	let r = parseInt(hex.substring(0, 2), 16);
-	let g = parseInt(hex.substring(2, 4), 16);
-	let b = parseInt(hex.substring(4, 6), 16);
-
-	return `rgb(${r}, ${g}, ${b})`;
-}
-
-// Function to truncate long labels
-function truncateLabel(label, maxLength = 5) {
-	return label.length > maxLength ? label.slice(0, maxLength) + "..." : label;
-}
-
-// function parseD3ColorScheme(input) {
-// 	const regex = /^([a-zA-Z]+)(\[(\d+)\])?$/;
-// 	const match = input.match(regex);
-
-// 	if (!match) return null;
-
-// 	const rawName = match[1]; // User input, e.g. "BuGn"
-// 	const index = match[3] ? parseInt(match[3], 10) : null;
-
-// 	const interpolateSchemes = Object.keys(d3).filter(k => k.startsWith('interpolate'));
-// 	const colorSchemes = Object.keys(d3).filter(k => k.startsWith('scheme'));
-
-// 	const fullInterpolate = `interpolate${rawName}`;
-// 	const fullScheme = `scheme${rawName}`;
-
-// 	if (interpolateSchemes.includes(fullInterpolate)) {
-// 		return d3[fullInterpolate];
-// 	} else if (colorSchemes.includes(fullScheme)) {
-// 		return index !== null ? d3[fullScheme][index] : d3[fullScheme];
-// 	} else {
-// 		console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
-// 		return null;
-// 	}
-// }
-
-// function parseD3ColorScheme(input) {
-// 	const regex = /^([a-zA-Z0-9]+)(?:\[(\d+)\])?$/;
-// 	const match = input.match(regex);
-
-// 	if (!match) return null;
-
-// 	const rawName = match[1];
-// 	const index = match[2] ? parseInt(match[2], 10) : null;
-
-// 	const fullInterpolate = `interpolate${rawName}`;
-// 	const fullScheme = `scheme${rawName}`;
-
-// 	// Case 1: Continuous interpolator
-// 	if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
-// 		return {
-// 			type: "interpolate",
-// 			value: d3[fullInterpolate],
-// 			raw: rawName,
-// 		};
-// 	}
-
-// 	// Case 2: Discrete color scheme
-// 	if (fullScheme in d3) {
-// 		const scheme = d3[fullScheme];
-
-// 		if (Array.isArray(scheme)) {
-// 			return {
-// 				type: "scheme",
-// 				value: scheme,
-// 				raw: rawName,
-// 			};
-// 		} else if (typeof scheme === "object" && index !== null) {
-// 			return {
-// 				type: "scheme",
-// 				value: scheme[index] || null,
-// 				raw: rawName,
-// 			};
-// 		} else {
-// 			console.warn(`Index required for scheme: ${fullScheme}`);
-// 			return null;
-// 		}
-// 	}
-
-// 	console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
-// 	return null;
-// }
-
-function parseD3ColorScheme(input) {
-	const regex = /^([a-zA-Z0-9]+)(?:\[(\d+)\])?$/;
-	const match = input.match(regex);
-
-	if (!match) return null;
-
-	const rawName = match[1];
-	const index = match[2] ? parseInt(match[2], 10) : null;
-
-	const fullInterpolate = `interpolate${rawName}`;
-	const fullScheme = `scheme${rawName}`;
-
-	// // Nếu có index -> Ưu tiên dùng scheme
-	// if (index !== null && fullScheme in d3) {
-	// 	const scheme = d3[fullScheme];
-	// 	if (Array.isArray(scheme)) {
-	// 		// Một số scheme như schemeCategory10 là mảng cố định không có index
-	// 		return {
-	// 			type: "scheme",
-	// 			value: scheme,
-	// 			raw: rawName,
-	// 		};
-	// 	} else if (typeof scheme === "object") {
-	// 		return {
-	// 			type: "scheme",
-	// 			value: scheme[index] || null,
-	// 			raw: rawName,
-	// 		};
-	// 	}
-	// }
-
-	// // Nếu không có index, thử interpolate
-	// if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
-	// 	return {
-	// 		type: "interpolate",
-	// 		value: d3[fullInterpolate],
-	// 		raw: rawName,
-	// 	};
-	// }
-
-	// // Nếu không có interpolate nhưng có scheme
-	// if (fullScheme in d3) {
-	// 	const scheme = d3[fullScheme];
-	// 	if (Array.isArray(scheme)) {
-	// 		return {
-	// 			type: "scheme",
-	// 			value: scheme,
-	// 			raw: rawName,
-	// 		};
-	// 	} else if (typeof scheme === "object" && index !== null) {
-	// 		return {
-	// 			type: "scheme",
-	// 			value: scheme[index] || null,
-	// 			raw: rawName,
-	// 		};
-	// 	}
-	// }
-
-	// Check index, use d3.scheme with index (Ex: d3.schemeReds[5])
-	if (index !== null && fullScheme in d3) {
-		const scheme = d3[fullScheme];
-		if (Array.isArray(scheme)) {
-			// Check scheme[index] is exist
-			const schemeWithIndex = scheme[index];
-			if (Array.isArray(schemeWithIndex)) {
-				return {
-					type: "scheme",
-					value: schemeWithIndex,
-					raw: rawName,
-				};
-			}
-		} else if (typeof scheme === "object") {
-			return {
-				type: "scheme",
-				value: scheme[index] || null,
-				raw: rawName,
-			};
-		}
-	}
-
-	// If index is not exist, use interpolate (Ex: d3.interpolateReds)
-	if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
-		return {
-			type: "interpolate",
-			value: d3[fullInterpolate],
-			raw: rawName,
-		};
-	}
-
-	// If it's not interpolate but a scheme attached to an index (Ex: d3.schemeCategory10)
-	if (fullScheme in d3) {
-		const scheme = d3[fullScheme];
-		if (Array.isArray(scheme)) {
-			return {
-				type: "scheme",
-				value: scheme,
-				raw: rawName,
-			};
-		}
-	}
-
-	console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
-	return null;
-}
-
-
-// function parseD3ColorScheme(input) {
-// 	const regex = /^([a-zA-Z0-9]+)(?:\[(\d+)\])?$/;
-// 	const match = input.match(regex);
-  
-// 	if (!match) return null;
-  
-// 	const rawName = match[1];
-// 	const index = match[2] ? parseInt(match[2], 10) : null;
-  
-// 	const fullInterpolate = `interpolate${rawName}`;
-// 	const fullScheme = `scheme${rawName}`;
-  
-// 	// Case 1: Color scheme (e.g. schemeBlues, schemeReds, etc.)
-// 	if (fullScheme in d3) {
-// 	  const scheme = d3[fullScheme];
-  
-// 	  // Nếu scheme là một object (như d3.schemeBlues), cần kiểm tra index
-// 	  if (typeof scheme === 'object') {
-// 		if (index !== null && scheme[index]) {
-// 		  return {
-// 			type: "scheme",
-// 			value: scheme[index], // Trả về màu tương ứng với index
-// 			raw: `${rawName}[${index}]`,
-// 		  };
-// 		} else {
-// 		  console.warn(`[Color Error] scheme ${rawName}[${index}] không tồn tại. Các giá trị hợp lệ cho ${rawName} là ${Object.keys(scheme).join(", ")}`);
-// 		  return null;
-// 		}
-// 	  }
-  
-// 	  // Nếu scheme là mảng, trả về giá trị mảng đó (mặc định không có index)
-// 	  return {
-// 		type: "scheme",
-// 		value: scheme,
-// 		raw: rawName,
-// 	  };
-// 	}
-  
-// 	// Case 2: Continuous interpolator
-// 	if (fullInterpolate in d3 && typeof d3[fullInterpolate] === "function") {
-// 	  return {
-// 		type: "interpolate",
-// 		value: d3[fullInterpolate],
-// 		raw: rawName,
-// 	  };
-// 	}
-  
-// 	console.warn(`D3 không có scheme hoặc interpolate với tên "${rawName}".`);
-// 	return null;
-//   }
-  
-
-
-
 class BarChart extends HTMLElement {
 	#dataValue = '';
 	#coreData = null;
@@ -425,16 +159,16 @@ class BarChart extends HTMLElement {
 				const logMax = Math.pow(10, Math.ceil(Math.log10(rawMax)));
 				x = d3.scaleLog()
 					.base(10)
-					.domain([1, logMax])
+					.domain([1, logMax * 10])
 					.range([this.margin.left, this.#width - this.margin.right]);
 			} else if (yScaleType === "pow") {
 				x = d3.scalePow()
 					.exponent(exponent)
-					.domain([0, d3.max(data, d => +d[yVariable])])
+					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.range([this.margin.left, this.#width - this.margin.right]);
 			} else {
 				x = d3.scaleLinear()
-					.domain([0, d3.max(data, d => +d[yVariable])])
+					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.nice()
 					.range([this.margin.left, this.#width - this.margin.right]);
 			}
@@ -453,16 +187,16 @@ class BarChart extends HTMLElement {
 				const logMax = Math.pow(10, Math.ceil(Math.log10(rawMax)));
 				y = d3.scaleLog()
 					.base(10)
-					.domain([1, logMax])
+					.domain([1, logMax * 10])
 					.range([this.#height - this.margin.bottom, this.margin.top]);
 			} else if (yScaleType === "pow") {
 				y = d3.scalePow()
 					.exponent(exponent)
-					.domain([0, d3.max(data, d => +d[yVariable])])
+					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.range([this.#height - this.margin.bottom, this.margin.top]);
 			} else {
 				y = d3.scaleLinear()
-					.domain([0, d3.max(data, d => +d[yVariable])])
+					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.nice()
 					.range([this.#height - this.margin.bottom, this.margin.top]);
 			}
@@ -527,7 +261,7 @@ class BarChart extends HTMLElement {
 
 		// X Axis
 		const xAxis = isHorizontal
-		? d3.axisBottom(x).ticks(5).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"))
+		? d3.axisBottom(x).ticks(6).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"))
 		: d3.axisBottom(x).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d);
 
 		this.#svg.append("g")
@@ -539,7 +273,7 @@ class BarChart extends HTMLElement {
 		// Y Axis
 		const yAxis = isHorizontal
 			? d3.axisLeft(y).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d)
-			: d3.axisLeft(y).ticks(5).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"));
+			: d3.axisLeft(y).ticks(6).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"));
 
 		this.#svg.append("g")
 			.attr("transform", `translate(${this.margin.left}, 0)`)
@@ -608,11 +342,10 @@ class BarChart extends HTMLElement {
 		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
 		
 		// let colorRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
-		console.log("Blues", d3.schemeReds);
 
 		let rawColorRange = colorScaleObj?.range;
 		let colorRange;
-		console.log("rawColor", rawColorRange)
+		// console.log("rawColor", rawColorRange)
 		if (typeof rawColorRange === 'string') {
 			// colorRange = parseD3ColorScheme(rawColorRange);
 			const parsedColor = parseD3ColorScheme(rawColorRange);
@@ -628,7 +361,7 @@ class BarChart extends HTMLElement {
 			}
 
 			console.log("colorRange", colorRange)
-			// Nếu là hàm nội suy thì cần chuyển thành mảng màu
+			// If it is an interpolation function, it needs to be converted to a color array.
 			if (typeof colorRange === 'function') {
 				const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
 				colorRange = d3.quantize(colorRange, domainSize);
@@ -641,43 +374,23 @@ class BarChart extends HTMLElement {
 
 		
 		this.colorRange = colorRange;
-
-// 		let rawColorRange = colorScaleObj?.range;
-// 		let colorRange;
-// 		console.log("rawColor", rawColorRange);
-// 		if (typeof rawColorRange === 'string') {
-// 		const parsedColor = parseD3ColorScheme(rawColorRange);
-// 		if (parsedColor) {
-// 			if (parsedColor.type === "interpolate") {
-// 			const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
-// 			colorRange = d3.quantize(parsedColor.value, domainSize);
-// 			console.info(`[Color Info] Using D3 interpolator "${parsedColor.raw}", quantizing it to ${domainSize} steps.`);
-// 			} else if (parsedColor.type === "scheme") {
-// 			colorRange = parsedColor.value;
-// 			}
-// 		}
-
-//   console.log("colorRange", colorRange);
-//   // Nếu là hàm nội suy thì cần chuyển thành mảng màu
-//   if (typeof colorRange === 'function') {
-//     const domainSize = Array.isArray(colorDomain) && colorDomain.length > 0 ? colorDomain.length : uniqueColors.length;
-//     colorRange = d3.quantize(colorRange, domainSize);
-//   }
-// } else if (Array.isArray(rawColorRange)) {
-//   colorRange = rawColorRange;
-// } else {
-//   colorRange = rawColorRange;
-// }
-
-// this.colorRange = colorRange;
-
 	
 		
 		let finalColors;
 
 		// Check if colorDomain is a valid non-empty array
 		const isDomainArray = Array.isArray(colorDomain) && colorDomain.length > 0;
-
+		if (isDomainArray) {
+			const duplicates = colorDomain.filter((item, index) => colorDomain.indexOf(item) !== index);
+			if (duplicates.length > 0) {
+				console.warn(
+					`[Color Warning] Duplicate domain values detected: ${[...new Set(duplicates)].join(', ')}. Assigning colors to the position where it was first detected.` +
+					`Duplicates may cause unexpected behavior.`
+				);
+			}
+		}
+		
+		
 		if (colorRange && !isStacked) {
 			// Only proceed with color mapping logic if colorRange is defined and not stacked bar chart
 			if (isDomainArray) {
@@ -694,7 +407,7 @@ class BarChart extends HTMLElement {
 
 				// Find dataset values that are missing in the color domain
 				const missingDomain = uniqueColors.filter(d => !validDomain.includes(d));
-
+				
 				if (missingDomain.length > 0) {
 					console.warn(
 						`[Color Warning] The color domain is missing the following values from the dataset: ${missingDomain.join(', ')}. ` +
@@ -704,7 +417,7 @@ class BarChart extends HTMLElement {
 
 				// Final domain will include both valid and missing (new) values
 				const finalDomain = [...validDomain, ...missingDomain];
-
+			
 				// Warn if the number of colors is less than or more than domain values
 				if (colorRange.length < finalDomain.length) {
 					console.warn(
@@ -735,6 +448,19 @@ class BarChart extends HTMLElement {
 				console.warn(
 					"[Color Warning] Provided color domain is empty or invalid. Using color range with dataset values."
 				);
+
+				// Warn if the number of colors is less than or more than domain values
+				if (colorRange.length < uniqueColors.length) {
+					console.warn(
+						`[Color Warning] Color range size (${colorRange.length}) is smaller than the number of domain values (${uniqueColors.length}). ` +
+						`Colors will repeat in a cyclic manner.`
+					);
+				} else if (colorRange.length > uniqueColors.length) {
+					console.warn(
+						`[Color Warning] Color range size (${colorRange.length}) is larger than the number of domain values (${uniqueColors.length}). ` +
+						`Extra colors will be ignored.`
+					);
+				}
 
 				if (Array.isArray(colorRange) && colorRange.length > 0) {
 					finalColors = uniqueColors.map((_, i) => colorRange[i % colorRange.length]);
@@ -838,44 +564,33 @@ class BarChart extends HTMLElement {
 	
 
 	drawStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip) {
-		// const stackVariable = coreData.encoding.color?.field;
-		// const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
-		// // const stackRange = coreData.encoding.color?.scale;
-		// const colorScaleObj = coreData.encoding.color?.scale;
-		// const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : null;
-		// const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : null;
-
-
-		// const stack = d3.stack()
-		// 	.keys(d3.union(data.map(d => d[stackVariable])))
-		// 	.value(([, d], key) => d.get(key)[yVariable])
-		// 	(d3.index(data, d => d[xVariable], d => d[stackVariable]));
-
-		// 	function getSafeColors(domain, colorRange, defaultColors) {
-		// 		if (!colorRange || colorRange.length === 0) {
-		// 		  return defaultColors || d3.schemeCategory10;
-		// 		}
-		// 		if (colorRange.length < domain.length) {
-		// 		  console.warn(`Color range (${colorRange.length}) is fewer than domain (${domain.length}). Colors will repeat.`);
-		// 		  return domain.map((_, i) => colorRange[i % colorRange.length]);
-		// 		}
-		// 		if (colorRange.length > domain.length) {
-		// 		  console.warn(`Color range (${colorRange.length}) is more than domain (${domain.length}). Extra colors will be ignored.`);
-		// 		  return colorRange.slice(0, domain.length);
-		// 		}
-		// 		return colorRange;
-		// 	  }
-
-		// 	const stackColorScale = d3.scaleOrdinal()
-		// 		.domain(stackDomain || stackKeys)
-		// 		.range(getSafeColors(stackDomain || stackKeys, stackRange, d3.schemeCategory10)
-		// 	);
-		
 		const stackVariable = coreData.encoding.color?.field;
 		const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
 		const colorScaleObj = coreData.encoding.color?.scale;
 		const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
-		const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
+		// const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
+
+		const rawStackRange = coreData.encoding.color?.scale?.range;
+		let stackRange;
+		if (typeof rawStackRange === 'string') {
+			const parsedStackColor = parseD3ColorScheme(rawStackRange);
+			if (parsedStackColor) {
+				if (parsedStackColor.type === "interpolate") {
+					stackRange = d3.quantize(parsedStackColor.value, stackKeys.length);
+					console.info(`[StackColor Info] Using D3 interpolator "${parsedStackColor.raw}", quantized to ${stackKeys.length} steps.`);
+				} else if (parsedStackColor.type === "scheme") {
+					stackRange = parsedStackColor.value;
+					console.info(`[StackColor Info] Using D3 scheme "${parsedStackColor.raw}".`);
+				}
+			}
+			if (typeof stackRange === 'function') {
+				stackRange = d3.quantize(stackRange, stackKeys.length);
+			}
+		} else if (Array.isArray(rawStackRange)) {
+			stackRange = rawStackRange;
+		} else {
+			stackRange = rawStackRange;
+		}
 
 		const stack = d3.stack()
 			.keys(d3.union(data.map(d => d[stackVariable])))
@@ -923,6 +638,20 @@ class BarChart extends HTMLElement {
 					.domain(finalDomain)
 					.range(finalStackColors);
 			} else {
+
+				// Warn if the number of colors is less than or more than domain values
+				if (stackRange.length < stackKeys.length) {
+					console.warn(
+						`[StackColor Warning] Color range size (${stackRange.length}) is smaller than the number of domain values (${stackKeys.length}). ` +
+						`Colors will repeat in a cyclic manner.`
+					);
+				} else if (stackRange.length > stackKeys.length) {
+					console.warn(
+						`[StackColor Warning] Color range size (${stackRange.length}) is larger than the number of domain values (${stackKeys.length}). ` +
+						`Extra colors will be ignored.`
+					);
+				}
+
 				console.warn("[StackColor Warning] Provided domain is invalid. Using dataset values as domain.");
 				finalStackColors = Array.isArray(stackRange) && stackRange.length > 0
 					? stackKeys.map((_, i) => stackRange[i % stackRange.length])
@@ -1128,6 +857,81 @@ class BarChart extends HTMLElement {
 	// 			d3.select(event.target).style("stroke", "none").style("opacity", 1);
 	// 		});
 	// }
+	// drawGroupedChart(data, coreData, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, defaultColor, tooltip) {
+	// 	const groupVariable = coreData.encoding.color?.field;
+	// 	const groups = [...new Set(data.map(d => d[xVariable]))];
+	// 	// Group data by main group
+	// 	const groupedData = d3.groups(data, d => d[xVariable]);
+	
+	// 	// Create scale for main group
+	// 	const x0 = isHorizontal ? null : d3.scaleBand()
+	// 		.domain(groups)
+	// 		.range([this.margin.left, this.#width - this.margin.right])
+	// 		.padding(0.5);
+	
+	// 	const y0 = isHorizontal ? d3.scaleBand()
+	// 		.domain(groups)
+	// 		.range([this.margin.top, this.#height - this.margin.bottom])
+	// 		.padding(0.2) : null;
+	
+	// 	const group = this.#svg.append("g")
+	// 		.selectAll("g")
+	// 		.data(groupedData)
+	// 		.join("g")
+	// 		.attr("transform", ([group]) =>
+	// 			isHorizontal
+	// 				? `translate(0, ${y0(group)})`
+	// 				: `translate(${x0(group)}, 0)`
+	// 		);
+	
+	// 	group.each(([, values], i, nodes) => {
+	// 		const g = d3.select(nodes[i]);
+	
+	// 		// Get the list of subgroups that exist in the current group
+	// 		const localSubgroups = [...new Set(values.map(d => d[groupVariable]))];
+
+	
+	// 		// Create local scale for subgroup
+	// 		const localSubgroupScale = d3.scaleBand()
+	// 			.domain(localSubgroups)
+	// 			.range(isHorizontal ? [0, y0.bandwidth()] : [0, x0.bandwidth()])
+	// 			.padding(0.01);
+
+	// 		console.log("KKKKKKKKK", groupedData)
+	// 		if (i >=1){
+	// 			console.log("AAAAAAAAAAAAAa", groupedData[i-1][1].length * localSubgroupScale.bandwidth())
+	// 		}
+	
+	// 		g.selectAll("rect")
+	// 			.data(values)
+	// 			.join("rect")
+	// 			// .attr("x", d => isHorizontal ? x(0) : localSubgroupScale(d[groupVariable]))
+	// 			.attr("x", function (d, j){
+	// 				//padding add with number of previous columns group
+	// 				let pad = 0
+	// 				if (i >= 1){ pad = groupedData[i-1][1].length * localSubgroupScale.bandwidth()} 
+	// 				return isHorizontal ? x(0) : localSubgroupScale(d[groupVariable]) + pad;
+	// 			})
+	// 			.attr("y", d => isHorizontal ? localSubgroupScale(d[groupVariable]) : y(d[yVariable]))
+	// 			.attr("width", d => isHorizontal ? x(d[yVariable]) - x(0) : localSubgroupScale.bandwidth())
+	// 			.attr("height", d => isHorizontal ? localSubgroupScale.bandwidth() : y(0) - y(d[yVariable]))
+	// 			.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
+	// 			.on("mouseover", (event, d) => {
+	// 				tooltip.style.opacity = 1;
+	// 				tooltip.innerHTML = `${xVariable}: ${d[xVariable]}<br>${groupVariable}: ${d[groupVariable]}<br>${yVariable}: ${d[yVariable]}`;
+	// 				d3.select(event.target).style("stroke", "black").style("opacity", 1);
+	// 			})
+	// 			.on("mousemove", (event) => {
+	// 				tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
+	// 				tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
+	// 			})
+	// 			.on("mouseleave", (event) => {
+	// 				tooltip.style.opacity = 0;
+	// 				d3.select(event.target).style("stroke", "none").style("opacity", 1);
+	// 			});
+	// 	});
+	// }
+
 	drawGroupedChart(data, coreData, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, defaultColor, tooltip) {
 		const groupVariable = coreData.encoding.color?.field;
 		const groups = [...new Set(data.map(d => d[xVariable]))];
@@ -1136,15 +940,17 @@ class BarChart extends HTMLElement {
 		const x0 = isHorizontal ? null : d3.scaleBand()
 			.domain(groups)
 			.range([this.margin.left, this.#width - this.margin.right])
-			.padding(0.2);
+			.paddingOuter(0.2).padding(0.3);
 	
 		const y0 = isHorizontal ? d3.scaleBand()
 			.domain(groups)
 			.range([this.margin.top, this.#height - this.margin.bottom])
-			.padding(0.2) : null;
+			.paddingOuter(0.2).padding(0.3) : null;
+		
 	
-		// Group data by main group
 		const groupedData = d3.groups(data, d => d[xVariable]);
+		
+		const fixedSubgroupWidth = x0.bandwidth() / d3.max(groupedData.map((e) => e[1].length)) * 1.2;
 	
 		const group = this.#svg.append("g")
 			.selectAll("g")
@@ -1162,19 +968,31 @@ class BarChart extends HTMLElement {
 			// Get the list of subgroups that exist in the current group
 			const localSubgroups = [...new Set(values.map(d => d[groupVariable]))];
 	
-			// Create local scale for subgroup
-			const localSubgroupScale = d3.scaleBand()
-				.domain(localSubgroups)
-				.range(isHorizontal ? [0, y0.bandwidth()] : [0, x0.bandwidth()])
-				.padding(0.05);
+			// Calculate total width of subgroups
+			const totalSubgroupWidth = localSubgroups.length * fixedSubgroupWidth;
+	
+			// Calculate space to center
+			const offset = (isHorizontal ? y0.bandwidth() : x0.bandwidth()) / 2 - totalSubgroupWidth / 2;
 	
 			g.selectAll("rect")
 				.data(values)
 				.join("rect")
-				.attr("x", d => isHorizontal ? x(0) : localSubgroupScale(d[groupVariable]))
-				.attr("y", d => isHorizontal ? localSubgroupScale(d[groupVariable]) : y(d[yVariable]))
-				.attr("width", d => isHorizontal ? x(d[yVariable]) - x(0) : localSubgroupScale.bandwidth())
-				.attr("height", d => isHorizontal ? localSubgroupScale.bandwidth() : y(0) - y(d[yVariable]))
+				.attr("x", d => isHorizontal
+					? x(0)
+					: offset + localSubgroups.indexOf(d[groupVariable]) * fixedSubgroupWidth
+				)
+				.attr("y", d => isHorizontal
+					? offset + localSubgroups.indexOf(d[groupVariable]) * fixedSubgroupWidth
+					: y(d[yVariable])
+				)
+				.attr("width", d => isHorizontal
+					? x(d[yVariable]) - x(0)
+					: fixedSubgroupWidth
+				)
+				.attr("height", d => isHorizontal
+					? fixedSubgroupWidth
+					: y(0) - y(d[yVariable])
+				)
 				.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
 				.on("mouseover", (event, d) => {
 					tooltip.style.opacity = 1;
@@ -1261,12 +1079,6 @@ class BarChart extends HTMLElement {
 
 			const label = document.createElement("label");
 			label.textContent = d; // Set the text label to the unique language name
-
-			console.log("AAAAAA", this.colorScale(d))
-			console.log("colorScale domain:", this.colorScale.domain());
-			console.log("value d:", d);
-			console.log("colorScale range:", this.colorScale.range());
-
 
 			const input = document.createElement("input");
 			input.type = "color"; // Create a color input element
