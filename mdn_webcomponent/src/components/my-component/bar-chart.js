@@ -137,15 +137,9 @@ class BarChart extends HTMLElement {
 	  `;
 	}
 
-	// Function to show or hide the popup
-	togglePopup(show) {
-	  const popup = this.shadowRoot.querySelector(".popup");
-	  popup.classList.toggle("show", show);
-	}
-
 
 	// Function to draw Axes based on provided data
-	drawAxis(data, xVariable, yVariable, isHorizontal=false, isStacked=false, isNormalized = false, scaleType, maxLabelLength=5) 
+	drawAxis(data, xVariable, yVariable, isHorizontal=false, isStacked=false, isNormalized = false, xAxisLabelAngle = 0, yAxisLabelAngle = 0, scaleType, maxLabelLength=5) 
 	{
 		// Define scales based on direction
 		let x, y;
@@ -268,7 +262,9 @@ class BarChart extends HTMLElement {
 			.attr("transform", `translate(0, ${this.#height - this.margin.bottom})`)
 			.call(xAxis)
 			.selectAll("text")
-			.style("font-size", "10px");
+			.style("font-size", "10px")
+			.attr("transform", `rotate(${xAxisLabelAngle})`)
+			.style("text-anchor", xAxisLabelAngle !== 0 ? "start" : "middle");
 
 		// Y Axis
 		const yAxis = isHorizontal
@@ -279,7 +275,10 @@ class BarChart extends HTMLElement {
 			.attr("transform", `translate(${this.margin.left}, 0)`)
 			.call(yAxis)
 			.selectAll("text")
-			.style("font-size", "10px");
+			.style("font-size", "10px")
+			.attr("transform", `translate(-5,0) rotate(${yAxisLabelAngle})`)
+			.style("text-anchor", "end");
+
 
 		// X axis label
 		this.#svg.append("text")
@@ -289,16 +288,6 @@ class BarChart extends HTMLElement {
 			.style("text-anchor", "middle")
 			.style("font-size", "18px")
 			.text(isHorizontal ? yVariable : xVariable);
-
-		// // Y axis label
-		// this.#svg.append("text")
-		// 	.attr("class", "y-axis-label")
-		// 	.attr("x", -(this.#height - this.margin.top - this.margin.bottom) / 2)
-		// 	.attr("y", -this.margin.left + 20)
-		// 	.style("text-anchor", "middle")
-		// 	.style("font-size", "18px")
-		// 	.text(isHorizontal ? xVariable : yVariable)
-		// 	.attr("transform", "rotate(-90)");
 
 		// Y axis label
 		const yAxisTitle = isHorizontal
@@ -346,7 +335,9 @@ class BarChart extends HTMLElement {
 		const scaleType = coreData.encoding.y?.scale; // Scale Type
 
 		const xVariable = coreData.encoding.x?.field;
+		const xAxisLabelAngle = coreData.encoding.x?.axis?.labelAngle || 0;
 		const yVariable = coreData.encoding.y?.field;
+		const yAxisLabelAngle = coreData.encoding.y?.axis?.labelAngle || 0;
 	
 		this.xVariable = xVariable;
 		this.yVariable = yVariable;
@@ -379,97 +370,6 @@ class BarChart extends HTMLElement {
 			colorRange = rawColorRange;
 		}
 
-		// let finalColors;
-		// const isDomainArray = Array.isArray(colorDomain) && colorDomain.length > 0;
-
-		// // Check for duplicate domain entries and warn if found
-		// if (isDomainArray) {
-		// 	const duplicates = colorDomain.filter((item, index) => colorDomain.indexOf(item) !== index);
-		// 	if (duplicates.length > 0) {
-		// 		console.warn(`[Color Warning] Duplicate domain values detected: ${[...new Set(duplicates)].join(', ')}. Assigning colors to the position where it was first detected.`);
-		// 	}
-		// }
-
-		// // Proceed only if a color range or parsedColor is available and the chart is not stacked
-		// if ((parsedColor || colorRange) && !isStacked) {
-		// 	let finalDomain;
-
-		// 	if (isDomainArray) {
-		// 		// Filter out domain values that aren't found in the data
-		// 		const validDomain = colorDomain.filter(d => uniqueColors.includes(d));
-		// 		const extraDomain = colorDomain.filter(d => !uniqueColors.includes(d));
-		// 		const missingDomain = uniqueColors.filter(d => !validDomain.includes(d));
-
-		// 		// Warn about unused domain values
-		// 		if (extraDomain.length > 0) {
-		// 			console.warn(`[Color Warning] The following domain values are not found in the dataset and will be ignored: ${extraDomain.join(', ')}.`);
-		// 		}
-		// 		// Warn about missing values not listed in the domain
-		// 		if (missingDomain.length > 0) {
-		// 			console.warn(`[Color Warning] The color domain is lacking the following values from the dataset: ${missingDomain.join(', ')}. They will be appended.`);
-		// 		}
-
-		// 		// Final domain is valid values + missing ones from the dataset
-		// 		finalDomain = [...validDomain, ...missingDomain];
-		// 	} else {
-		// 		// No valid domain provided – fallback to using dataset values
-		// 		console.warn(`[Color Warning] Provided color domain is empty or invalid. Using color range with dataset values.`);
-		// 		finalDomain = uniqueColors;
-		// 	}
-
-		// 	// Generate color range AFTER finalDomain is known
-		// 	if (parsedColor) {
-		// 		if (parsedColor.type === "interpolate") {
-		// 			// Use interpolator and quantize it to match the number of domain values
-		// 			colorRange = d3.quantize(parsedColor.value, finalDomain.length);
-		// 			console.info(`[Color Info] Using D3 interpolator "${parsedColor.raw}", quantizing it to ${finalDomain.length} steps.`);
-		// 		} else if (parsedColor.type === "scheme") {
-		// 			colorRange = parsedColor.value;
-		// 		}
-		// 	}
-
-		// // Warn if the color range length does not match the domain size
-		// if (Array.isArray(colorRange)) {
-		// 	if (colorRange.length < finalDomain.length) {
-		// 		console.warn(`[Color Warning] Color range size (${colorRange.length}) is smaller than domain (${finalDomain.length}). Colors will repeat.`);
-		// 	} else if (colorRange.length > finalDomain.length) {
-		// 		console.warn(`[Color Warning] Color range size (${colorRange.length}) is larger than domain (${finalDomain.length}). Extra colors will be ignored.`);
-		// 	}
-		// }
-
-		// // Assign colors based on domain index (looping if needed)
-		// if (Array.isArray(colorRange) && colorRange.length > 0) {
-		// 	finalColors = finalDomain.map((_, i) => colorRange[i % colorRange.length]);
-		// } else {
-		// 	// Fallback to default Turbo interpolator if range is invalid
-		// 	console.warn("[Color Warning] Color range is empty or invalid. Using default Turbo colors.");
-		// 	finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), finalDomain.length);
-		// }
-
-		// 	// Create the D3 ordinal color scale
-		// 	this.colorScale = d3.scaleOrdinal()
-		// 		.domain(finalDomain)
-		// 		.range(finalColors);
-
-			
-
-		// } else {
-		// 	// Fallback logic: if no color range is provided or the chart is stacked
-		// 	if (!colorRange && isDomainArray) {
-		// 		console.warn("[Color Warning] Color domain is provided but no color range is defined. Domain will be ignored.");
-		// 	}
-
-		// 	// Use default Turbo scale with number of unique color values
-		// 	finalColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueColors.length);
-
-		// 	this.colorScale = d3.scaleOrdinal()
-		// 		.domain(uniqueColors)
-		// 		.range(finalColors);
-		// }
-
-		// // Save color range for external use or reference
-		// this.colorRange = colorRange;
-
 		this.colorScale = this.createColorScale(
 			{
 				domain: colorDomain, 
@@ -484,7 +384,7 @@ class BarChart extends HTMLElement {
 			data = this.fillMissingStackData(data, coreData, xVariable, yVariable);
 		}
 	
-		const [x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked, isNormalized, scaleType);
+		const [x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked, isNormalized, xAxisLabelAngle, yAxisLabelAngle, scaleType);
 		
 
 		if (isStacked && isNormalized) {
@@ -499,7 +399,7 @@ class BarChart extends HTMLElement {
 	
 		// Color picker & legend
 		if (hasColors && !isStacked) {
-			this.renderColorPickers(uniqueColors);
+			this.renderColorPickers(this.finalColorDomain);
 			this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
 		} else if (isStacked) {
 			this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
@@ -536,18 +436,6 @@ class BarChart extends HTMLElement {
 			});
 		});
 	
-		return completeData;
-	}
-	fillMissingGroupedData(data, xVariable, yVariable, colorVariable) {
-		const groupedData = d3.group(data, d => d[xVariable]);
-		const completeData = [];
-	
-		for (const [xVal, entries] of groupedData.entries()) {
-			const validGroups = entries.filter(d => d[yVariable] !== 0);
-			if (validGroups.length > 0) {
-				completeData.push(...validGroups);
-			}
-		}
 		return completeData;
 	}
 	
@@ -587,89 +475,17 @@ class BarChart extends HTMLElement {
 			(d3.index(data, d => d[xVariable], d => d[stackVariable]));
 
 		let finalStackColors;
-		const isStackDomainArray = Array.isArray(stackDomain) && stackDomain.length > 0;
-		if (isStackDomainArray) {
-			const duplicates = stackDomain.filter((item, index) => stackDomain.indexOf(item) !== index);
-			if (duplicates.length > 0) {
-				console.warn(
-					`[StackColor Warning] Duplicate domain values detected: ${[...new Set(duplicates)].join(', ')}. Assigning colors to the position where it was first detected.` +
-					`Duplicates may cause unexpected behavior.`
-				);
-			}
-		}
 
-		if (stackRange) {
-			if (isStackDomainArray) {
-				const validDomain = stackDomain.filter(d => stackKeys.includes(d));
-				const extraDomain = stackDomain.filter(d => !stackKeys.includes(d));
-				const missingDomain = stackKeys.filter(d => !validDomain.includes(d));
-
-				if (extraDomain.length > 0) {
-					console.warn(
-						`[StackColor Warning] The following domain values are not found in the dataset and will be ignored: ${extraDomain.join(', ')}.`
-					);
-				}
-				if (missingDomain.length > 0) {
-					console.warn(
-						`[StackColor Warning] The domain is missing values from the dataset: ${missingDomain.join(', ')}. ` +
-						`These values will be appended and assigned colors from the remaining color range.`
-					);
-				}
-
-				const finalDomain = [...validDomain, ...missingDomain];
-
-				if (stackRange.length < finalDomain.length) {
-					console.warn(
-						`[StackColor Warning] Color range size (${stackRange.length}) is smaller than domain size (${finalDomain.length}). Colors will repeat.`
-					);
-				} else if (stackRange.length > finalDomain.length) {
-					console.warn(
-						`[StackColor Warning] Color range size (${stackRange.length}) is larger than domain size (${finalDomain.length}). Extra colors will be ignored.`
-					);
-				}
-
-				finalStackColors = Array.isArray(stackRange) && stackRange.length > 0
-					? finalDomain.map((_, i) => stackRange[i % stackRange.length])
-					: d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), finalDomain.length);
-
-				this.stackColorScale = d3.scaleOrdinal()
-					.domain(finalDomain)
-					.range(finalStackColors);
-			} else {
-
-				// Warn if the number of colors is less than or more than domain values
-				if (stackRange.length < stackKeys.length) {
-					console.warn(
-						`[StackColor Warning] Color range size (${stackRange.length}) is smaller than the number of domain values (${stackKeys.length}). ` +
-						`Colors will repeat in a cyclic manner.`
-					);
-				} else if (stackRange.length > stackKeys.length) {
-					console.warn(
-						`[StackColor Warning] Color range size (${stackRange.length}) is larger than the number of domain values (${stackKeys.length}). ` +
-						`Extra colors will be ignored.`
-					);
-				}
-
-				console.warn("[StackColor Warning] Provided domain is invalid. Using dataset values as domain.");
-				finalStackColors = Array.isArray(stackRange) && stackRange.length > 0
-					? stackKeys.map((_, i) => stackRange[i % stackRange.length])
-					: d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), stackKeys.length);
-
-				this.stackColorScale = d3.scaleOrdinal()
-					.domain(stackKeys)
-					.range(finalStackColors);
-			}
-		} else {
-			console.warn("[StackColor Warning] No color range provided. Using default Turbo colors.");
-			finalStackColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), stackKeys.length);
-
-			this.stackColorScale = d3.scaleOrdinal()
-				.domain(stackKeys)
-				.range(finalStackColors);
-		}
-
+		this.stackColorScale = this.createColorScale(
+			{
+				domain: stackDomain, 
+				range: stackRange,
+				dataKeys: stackKeys,
+				fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
+				label: "Color"
+			})
 		
-		this.renderStackLegend(stackKeys, this.stackColorScale);
+		this.renderStackLegend(this.finalColorDomain, this.stackColorScale);
 	
 		const bars = this.#svg.append("g")
 			.selectAll("g")
@@ -758,88 +574,6 @@ class BarChart extends HTMLElement {
 			.keys(stackKeys)
 			.value(([, d], key) => d.get(key)?.[yVariable] || 0)
 			(d3.index(normalizedData, d => d[xVariable], d => d[stackVariable]));
-
-			// let finalStackColors;
-			// const isStackDomainArray = Array.isArray(stackDomain) && stackDomain.length > 0;
-			// if (isStackDomainArray) {
-			// 	const duplicates = stackDomain.filter((item, index) => stackDomain.indexOf(item) !== index);
-			// 	if (duplicates.length > 0) {
-			// 		console.warn(
-			// 			`[PercentageStackColor Warning] Duplicate domain values detected: ${[...new Set(duplicates)].join(', ')}. Assigning colors to the position where it was first detected.` +
-			// 			`Duplicates may cause unexpected behavior.`
-			// 		);
-			// 	}
-			// }
-	
-			// if (stackRange) {
-			// 	if (isStackDomainArray) {
-			// 		const validDomain = stackDomain.filter(d => stackKeys.includes(d));
-			// 		const extraDomain = stackDomain.filter(d => !stackKeys.includes(d));
-			// 		const missingDomain = stackKeys.filter(d => !validDomain.includes(d));
-	
-			// 		if (extraDomain.length > 0) {
-			// 			console.warn(
-			// 				`[PercentageStackColor Warning] The following domain values are not found in the dataset and will be ignored: ${extraDomain.join(', ')}.`
-			// 			);
-			// 		}
-			// 		if (missingDomain.length > 0) {
-			// 			console.warn(
-			// 				`[PercentageStackColor Warning] The domain is missing values from the dataset: ${missingDomain.join(', ')}. ` +
-			// 				`These values will be appended and assigned colors from the remaining color range.`
-			// 			);
-			// 		}
-	
-			// 		const finalDomain = [...validDomain, ...missingDomain];
-	
-			// 		if (stackRange.length < finalDomain.length) {
-			// 			console.warn(
-			// 				`[PercentageStackColor Warning] Color range size (${stackRange.length}) is smaller than domain size (${finalDomain.length}). Colors will repeat.`
-			// 			);
-			// 		} else if (stackRange.length > finalDomain.length) {
-			// 			console.warn(
-			// 				`[PercentageStackColor Warning] Color range size (${stackRange.length}) is larger than domain size (${finalDomain.length}). Extra colors will be ignored.`
-			// 			);
-			// 		}
-	
-			// 		finalStackColors = Array.isArray(stackRange) && stackRange.length > 0
-			// 			? finalDomain.map((_, i) => stackRange[i % stackRange.length])
-			// 			: d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), finalDomain.length);
-	
-			// 		this.stackColorScale = d3.scaleOrdinal()
-			// 			.domain(finalDomain)
-			// 			.range(finalStackColors);
-			// 	} else {
-	
-			// 		// Warn if the number of colors is less than or more than domain values
-			// 		if (stackRange.length < stackKeys.length) {
-			// 			console.warn(
-			// 				`[PercentageStackColor Warning] Color range size (${stackRange.length}) is smaller than the number of domain values (${stackKeys.length}). ` +
-			// 				`Colors will repeat in a cyclic manner.`
-			// 			);
-			// 		} else if (stackRange.length > stackKeys.length) {
-			// 			console.warn(
-			// 				`[PercentageStackColor Warning] Color range size (${stackRange.length}) is larger than the number of domain values (${stackKeys.length}). ` +
-			// 				`Extra colors will be ignored.`
-			// 			);
-			// 		}
-	
-			// 		console.warn("[PercentageStackColor Warning] Provided domain is invalid. Using dataset values as domain.");
-			// 		finalStackColors = Array.isArray(stackRange) && stackRange.length > 0
-			// 			? stackKeys.map((_, i) => stackRange[i % stackRange.length])
-			// 			: d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), stackKeys.length);
-	
-			// 		this.stackColorScale = d3.scaleOrdinal()
-			// 			.domain(stackKeys)
-			// 			.range(finalStackColors);
-			// 	}
-			// } else {
-			// 	console.warn("[PercentageStackColor Warning] No color range provided. Using default Turbo colors.");
-			// 	finalStackColors = d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), stackKeys.length);
-	
-			// 	this.stackColorScale = d3.scaleOrdinal()
-			// 		.domain(stackKeys)
-			// 		.range(finalStackColors);
-			// }
 		
 		this.stackColorScale = this.createColorScale(
 				{
@@ -1038,11 +772,18 @@ class BarChart extends HTMLElement {
 			}
 			
 			// Final domain is valid values + missing ones from the dataset
+			// finalDomain = [...validDomain, ...missingDomain];
+			// Alphabetically sort missing values not listed in domain
+			missingDomain.sort((a, b) => a.localeCompare(b));
 			finalDomain = [...validDomain, ...missingDomain];
+
 		} else {
 			// No valid domain provided – fallback to using dataset values
 			console.warn(`[${label} Warning] Invalid or empty domain. Using dataset values.`);
-			finalDomain = dataKeys;
+			// finalDomain = dataKeys;
+			finalDomain = [...dataKeys].sort((a, b) => a.localeCompare(b));
+			console.log(finalDomain)
+
 		}
 		
 		// Generate color range AFTER finalDomain is known
@@ -1072,6 +813,7 @@ class BarChart extends HTMLElement {
 			}
 		}
 		
+		this.finalColorDomain = finalDomain;
 		// Ensure colors assigned with wrap-around indexing
 		const finalColors = finalDomain.map((_, i) => finalRange[i % finalRange.length]);
 		
@@ -1079,18 +821,6 @@ class BarChart extends HTMLElement {
 		return d3.scaleOrdinal().domain(finalDomain).range(finalColors);
 	}
 	
-	// Show information popup with data details when a bar is clicked
-	showInfoPopup(d) {
-		const infoPopup = this.shadowRoot.querySelector(".info-popup");
-		infoPopup.innerHTML = `
-			<div>Tag: ${d[this.xVariable]}</div>
-			<div>Value: ${d[this.yVariable]}</div>
-			<button class="close-popup">Close</button>
-		`;
-		infoPopup.classList.add("show");
-		this.shadowRoot.querySelector(".close-popup").addEventListener("click", () => infoPopup.classList.remove("show"));
-	}
-
 	// Render color pickers for each bar based on data
 	renderColorPickers(uniqueColors) {
 		let coreData = JSON.parse(this.#dataValue);
@@ -1134,9 +864,9 @@ class BarChart extends HTMLElement {
 			input.type = "color";
 			input.value = d3.color(stackColorScale(key)).formatHex();
 			input.setAttribute("data-key", key);
-	
-			colorItem.appendChild(label);
+			
 			colorItem.appendChild(input);
+			colorItem.appendChild(label);
 			container.appendChild(colorItem);
 	
 			input.addEventListener("input", (event) => this.updateStackColor(event, key, stackColorScale));
