@@ -106,3 +106,24 @@ function parseD3ColorScheme(input) {
 	console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
 	return null;
 }
+
+function toSuperscript(num) {
+	const superscripts = {
+		"0": "⁰",
+		"1": "¹",
+		"2": "²",
+		"3": "³",
+		"4": "⁴",
+		"5": "⁵",
+		"6": "⁶",
+		"7": "⁷",
+		"8": "⁸",
+		"9": "⁹",
+		".": ".", 
+		"-": "⁻"   
+	};
+	return String(num)
+		.split("")
+		.map(c => superscripts[c] || c) 
+		.join("");
+}

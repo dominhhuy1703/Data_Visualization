@@ -31,7 +31,7 @@ function drawHexbinMap(data) {
         "projection": {
             "type": "mercator"
         },
-        "mark": "geoshape",
+        // "mark": "geoshape",
         "encoding": {
             "color": {
             "field": "population",

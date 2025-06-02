@@ -211,7 +211,7 @@ class PieChart extends HTMLElement {
 					  <div class="description"></div>
           </div>
           
-          <!-- <div class="controls">
+          <div class="controls">
             <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="${this.startAngle}" data-param="startAngle"></label>
             <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="${this.endAngle}" data-param="endAngle"></label>
             <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="${this.padAngle}" data-param="padAngle"></label>
@@ -221,25 +221,25 @@ class PieChart extends HTMLElement {
               <label for="sort-toggle">Sort</label>
               <input type="checkbox" id="sort-toggle">
             </div>
-          </div> -->
+          </div>
           <div class="tooltip"></div>
         </div>
       </div>
     `;
 
-    // // Add event listener to change value on slider
-    // this.shadowRoot.querySelectorAll(".controls input").forEach(input => {
-    //   input.addEventListener("input", (event) => this.updateParams(event));
-    // });
+    // Add event listener to change value on slider
+    this.shadowRoot.querySelectorAll(".controls input").forEach(input => {
+      input.addEventListener("input", (event) => this.updateParams(event));
+    });
 
-    // // Add event for data sort button
-    // this.shadowRoot.querySelector("#sort-toggle").addEventListener("change", (event) => {
-    //   if (event.target.checked) {
-    //     this.sortData(); // If chose, call sortData
-    //   } else {
-    //     this.restoreData(); // Else, call restoreData
-    //   }
-    // });
+    // Add event for data sort button
+    this.shadowRoot.querySelector("#sort-toggle").addEventListener("change", (event) => {
+      if (event.target.checked) {
+        this.sortData(); // If chose, call sortData
+      } else {
+        this.restoreData(); // Else, call restoreData
+      }
+    });
   }
 
   // Update parameters when user changes slider
@@ -251,7 +251,7 @@ class PieChart extends HTMLElement {
   // Sort the data in descending order
   sortData() {
     let coreData = JSON.parse(this.#dataValue);
-    coreData.data[0].values.sort((a, b) => b[populationVariable] - a[populationVariable]);
+    coreData.data[0].values.sort((a, b) => b[this.populationVariable] - a[this.populationVariable]);
     this.#dataValue = JSON.stringify(coreData);
     this.drawChart();
   }  
@@ -280,6 +280,7 @@ class PieChart extends HTMLElement {
     const countryVariable = coreData.encoding.find(element => element.text)?.text.field; // attribute countryVariable
     const populationVariable = coreData.encoding.find(element => element.theta)?.theta.field; // attribute populationVariable
 
+    this.populationVariable = populationVariable;
     // const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
     // legendContainer.innerHTML = '<div class="legend-title">Language</div>';
     
@@ -329,26 +330,26 @@ class PieChart extends HTMLElement {
 
 
     // Define arc shape
-    // const arcShape = d3.arc()
-    //   .innerRadius(this.innerRadius)
-    //   .outerRadius(radius - 0.9)
-    //   .cornerRadius(this.cornerRadius);
+    const arcShape = d3.arc()
+      .innerRadius(this.innerRadius)
+      .outerRadius(radius - 0.9)
+      .cornerRadius(this.cornerRadius);
 
     const radiusVariable = coreData.encoding.find(element => element.radius)?.radius.field;
     const scaleRadius = d3.scaleSqrt()
       .domain(d3.extent(data, d => +d[radiusVariable])) // Convert to numeric
       .range([radius * 0.4, radius - 5]); // Min, max
 
-    const arcShape = d3.arc()
-      .innerRadius(this.innerRadius)
-      .outerRadius(d => {
-        if (radiusVariable) {
-          return scaleRadius(+d.data[radiusVariable]);
-        } else {
-          return radius - 5;
-        }
-      })
-      .cornerRadius(this.cornerRadius);
+    // const arcShape = d3.arc()
+    //   .innerRadius(this.innerRadius)
+    //   .outerRadius(d => {
+    //     if (radiusVariable) {
+    //       return scaleRadius(+d.data[radiusVariable]);
+    //     } else {
+    //       return radius - 5;
+    //     }
+    //   })
+    //   .cornerRadius(this.cornerRadius);
       
     // const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
     const arcShapeLabels = d3.arc()
@@ -437,6 +438,7 @@ class PieChart extends HTMLElement {
   renderColorPickers(uniqueLanguages) {
     let coreData = JSON.parse(this.#dataValue);
     const container = this.shadowRoot.querySelector(".color-picker-container");
+    container.innerHTML = '<div class="legend-title">Language</div>';
     const colorVariable = coreData.encoding.find(element => element.color)?.color.field;
     container.style.display = "block"; // Ensure the color picker container is visible
     uniqueLanguages.forEach((d, index) => {
@@ -451,8 +453,9 @@ class PieChart extends HTMLElement {
       input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
       input.setAttribute("data-index", index); // Store index data for reference
   
-      colorItem.appendChild(label); // Append to color item container
+      // Append to color item container
       colorItem.appendChild(input);
+      colorItem.appendChild(label);
       container.appendChild(colorItem);
       
       // Add event listener to handle color changes

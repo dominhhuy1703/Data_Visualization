@@ -7,10 +7,6 @@ function drawBubbleMap(data) {
 
         "data": {
             "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
-            // "format": {
-            // "type": "topojson",
-            // "feature": "countries"
-            // }
         },
         "transform": [
             {
@@ -31,7 +27,7 @@ function drawBubbleMap(data) {
         "projection": {
             "type": "mercator"
         },
-        "mark": "geoshape",
+        // "mark": "geoshape",
         "encoding": {
             "color": {
             "field": "population",

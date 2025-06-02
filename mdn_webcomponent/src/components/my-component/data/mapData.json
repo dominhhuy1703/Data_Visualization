@@ -1,0 +1,907 @@
+[
+  {
+    "isoCode": "CHN",
+    "population": 1442965000,
+    "countryLabel": "People's Republic of China"
+  },
+  {
+    "isoCode": "IND",
+    "population": 1326093247,
+    "countryLabel": "India"
+  },
+  {
+    "isoCode": "USA",
+    "population": 340110988,
+    "countryLabel": "United States"
+  },
+  {
+    "isoCode": "IDN",
+    "population": 275439000,
+    "countryLabel": "Indonesia"
+  },
+  {
+    "isoCode": "PAK",
+    "population": 223773700,
+    "countryLabel": "Pakistan"
+  },
+  {
+    "isoCode": "NGA",
+    "population": 211400708,
+    "countryLabel": "Nigeria"
+  },
+  {
+    "isoCode": "BRA",
+    "population": 203062512,
+    "countryLabel": "Brazil"
+  },
+  {
+    "isoCode": "BGD",
+    "population": 171466990,
+    "countryLabel": "Bangladesh"
+  },
+  {
+    "isoCode": "RUS",
+    "population": 146119928,
+    "countryLabel": "Russia"
+  },
+  {
+    "isoCode": "ETH",
+    "population": 128691692,
+    "countryLabel": "Ethiopia"
+  },
+  {
+    "isoCode": "JPN",
+    "population": 125440000,
+    "countryLabel": "Japan"
+  },
+  {
+    "isoCode": "MEX",
+    "population": 124777324,
+    "countryLabel": "Mexico"
+  },
+  {
+    "isoCode": "EGY",
+    "population": 114535772,
+    "countryLabel": "Egypt"
+  },
+  {
+    "isoCode": "PHL",
+    "population": 109035343,
+    "countryLabel": "Philippines"
+  },
+  {
+    "isoCode": "COD",
+    "population": 105789731,
+    "countryLabel": "Democratic Republic of the Congo"
+  },
+  {
+    "isoCode": "VNM",
+    "population": 96208984,
+    "countryLabel": "Vietnam"
+  },
+  {
+    "isoCode": "IRN",
+    "population": 86758304,
+    "countryLabel": "Iran"
+  },
+  {
+    "isoCode": "TUR",
+    "population": 85372377,
+    "countryLabel": "Turkey"
+  },
+  {
+    "isoCode": "DEU",
+    "population": 84358845,
+    "countryLabel": "Germany"
+  },
+  {
+    "isoCode": "FRA",
+    "population": 68373433,
+    "countryLabel": "France"
+  },
+  {
+    "isoCode": "GBR",
+    "population": 67326569,
+    "countryLabel": "United Kingdom"
+  },
+  {
+    "isoCode": "THA",
+    "population": 66188503,
+    "countryLabel": "Thailand"
+  },
+  {
+    "isoCode": "ZAF",
+    "population": 62027503,
+    "countryLabel": "South Africa"
+  },
+  {
+    "isoCode": "ITA",
+    "population": 58850717,
+    "countryLabel": "Italy"
+  },
+  {
+    "isoCode": "TZA",
+    "population": 57310019,
+    "countryLabel": "Tanzania"
+  },
+  {
+    "isoCode": "MMR",
+    "population": 53370609,
+    "countryLabel": "Myanmar"
+  },
+  {
+    "isoCode": "COL",
+    "population": 52321152,
+    "countryLabel": "Colombia"
+  },
+  {
+    "isoCode": "KOR",
+    "population": 51466201,
+    "countryLabel": "South Korea"
+  },
+  {
+    "isoCode": "ESP",
+    "population": 48592909,
+    "countryLabel": "Spain"
+  },
+  {
+    "isoCode": "KEN",
+    "population": 48468138,
+    "countryLabel": "Kenya"
+  },
+  {
+    "isoCode": "ARG",
+    "population": 47327407,
+    "countryLabel": "Argentina"
+  },
+  {
+    "isoCode": "UGA",
+    "population": 47123531,
+    "countryLabel": "Uganda"
+  },
+  {
+    "isoCode": "DZA",
+    "population": 46164219,
+    "countryLabel": "Algeria"
+  },
+  {
+    "isoCode": "AFG",
+    "population": 41454761,
+    "countryLabel": "Afghanistan"
+  },
+  {
+    "isoCode": "SDN",
+    "population": 40533330,
+    "countryLabel": "Sudan"
+  },
+  {
+    "isoCode": "IRQ",
+    "population": 38274618,
+    "countryLabel": "Iraq"
+  },
+  {
+    "isoCode": "POL",
+    "population": 37563071,
+    "countryLabel": "Poland"
+  },
+  {
+    "isoCode": "MAR",
+    "population": 37076584,
+    "countryLabel": "Morocco"
+  },
+  {
+    "isoCode": "CAN",
+    "population": 36991981,
+    "countryLabel": "Canada"
+  },
+  {
+    "isoCode": "MAR",
+    "population": 36828330,
+    "countryLabel": "Morocco"
+  },
+  {
+    "isoCode": "AGO",
+    "population": 36749906,
+    "countryLabel": "Angola"
+  },
+  {
+    "isoCode": "UZB",
+    "population": 34915100,
+    "countryLabel": "Uzbekistan"
+  },
+  {
+    "isoCode": "SAU",
+    "population": 33000000,
+    "countryLabel": "Saudi Arabia"
+  },
+  {
+    "isoCode": "GHA",
+    "population": 32833031,
+    "countryLabel": "Ghana"
+  },
+  {
+    "isoCode": "MYS",
+    "population": 32447385,
+    "countryLabel": "Malaysia"
+  },
+  {
+    "isoCode": "CIV",
+    "population": 31165654,
+    "countryLabel": "Ivory Coast"
+  },
+  {
+    "isoCode": "MOZ",
+    "population": 29668834,
+    "countryLabel": "Mozambique"
+  },
+  {
+    "isoCode": "NPL",
+    "population": 29164578,
+    "countryLabel": "Nepal"
+  },
+  {
+    "isoCode": "VEN",
+    "population": 28515829,
+    "countryLabel": "Venezuela"
+  },
+  {
+    "isoCode": "CMR",
+    "population": 28372687,
+    "countryLabel": "Cameroon"
+  },
+  {
+    "isoCode": "YEM",
+    "population": 28250420,
+    "countryLabel": "Yemen"
+  },
+  {
+    "isoCode": "AUS",
+    "population": 27309396,
+    "countryLabel": "Australia"
+  },
+  {
+    "isoCode": "PRK",
+    "population": 26418204,
+    "countryLabel": "North Korea"
+  },
+  {
+    "isoCode": "SYR",
+    "population": 23865423,
+    "countryLabel": "Syria"
+  },
+  {
+    "isoCode": "TWN",
+    "population": 23409323,
+    "countryLabel": "Taiwan"
+  },
+  {
+    "isoCode": "BFA",
+    "population": 23025776,
+    "countryLabel": "Burkina Faso"
+  },
+  {
+    "isoCode": "NER",
+    "population": 21477348,
+    "countryLabel": "Niger"
+  },
+  {
+    "isoCode": "LKA",
+    "population": 21444000,
+    "countryLabel": "Sri Lanka"
+  },
+  {
+    "isoCode": "MLI",
+    "population": 20250833,
+    "countryLabel": "Mali"
+  },
+  {
+    "isoCode": "KAZ",
+    "population": 20139914,
+    "countryLabel": "Kazakhstan"
+  },
+  {
+    "isoCode": "ZMB",
+    "population": 19610769,
+    "countryLabel": "Zambia"
+  },
+  {
+    "isoCode": "CHL",
+    "population": 19458000,
+    "countryLabel": "Chile"
+  },
+  {
+    "isoCode": "TCD",
+    "population": 19319064,
+    "countryLabel": "Chad"
+  },
+  {
+    "isoCode": "ROU",
+    "population": 19053815,
+    "countryLabel": "Romania"
+  },
+  {
+    "isoCode": "MWI",
+    "population": 18622104,
+    "countryLabel": "Malawi"
+  },
+  {
+    "isoCode": "KHM",
+    "population": 17423880,
+    "countryLabel": "Cambodia"
+  },
+  {
+    "isoCode": "GTM",
+    "population": 17263239,
+    "countryLabel": "Guatemala"
+  },
+  {
+    "isoCode": "NLD",
+    "population": 17100715,
+    "countryLabel": "Kingdom of the Netherlands"
+  },
+  {
+    "isoCode": "ECU",
+    "population": 16938986,
+    "countryLabel": "Ecuador"
+  },
+  {
+    "isoCode": "SEN",
+    "population": 16876720,
+    "countryLabel": "Senegal"
+  },
+  {
+    "isoCode": "ZWE",
+    "population": 15178979,
+    "countryLabel": "Zimbabwe"
+  },
+  {
+    "isoCode": "RWA",
+    "population": 14569341,
+    "countryLabel": "Rwanda"
+  },
+  {
+    "isoCode": "BEN",
+    "population": 14111034,
+    "countryLabel": "Benin"
+  },
+  {
+    "isoCode": "BDI",
+    "population": 13689450,
+    "countryLabel": "Burundi"
+  },
+  {
+    "isoCode": "GIN",
+    "population": 12717176,
+    "countryLabel": "Guinea"
+  },
+  {
+    "isoCode": "SSD",
+    "population": 12575714,
+    "countryLabel": "South Sudan"
+  },
+  {
+    "isoCode": "BOL",
+    "population": 12244159,
+    "countryLabel": "Bolivia"
+  },
+  {
+    "isoCode": "BEL",
+    "population": 11584008,
+    "countryLabel": "Belgium"
+  },
+  {
+    "isoCode": "TUN",
+    "population": 11565204,
+    "countryLabel": "Tunisia"
+  },
+  {
+    "isoCode": "SOM",
+    "population": 11031386,
+    "countryLabel": "Somalia"
+  },
+  {
+    "isoCode": "CUB",
+    "population": 10985974,
+    "countryLabel": "Cuba"
+  },
+  {
+    "isoCode": "CZE",
+    "population": 10909500,
+    "countryLabel": "Czech Republic"
+  },
+  {
+    "isoCode": "DOM",
+    "population": 10760028,
+    "countryLabel": "Dominican Republic"
+  },
+  {
+    "isoCode": "SWE",
+    "population": 10587696,
+    "countryLabel": "Sweden"
+  },
+  {
+    "isoCode": "GRC",
+    "population": 10482487,
+    "countryLabel": "Greece"
+  },
+  {
+    "isoCode": "JOR",
+    "population": 10428241,
+    "countryLabel": "Jordan"
+  },
+  {
+    "isoCode": "PRT",
+    "population": 10347892,
+    "countryLabel": "Portugal"
+  },
+  {
+    "isoCode": "AZE",
+    "population": 10145212,
+    "countryLabel": "Azerbaijan"
+  },
+  {
+    "isoCode": "ARE",
+    "population": 9890400,
+    "countryLabel": "United Arab Emirates"
+  },
+  {
+    "isoCode": "ISR",
+    "population": 9840000,
+    "countryLabel": "Israel"
+  },
+  {
+    "isoCode": "HUN",
+    "population": 9599744,
+    "countryLabel": "Hungary"
+  },
+  {
+    "isoCode": "TJK",
+    "population": 9504000,
+    "countryLabel": "Tajikistan"
+  },
+  {
+    "isoCode": "BLR",
+    "population": 9109280,
+    "countryLabel": "Belarus"
+  },
+  {
+    "isoCode": "AUT",
+    "population": 8979894,
+    "countryLabel": "Austria"
+  },
+  {
+    "isoCode": "PNG",
+    "population": 8935000,
+    "countryLabel": "Papua New Guinea"
+  },
+  {
+    "isoCode": "CHE",
+    "population": 8902308,
+    "countryLabel": "Switzerland"
+  },
+  {
+    "isoCode": "HND",
+    "population": 8303771,
+    "countryLabel": "Honduras"
+  },
+  {
+    "isoCode": "TGO",
+    "population": 7797694,
+    "countryLabel": "Togo"
+  },
+  {
+    "isoCode": "SLE",
+    "population": 7557212,
+    "countryLabel": "Sierra Leone"
+  },
+  {
+    "isoCode": "LAO",
+    "population": 6858160,
+    "countryLabel": "Laos"
+  },
+  {
+    "isoCode": "PRY",
+    "population": 6811297,
+    "countryLabel": "Paraguay"
+  },
+  {
+    "isoCode": "KGZ",
+    "population": 6694200,
+    "countryLabel": "Kyrgyzstan"
+  },
+  {
+    "isoCode": "LBY",
+    "population": 6678567,
+    "countryLabel": "Libya"
+  },
+  {
+    "isoCode": "BGR",
+    "population": 6437360,
+    "countryLabel": "Bulgaria"
+  },
+  {
+    "isoCode": "COG",
+    "population": 6142180,
+    "countryLabel": "Republic of the Congo"
+  },
+  {
+    "isoCode": "TKM",
+    "population": 6117933,
+    "countryLabel": "Turkmenistan"
+  },
+  {
+    "isoCode": "LBN",
+    "population": 6100075,
+    "countryLabel": "Lebanon"
+  },
+  {
+    "isoCode": "SLV",
+    "population": 6029976,
+    "countryLabel": "El Salvador"
+  },
+  {
+    "isoCode": "SGP",
+    "population": 5866139,
+    "countryLabel": "Singapore"
+  },
+  {
+    "isoCode": "DNK",
+    "population": 5827463,
+    "countryLabel": "Denmark"
+  },
+  {
+    "isoCode": "FIN",
+    "population": 5608218,
+    "countryLabel": "Finland"
+  },
+  {
+    "isoCode": "NOR",
+    "population": 5594340,
+    "countryLabel": "Norway"
+  },
+  {
+    "isoCode": "SVK",
+    "population": 5419451,
+    "countryLabel": "Slovakia"
+  },
+  {
+    "isoCode": "PSE",
+    "population": 5227193,
+    "countryLabel": "State of Palestine"
+  },
+  {
+    "isoCode": "LBR",
+    "population": 5214030,
+    "countryLabel": "Liberia"
+  },
+  {
+    "isoCode": "CAF",
+    "population": 5152421,
+    "countryLabel": "Central African Republic"
+  },
+  {
+    "isoCode": "IRL",
+    "population": 5149139,
+    "countryLabel": "Ireland"
+  },
+  {
+    "isoCode": "NIC",
+    "population": 5142098,
+    "countryLabel": "Nicaragua"
+  },
+  {
+    "isoCode": "NZL",
+    "population": 5118700,
+    "countryLabel": "New Zealand"
+  },
+  {
+    "isoCode": "CRI",
+    "population": 5044197,
+    "countryLabel": "Costa Rica"
+  },
+  {
+    "isoCode": "OMN",
+    "population": 4829480,
+    "countryLabel": "Oman"
+  },
+  {
+    "isoCode": "MRT",
+    "population": 4736139,
+    "countryLabel": "Mauritania"
+  },
+  {
+    "isoCode": "HRV",
+    "population": 3871833,
+    "countryLabel": "Croatia"
+  },
+  {
+    "isoCode": "BIH",
+    "population": 3816459,
+    "countryLabel": "Bosnia and Herzegovina"
+  },
+  {
+    "isoCode": "ERI",
+    "population": 3497000,
+    "countryLabel": "Eritrea"
+  },
+  {
+    "isoCode": "URY",
+    "population": 3444263,
+    "countryLabel": "Uruguay"
+  },
+  {
+    "isoCode": "MNG",
+    "population": 3409939,
+    "countryLabel": "Mongolia"
+  },
+  {
+    "isoCode": "ARM",
+    "population": 2930450,
+    "countryLabel": "Armenia"
+  },
+  {
+    "isoCode": "LTU",
+    "population": 2860002,
+    "countryLabel": "Lithuania"
+  },
+  {
+    "isoCode": "ALB",
+    "population": 2811655,
+    "countryLabel": "Albania"
+  },
+  {
+    "isoCode": "JAM",
+    "population": 2697983,
+    "countryLabel": "Jamaica"
+  },
+  {
+    "isoCode": "GMB",
+    "population": 2639916,
+    "countryLabel": "The Gambia"
+  },
+  {
+    "isoCode": "QAT",
+    "population": 2639211,
+    "countryLabel": "Qatar"
+  },
+  {
+    "isoCode": "NAM",
+    "population": 2533794,
+    "countryLabel": "Namibia"
+  },
+  {
+    "isoCode": "BWA",
+    "population": 2480244,
+    "countryLabel": "Botswana"
+  },
+  {
+    "isoCode": "SVN",
+    "population": 2066880,
+    "countryLabel": "Slovenia"
+  },
+  {
+    "isoCode": "GAB",
+    "population": 2025137,
+    "countryLabel": "Gabon"
+  },
+  {
+    "isoCode": "LSO",
+    "population": 2007201,
+    "countryLabel": "Lesotho"
+  },
+  {
+    "isoCode": "LVA",
+    "population": 1871882,
+    "countryLabel": "Latvia"
+  },
+  {
+    "isoCode": "MKD",
+    "population": 1836713,
+    "countryLabel": "North Macedonia"
+  },
+  {
+    "isoCode": "BHR",
+    "population": 1569666,
+    "countryLabel": "Bahrain"
+  },
+  {
+    "isoCode": "EST",
+    "population": 1369995,
+    "countryLabel": "Estonia"
+  },
+  {
+    "isoCode": "TTO",
+    "population": 1369125,
+    "countryLabel": "Trinidad and Tobago"
+  },
+  {
+    "isoCode": "CYP",
+    "population": 1344976,
+    "countryLabel": "Cyprus"
+  },
+  {
+    "isoCode": "MUS",
+    "population": 1264613,
+    "countryLabel": "Mauritius"
+  },
+  {
+    "isoCode": "TLS",
+    "population": 1243235,
+    "countryLabel": "Timor-Leste"
+  },
+  {
+    "isoCode": "DJI",
+    "population": 1152944,
+    "countryLabel": "Djibouti"
+  },
+  {
+    "isoCode": "FJI",
+    "population": 926276,
+    "countryLabel": "Fiji"
+  },
+  {
+    "isoCode": "COM",
+    "population": 902348,
+    "countryLabel": "Comoros"
+  },
+  {
+    "isoCode": "BTN",
+    "population": 787424,
+    "countryLabel": "Bhutan"
+  },
+  {
+    "isoCode": "GUY",
+    "population": 777859,
+    "countryLabel": "Guyana"
+  },
+  {
+    "isoCode": "LUX",
+    "population": 672050,
+    "countryLabel": "Luxembourg"
+  },
+  {
+    "isoCode": "MNE",
+    "population": 617213,
+    "countryLabel": "Montenegro"
+  },
+  {
+    "isoCode": "SLB",
+    "population": 611343,
+    "countryLabel": "Solomon Islands"
+  },
+  {
+    "isoCode": "CPV",
+    "population": 555988,
+    "countryLabel": "Cape Verde"
+  },
+  {
+    "isoCode": "MLT",
+    "population": 553214,
+    "countryLabel": "Malta"
+  },
+  {
+    "isoCode": "BRN",
+    "population": 458949,
+    "countryLabel": "Brunei"
+  },
+  {
+    "isoCode": "MDV",
+    "population": 436330,
+    "countryLabel": "Maldives"
+  },
+  {
+    "isoCode": "BHS",
+    "population": 399440,
+    "countryLabel": "The Bahamas"
+  },
+  {
+    "isoCode": "ISL",
+    "population": 364260,
+    "countryLabel": "Iceland"
+  },
+  {
+    "isoCode": "VUT",
+    "population": 300019,
+    "countryLabel": "Vanuatu"
+  },
+  {
+    "isoCode": "STP",
+    "population": 204327,
+    "countryLabel": "São Tomé and Príncipe"
+  },
+  {
+    "isoCode": "WSM",
+    "population": 200010,
+    "countryLabel": "Samoa"
+  },
+  {
+    "isoCode": "LCA",
+    "population": 167591,
+    "countryLabel": "Saint Lucia"
+  },
+  {
+    "isoCode": "SYC",
+    "population": 119773,
+    "countryLabel": "Seychelles"
+  },
+  {
+    "isoCode": "GRD",
+    "population": 114299,
+    "countryLabel": "Grenada"
+  },
+  {
+    "isoCode": "VCT",
+    "population": 109897,
+    "countryLabel": "Saint Vincent and the Grenadines"
+  },
+  {
+    "isoCode": "ABW",
+    "population": 106739,
+    "countryLabel": "Aruba"
+  },
+  {
+    "isoCode": "FSM",
+    "population": 105544,
+    "countryLabel": "Federated States of Micronesia"
+  },
+  {
+    "isoCode": "ATG",
+    "population": 101489,
+    "countryLabel": "Antigua and Barbuda"
+  },
+  {
+    "isoCode": "AND",
+    "population": 87486,
+    "countryLabel": "Andorra"
+  },
+  {
+    "isoCode": "DMA",
+    "population": 74656,
+    "countryLabel": "Dominica"
+  },
+  {
+    "isoCode": "KNA",
+    "population": 55345,
+    "countryLabel": "Saint Kitts and Nevis"
+  },
+  {
+    "isoCode": "SXM",
+    "population": 43847,
+    "countryLabel": "Sint Maarten"
+  },
+  {
+    "isoCode": "LIE",
+    "population": 37922,
+    "countryLabel": "Liechtenstein"
+  },
+  {
+    "isoCode": "PLW",
+    "population": 21729,
+    "countryLabel": "Palau"
+  },
+  {
+    "isoCode": "COK",
+    "population": 14222,
+    "countryLabel": "Cook Islands"
+  },
+  {
+    "isoCode": "NRU",
+    "population": 13650,
+    "countryLabel": "Nauru"
+  },
+  {
+    "isoCode": "TUV",
+    "population": 10643,
+    "countryLabel": "Tuvalu"
+  },
+  {
+    "isoCode": "NIU",
+    "population": 1933,
+    "countryLabel": "Niue"
+  },
+  {
+    "isoCode": "VAT",
+    "population": 882,
+    "countryLabel": "Vatican City"
+  }
+]

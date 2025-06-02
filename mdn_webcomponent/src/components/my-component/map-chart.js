@@ -1,9 +1,10 @@
 class MapChart extends HTMLElement {
     #dataValue = '';
-        #coreData = null;
-        #width = 400;
-        #height = 400;
-        #svg = null;
+    #coreData = null;
+    #data = null;
+    #width = 400;
+    #height = 400;
+    #svg = null;
 
     constructor() {
         super();
@@ -20,14 +21,35 @@ class MapChart extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === "data" && newValue != null) {
-            this.#dataValue = newValue;
-            this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
-            this.#width = this.#coreData.width, this.#height = this.#coreData.height;
-            this.removeAttribute("data");
-            this.drawChart();
-	    }
+    if (name === "data" && newValue != null) {
+        this.#dataValue = newValue;
+        this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
+
+        let rawData = Array.isArray(this.#coreData.data)
+            ? this.#coreData.data[0].values
+            : this.#coreData.data.values;
+
+        // Flatten SPARQL-style fields (i.e., { value: "..." })
+        this.#data = rawData.map(d => {
+            const flattened = {};
+            for (const [key, valObj] of Object.entries(d)) {
+                if (valObj && typeof valObj === "object" && "value" in valObj) {
+                    const num = Number(valObj.value);
+                    flattened[key] = isNaN(num) ? valObj.value : num;
+                }
+            }
+            console.log("flat", flattened)
+            return flattened;
+        });
+
+        this.#width = this.#coreData.width;
+        this.#height = this.#coreData.height;
+
+        this.removeAttribute("data");
+        this.drawChart();
     }
+}
+
 
     render() {
         this.shadowRoot.innerHTML = `
@@ -89,35 +111,38 @@ class MapChart extends HTMLElement {
     }
 
     drawChart() {
-        let coreData = JSON.parse(this.#dataValue);
-        // let data = coreData.data[0].values;
+        let data = this.#data;
         const svgElement = this.shadowRoot.querySelector('svg');
         d3.select(svgElement).selectAll("g").remove();
         this.#svg = d3.select(svgElement)
-			.attr("width", this.#width).attr("height", this.#height);
+            .attr("width", this.#width)
+            .attr("height", this.#height);
+    
+        const isChoropleth = this.#coreData.mark === "geoshape" && !this.#coreData.layer;
+        const isConnection = Array.isArray(this.#coreData.layer) && this.#coreData.layer.some(l => l.mark === "rule");
+        const isBubbled = this.#coreData.bubble;
+        const isHexbin = this.#coreData.hexbin;
 
-        const isConnected = coreData.connection;
-        const isBubbled = coreData.bubble;
-        const isHexbin = coreData.hexbin;
-
-
-        if (isConnected === "true"){
+        if (isChoropleth) {
+            this.drawGeoChart();
+        } else if (isConnection) {
             this.drawConnectionMap();
-        }
-        else if (isBubbled === "true"){
+        } else if (isBubbled) {
             this.drawBubbleMap();
-        }
-        else if (isHexbin === "true"){
+        } else if (isHexbin) {
             this.drawHexbinMap();
+        } else {
+            console.warn("Unable to determine chart type from metadata");
         }
-        else {this.drawGeoChart();}
     }
-
+    
+    
     drawHexbinMap() {
         const projection = d3.geoMercator()
-            .scale(99)
+            .scale(80)
             .translate([this.#width / 2, this.#height / 2]);
-    
+        
+            
         const path = d3.geoPath().projection(projection);
     
         // attach with data's url
@@ -125,9 +150,7 @@ class MapChart extends HTMLElement {
             d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
             d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
         ]).then(([geoData, pointData]) => {
-    
-            console.log(geoData);  // Check geoData
-    
+        
             // Check data is TopoJSON or GeoJSON
             if (geoData.objects) {
                 // Data is TOopoJSON
@@ -152,15 +175,28 @@ class MapChart extends HTMLElement {
             const color = d3.scaleSequential(d3.interpolateYlOrRd)
                 .domain([0, d3.max(bins, d => d.length)]);
     
-            // draw map
+            // // draw map
+            // this.#svg.append("g")
+            //     .selectAll("path")
+            //     .data(geoData.features)  // data in geoJSON
+            //     .enter()
+            //     .append("path")
+            //     .attr("fill", "#e0e0e0")
+            //     .attr("d", path)
+            //     .attr("stroke", "#999");
+
+            // Draw map
             this.#svg.append("g")
-                .selectAll("path")
-                .data(geoData.features)  // data in geoJSON
-                .enter()
-                .append("path")
-                .attr("fill", "#e0e0e0")
-                .attr("d", path)
-                .attr("stroke", "#999");
+            .selectAll("path")
+            .data(geoData.features)
+            .enter()
+            .append("path")
+                .attr("fill", "#b8b8b8")
+                .attr("d", d3.geoPath()
+                    .projection(projection)
+                )
+                .style("stroke", "none")
+                .style("opacity", 3);
     
             // draw hexbinGroup
             const hexbinGroup = this.#svg.append("g")
@@ -192,10 +228,10 @@ class MapChart extends HTMLElement {
                 });
     
             // Legend
-            const legendValues = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+            const legendValues = [1, 50, 90];
     
             const legend = this.#svg.append("g")
-                .attr("transform", `translate(${this.#width - 160}, ${this.#height/2 + 100})`);
+                .attr("transform", `translate(${this.#width - 120}, ${this.#height/2 + 150})`);
     
             legendValues.forEach((val, i) => {
                 const y = i * 20;
@@ -228,8 +264,8 @@ class MapChart extends HTMLElement {
 
         // Projection setup
         const projection = d3.geoMercator()
-            .center([0, 20])
-            .scale(99)
+            // .center([0, 20])
+            .scale(80)
             .translate([this.#width / 2, this.#height / 2]);
     
         const geoPath = d3.geoPath().projection(projection);
@@ -313,7 +349,7 @@ class MapChart extends HTMLElement {
             .enter()
             .append("circle")
             .attr("cx", xCircle)
-            .attr("cy", function(d){ return height - size(d) } )
+            .attr("cy", function(d){ return height - size(d)} )
             .attr("r", function(d){ return size(d) })
             .style("fill", "none")
             .attr("stroke", "black")
@@ -369,26 +405,42 @@ class MapChart extends HTMLElement {
         });
     }      
 
+    // drawConnectionMap() {
     drawConnectionMap() {
-        let coreData = JSON.parse(this.#dataValue);
         const tooltip = this.shadowRoot.querySelector(".tooltip");
-        
-        // Variable for data
-        const mapUrl = "https://vega.github.io/vega-datasets/data/us-10m.json";
-        const airportsUrl = "https://vega.github.io/vega-datasets/data/airports.csv";
-        const flightsUrl = "https://vega.github.io/vega-datasets/data/flights-airport.csv";
+        const layers = this.#coreData.layer;
+        const connectionLayer = layers.find(l => l.mark === "rule");
+        const airportLayer = layers.find(l => l.mark === "circle");
+        const mapLayer = layers.find(l => l.mark?.type === "geoshape");
     
-        const projection = d3.geoAlbersUsa()
-            .scale(1280)
-            .translate([this.#width / 2, this.#height / 2]);
-    
+        const mapUrl = mapLayer?.data?.url;
+        console.log("MAP", mapUrl)
+        const airportsUrl = airportLayer?.data?.url;
+        const flightsUrl = connectionLayer?.data?.url;
+        const originFilter = connectionLayer?.transform?.find(t => t.filter)?.filter?.equal;
+        const projectionType = connectionLayer?.projection?.type || "albersUsa";
+
+        // const projection = d3.geoAlbersUsa()
+        //     .scale(1280)
+        //     .translate([this.#width / 2, this.#height / 2]);
+        console.log("Projection Type from grammar:", projectionType);
+
+        const projection = d3[`geo${projectionType.charAt(0).toUpperCase() + projectionType.slice(1)}`]()
+    .fitSize([this.#width, this.#height], { type: "Sphere" });
+
+            console.log("D3 Projection Object:", projection);
+
+
         const path = d3.geoPath().projection(projection);
         
         const map = this.#svg.append("g").attr("class", "map");
         const routes = this.#svg.append("g").attr("class", "routes");
         const points = this.#svg.append("g").attr("class", "airports");
-        
-        //Draw background of map
+        console.log("mapUrl:", mapUrl);
+        console.log("airportsUrl:", airportsUrl);
+        console.log("flightsUrl:", flightsUrl);
+        console.log("originFilter:", originFilter);
+
         d3.json(mapUrl).then(geoData => {
             const states = topojson.feature(geoData, geoData.objects.states).features;
             map.selectAll("path")
@@ -399,11 +451,15 @@ class MapChart extends HTMLElement {
                 .attr("fill", "#ddd")
                 .attr("stroke", "#fff")
                 .attr("stroke-width", 1);
-    
+
             d3.csv(airportsUrl).then(airportsData => {
                 d3.csv(flightsUrl).then(flightsData => {
                     const airportMap = new Map(airportsData.map(d => [d.iata, d]));
-    
+                    
+                    // Filter theo originFilter
+                    const filteredFlights = flightsData.filter(f => f.origin === originFilter);
+                    console.log
+
                     // Calculate the number of route flights from each airport
                     const routeCounts = {};
                     flightsData.forEach(flight => {
@@ -411,8 +467,8 @@ class MapChart extends HTMLElement {
                     });
     
                     const sizeScale = d3.scaleSqrt()
-                        .domain([0, d3.max(Object.values(routeCounts))])
-                        .range([0, 20]);
+                    .domain([0, d3.max(Object.values(routeCounts))])
+                    .range([0, 10]);
                     
                     const usedIATAs = new Set();
                     flightsData.forEach(flight => {
@@ -420,7 +476,7 @@ class MapChart extends HTMLElement {
                         usedIATAs.add(flight.destination);
                     });
                     
-                    // Put a filter for valid airports
+                        // Put a filter for valid airports
                     const filteredAirports = airportsData.filter(d => usedIATAs.has(d.iata));
     
                     // Sort by the number of route flights
@@ -490,18 +546,18 @@ class MapChart extends HTMLElement {
     
   
     drawGeoChart() {
-        let coreData = JSON.parse(this.#dataValue);
-        console.log("AAAAAA",coreData)
-        let data = coreData.transform[0].from.data.values;
         const tooltip = this.shadowRoot.querySelector(".tooltip");
         
-        const geoData = coreData.data.url;
-        // const idVariable = coreData.encoding.id?.field;
-        // const valueVariable = coreData.encoding.size?.field;
-        const idVariable = "id";
-        const valueVariable = "population";
+        const geoData = this.#coreData.data.url;
+        const idVariable = this.#coreData.encoding.id?.field;
+        const labelVariable = this.#coreData.encoding.label?.field;
+        const labelData = new Map(this.#data.map(d => [d[idVariable], d[labelVariable]]));
+              console.log("Label", labelData)
+
+        const valueVariable = this.#coreData.encoding.value?.field;
+
         let projection;
-        if (coreData.projection.type === "mercator") {
+        if (this.#coreData.projection.type === "mercator") {
             projection = d3.geoMercator()
             .scale(70)
             .center([0, 20])
@@ -510,9 +566,9 @@ class MapChart extends HTMLElement {
     
         const path = d3.geoPath().projection(projection);
         
-        const userData = new Map(data.map(d => [d[idVariable], d[valueVariable]]));
-        const minValue = d3.min(data, d => d[valueVariable]);
-        const maxValue = d3.max(data, d => d[valueVariable]);
+        const userData = new Map(this.#data.map(d => [d[idVariable], d[valueVariable]]));
+        const minValue = d3.min(this.#data, d => d[valueVariable]);
+        const maxValue = d3.max(this.#data, d => d[valueVariable]);
     
         const colorScale = d3.scaleThreshold()
             .domain([minValue, (minValue + maxValue) / 8, (minValue + maxValue) / 6, (minValue + maxValue) / 4, (minValue + maxValue) / 2, maxValue / 1.5])
@@ -591,7 +647,10 @@ class MapChart extends HTMLElement {
                 .style("opacity", 1)
                 .style("stroke", "black");
     
-            tooltip.innerHTML = `${d.properties.name}: ${population.toLocaleString()}`;
+            const label = labelData.get(d.id) || d.id;
+            console.log("Label", label)
+
+            tooltip.innerHTML = `${label}: ${population.toLocaleString()}`;
             tooltip.style.opacity = 1;
             tooltip.style.left = `${event.pageX + 10}px`;
             tooltip.style.top = `${event.pageY}px`;

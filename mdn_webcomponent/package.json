@@ -1,6 +1,6 @@
 {
   "name": "@dominhhuy1703/mdn_webcomponent",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "index.js",
   "scripts": {
     "start": "live-server src --port=8090",
