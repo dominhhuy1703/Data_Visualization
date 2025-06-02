@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 cột */
   grid-auto-rows: 1fr; /* Các hàng có chiều cao bằng nhau */
-  gap: 10px; /* Khoảng cách giữa các ô */
+  gap: 30px; /* Khoảng cách giữa các ô */
   padding: 10px;
   box-sizing: border-box;
 }

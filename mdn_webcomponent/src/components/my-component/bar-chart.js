@@ -1,9 +1,11 @@
 class BarChart extends HTMLElement {
 	#dataValue = '';
 	#coreData = null;
+	#data = null;
 	#width = 400;
 	#height = 400;
 	#svg = null;
+	#defaultColor = "#cccccc";
 
 	constructor() {
 	  super();
@@ -24,6 +26,25 @@ class BarChart extends HTMLElement {
 	  if (name === "data" && newValue != null) {
 		this.#dataValue = newValue;
 		this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
+		let rawData = Array.isArray(this.#coreData.data)
+		? this.#coreData.data[0].values
+		: this.#coreData.data.values;
+		
+
+		// Flatten all fields by extracting .value
+		this.#data = rawData.map(d => {
+		const flattened = {};
+		for (const [key, valObj] of Object.entries(d)) {
+			if (valObj?.value !== undefined) {
+			const num = Number(valObj.value);
+			flattened[key] = isNaN(num) ? valObj.value : num;
+			}
+		}
+
+		return flattened;
+		});
+
+		// this.#data = Array.isArray(this.#coreData.data) ? this.#coreData.data[0].values : this.#coreData.data.values;
 		this.#width = this.#coreData.width, this.#height = this.#coreData.height;
 		this.removeAttribute("data");
 		this.drawChart();
@@ -56,9 +77,6 @@ class BarChart extends HTMLElement {
 				flex-direction: column;
 				align-items: center;
 			}
-
-			.info-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); z-index: 1000; }
-			.info-popup.show { display: block; }
 
 			.color-picker-container {
 				display: flex;
@@ -123,7 +141,7 @@ class BarChart extends HTMLElement {
 		<div class="main-container">
 			<div class="content">
 				<div class="color-picker-container">
-					<div class="legend-title">Language</div>
+					<div class="legend-title"></div>
 				</div>
 
 				<div class="chart-container">
@@ -174,7 +192,8 @@ class BarChart extends HTMLElement {
 			x = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
 				.range([this.margin.left, this.#width - this.margin.right])
-				.padding(0.3);
+				.padding(0.3)
+;
 		
 			if (yScaleType === "log") {
 				const rawMax = d3.max(data, d => +d[yVariable]);
@@ -253,10 +272,28 @@ class BarChart extends HTMLElement {
 			
 		}
 
+		// // X Axis
+		// const xAxis = isHorizontal
+		// ? d3.axisBottom(x).ticks(6).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"))
+		// : d3.axisBottom(x).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d);
+		
 		// X Axis
 		const xAxis = isHorizontal
-		? d3.axisBottom(x).ticks(6).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"))
-		: d3.axisBottom(x).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d);
+		? d3.axisBottom(x)
+			.ticks(6)
+			.tickFormat(d =>
+				isNormalized
+				? `${Math.round(d * 100)}%`
+				: d < 1000000
+					? d
+					: d / 1000000 + " M"
+			)
+		: d3.axisBottom(x)
+			.tickFormat(d =>
+				typeof d === 'string' && d.length > maxLabelLength
+				? d.slice(0, maxLabelLength) + "..."
+				: d
+			);
 
 		this.#svg.append("g")
 			.attr("transform", `translate(0, ${this.#height - this.margin.bottom})`)
@@ -266,25 +303,43 @@ class BarChart extends HTMLElement {
 			.attr("transform", `rotate(${xAxisLabelAngle})`)
 			.style("text-anchor", xAxisLabelAngle !== 0 ? "start" : "middle");
 
+		// // Y Axis
+		// const yAxis = isHorizontal
+		// 	? d3.axisLeft(y).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d)
+		// 	: d3.axisLeft(y).ticks(6).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"));
+
 		// Y Axis
 		const yAxis = isHorizontal
-			? d3.axisLeft(y).tickFormat(d => d.length > maxLabelLength ? d.slice(0, maxLabelLength) + "..." : d)
-			: d3.axisLeft(y).ticks(6).tickFormat(d => isNormalized ? `${Math.round(d * 100)}%` : (d < 1000000 ? d : d / 1000000 + " M"));
-
+		? d3.axisLeft(y)
+			.tickFormat(d =>
+				typeof d === 'string' && d.length > maxLabelLength
+				? d.slice(0, maxLabelLength) + "..."
+				: d
+			)
+		: d3.axisLeft(y)
+			.ticks(6)
+			.tickFormat(d =>
+				isNormalized
+				? `${Math.round(d * 100)}%`
+				: d < 1000000
+					? d
+					: d / 1000000 + " M"
+			);
+			
 		this.#svg.append("g")
 			.attr("transform", `translate(${this.margin.left}, 0)`)
 			.call(yAxis)
 			.selectAll("text")
 			.style("font-size", "10px")
-			.attr("transform", `translate(-5,0) rotate(${yAxisLabelAngle})`)
-			.style("text-anchor", "end");
+			.attr("transform", `translate(-15,5) rotate(${yAxisLabelAngle})`)
+			.style("text-anchor", "middle");
 
 
 		// X axis label
 		this.#svg.append("text")
 			.attr("class", "x-axis-label")
-			.attr("x", (this.#width - this.margin.left - this.margin.right) / 2)
-			.attr("y", this.#height - this.margin.bottom / 2)
+			.attr("x", (this.#width- this.margin.right) / 2)
+			.attr("y", this.#height - this.margin.bottom / 3)
 			.style("text-anchor", "middle")
 			.style("font-size", "18px")
 			.text(isHorizontal ? yVariable : xVariable);
@@ -307,53 +362,56 @@ class BarChart extends HTMLElement {
 		.text(yAxisTitle)
 		.attr("transform", "rotate(-90)");
 
-
-
 		return [x, y];
-
 	}
 
 	// Draw chart
 	drawChart() {
 		const tooltip = this.shadowRoot.querySelector(".tooltip");
-		let coreData = JSON.parse(this.#dataValue);
-		let data = coreData.data[0].values;
+		// let data = coreData.data[0].values;
+		let data = this.#data;
 		const svgElement = this.shadowRoot.querySelector('svg');
 		d3.select(svgElement).selectAll("g").remove();
 		this.#svg = d3.select(svgElement)
-			.attr("width", this.#width).attr("height", this.#height).style("margin", "30px")
+			.attr("width", this.#width).attr("height", this.#height)
+			.style("margin", "30px")
 			.append("g")
 			.attr("transform",
 				 "translate(" + this.margin.left + "," + this.margin.top + ")");
-	
-		const isHorizontal = coreData.encoding.direction === "horizontal";
-		const stackOption = coreData.encoding.stack;
+		const isHorizontal = this.#coreData.encoding.direction === "horizontal";
+		const stackOption = this.#coreData.encoding.stack;
 		const isNormalized = stackOption === "normalize";
 		const isStacked = stackOption === true || isNormalized;
 		const isGrouped = stackOption === false;
 		
-		const scaleType = coreData.encoding.y?.scale; // Scale Type
+		const scaleType = this.#coreData.encoding.y?.scale; // Scale Type
 
-		const xVariable = coreData.encoding.x?.field;
-		const xAxisLabelAngle = coreData.encoding.x?.axis?.labelAngle || 0;
-		const yVariable = coreData.encoding.y?.field;
-		const yAxisLabelAngle = coreData.encoding.y?.axis?.labelAngle || 0;
+		const xVariable = this.#coreData.encoding.x?.field || null;
+		const xAxisLabelAngle = this.#coreData.encoding.x?.axis?.labelAngle || 0;
+		const yVariable = this.#coreData.encoding.y?.field || null;
+		const yAxisLabelAngle = this.#coreData.encoding.y?.axis?.labelAngle || 0;
 	
 		this.xVariable = xVariable;
 		this.yVariable = yVariable;
+		
+		const legendDescription = this.shadowRoot.querySelector(".legend-title");
 
-		// Extract the color field from the encoding definition
-		const colorVariable = coreData.encoding.color?.field;
-
+		if (legendDescription) {
+		legendDescription.textContent = this.#coreData.encoding.color?.title || "";
+		} else {
+		console.warn("legendDescription is null");
+		}
+		
+		// Get the field name used to map colors from the Vega-Lite encoding
+		const colorVariable = this.#coreData.encoding.color?.field || this.#defaultColor;
 		// Check if the dataset has any values for the color field
 		const hasColors = data.some(d => d[colorVariable]);
-		const defaultColor = "#cccccc";
 
-		// Extract unique color values from the dataset (if any)
-		let uniqueColors = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
-
+		// Extract values ​​in colorVariable field from data
+		let colorField = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
+		
 		// Get the color scale definition from the encoding
-		let colorScaleObj = coreData.encoding.color?.scale;
+		let colorScaleObj = this.#coreData.encoding.color?.scale || null;
 
 		// Retrieve domain and range from the color scale config
 		let colorDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
@@ -361,6 +419,29 @@ class BarChart extends HTMLElement {
 
 		let parsedColor;
 		let colorRange;
+
+		// xVariable or yVariable is missing
+		if (!xVariable || !yVariable) {
+			this.shadowRoot.querySelector(".description").textContent = "Invalid configuration. Please check the console.";
+			console.error(`Enter required x or y.`)
+			// Remove old chart
+			// d3.select(svgElement).selectAll("g").remove();
+
+			// Render legend if hasColors
+			if (hasColors && colorField.length > 0) {
+				this.colorScale = this.createColorScale({
+					domain: colorDomain,
+					range: rawColorRange,
+					dataKeys: colorField,
+					fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
+					label: "Color(Missing x or y axis)"
+				});
+
+				this.renderColorPickers(this.finalColorDomain);
+				this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
+			}
+			return;
+		}
 
 		// Parse the raw color range if it's a string (i.e., D3 scheme or interpolator name)
 		if (typeof rawColorRange === 'string') {
@@ -374,27 +455,33 @@ class BarChart extends HTMLElement {
 			{
 				domain: colorDomain, 
 				range: rawColorRange,
-				dataKeys: uniqueColors,
+				dataKeys: colorField,
 				fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
 				label: "Color"
 			})
 
 
 		if (isStacked) {
-			data = this.fillMissingStackData(data, coreData, xVariable, yVariable);
+			data = this.fillMissingStackData(data, xVariable, yVariable);
+		}
+
+		if (isStacked && !this.#coreData.encoding.color?.field){
+			this.shadowRoot.querySelector(".description").textContent = "Invalid configuration. Please check the console.";
+			console.error(`[Stacked Error] Missing color field for stacked chart.`);
+			return;
 		}
 	
 		const [x, y] = this.drawAxis(data, xVariable, yVariable, isHorizontal, isStacked, isNormalized, xAxisLabelAngle, yAxisLabelAngle, scaleType);
 		
 
 		if (isStacked && isNormalized) {
-			this.drawNormalizedStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip);
+			this.drawNormalizedStackedChart(data, x, y, xVariable, yVariable, isHorizontal, tooltip);
 		} else if (isStacked) {
-			this.drawStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip);
+			this.drawStackedChart(data, x, y, xVariable, yVariable, isHorizontal, tooltip);
 		} else if (isGrouped) {
-			this.drawGroupedChart(data, coreData, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, defaultColor, tooltip);
+			this.drawGroupedChart(data, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, tooltip);
 		} else {
-			this.drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, defaultColor, tooltip);
+			this.drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, tooltip);
 		}
 	
 		// Color picker & legend
@@ -407,14 +494,13 @@ class BarChart extends HTMLElement {
 			this.shadowRoot.querySelector(".color-picker-container").style.display = "none";
 		}
 	
-		this.shadowRoot.querySelector(".description").textContent = coreData.description;
+		this.shadowRoot.querySelector(".description").textContent = this.#coreData.description;
 	
-		const legendDescription = this.shadowRoot.querySelector(".legend-title");
-		legendDescription.textContent = coreData.encoding.color?.title
+		
 	}
 
-	fillMissingStackData(data, coreData, xVariable, yVariable) {
-		const stackVariable = coreData.encoding.color?.field;
+	fillMissingStackData(data, xVariable, yVariable) {
+		const stackVariable = this.#coreData.encoding.color?.field || null;
 		const stackCategories = [...new Set(data.map(d => d[stackVariable]))];
 		const xCategories = [...new Set(data.map(d => d[xVariable]))];
 	
@@ -439,193 +525,35 @@ class BarChart extends HTMLElement {
 		return completeData;
 	}
 	
-
-	// drawStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip) {
-	// 	const stackVariable = coreData.encoding.color?.field;
-	// 	const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
-	// 	const colorScaleObj = coreData.encoding.color?.scale;
-	// 	const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
-	// 	// const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : colorScaleObj;
-
-	// 	const rawStackRange = coreData.encoding.color?.scale?.range;
-	// 	let parsedStackColor;
-	// 	let stackRange;
-
-	// 	if (typeof rawStackRange === 'string') {
-	// 		parsedStackColor = parseD3ColorScheme(rawStackRange);
-	// 	} else {
-	// 		// Otherwise assume it's already a valid color array
-	// 		stackRange = rawStackRange;
-	// 	}
-
-	// 	const stack = d3.stack()
-	// 		.keys(d3.union(data.map(d => d[stackVariable])))
-	// 		.value(([, d], key) => d.get(key)[yVariable])
-	// 		(d3.index(data, d => d[xVariable], d => d[stackVariable]));
-
-
-	// 	this.stackColorScale = this.createColorScale(
-	// 		{
-	// 			domain: stackDomain, 
-	// 			range: rawStackRange,
-	// 			dataKeys: stackKeys,
-	// 			fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
-	// 			label: "Color"
-	// 		})
+	drawStackedChart(data, x, y, xVariable, yVariable, isHorizontal, tooltip, isNormalized = false) {
+		const stackVariable = this.#coreData.encoding.color?.field || null;
+		if (stackVariable){
+			const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
+			const colorScaleObj = this.#coreData.encoding.color?.scale;
+			const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
+			const rawStackRange = this.#coreData.encoding.color?.scale?.range;
 		
-	// 	this.renderStackLegend(this.finalColorDomain, this.stackColorScale);
-	
-	// 	const bars = this.#svg.append("g")
-	// 		.selectAll("g")
-	// 		.data(stack)
-	// 		.join("g")
-	// 		.attr("fill", d => this.stackColorScale(d.key));
-	
-	// 	bars.selectAll("rect")
-	// 		.data(d => d.map(entry => ({ 
-	// 			...entry, 
-	// 			key: d.key, 
-	// 			xValue: entry.data[0]
-	// 		})))
-	// 		.join("rect")
-	// 		.attr("x", d => isHorizontal ? x(d[0]) : x(d.data[0]))
-	// 		.attr("y", d => isHorizontal ? y(d.data[0]) : y(d[1]))
-	// 		.attr("height", d => isHorizontal ? y.bandwidth() : y(d[0]) - y(d[1]))
-	// 		.attr("width", d => isHorizontal ? x(d[1]) - x(d[0]) : x.bandwidth())
-	// 		.on("mouseover", (event, d) => {
-	// 			tooltip.style.opacity = 1;
-	// 			tooltip.innerHTML = `
-	// 				${xVariable}: ${d.xValue}<br>
-	// 				${stackVariable}: ${d.key}<br>
-	// 				${yVariable}: ${Math.round(d[1] - d[0])}
-	// 			`;
-	// 			d3.select(event.target).style("stroke", "black").style("opacity", 1);
-	// 		})
-	// 		.on("mousemove", (event) => {
-	// 			tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
-	// 			tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
-	// 		})
-	// 		.on("mouseleave", (event) => {
-	// 			tooltip.style.opacity = 0;
-	// 			d3.select(event.target).style("stroke", "none").style("opacity", 1);
-	// 		});
-	// }
-	
-	drawStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip, isNormalized = false) {
-		const stackVariable = coreData.encoding.color?.field;
-		const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
-		const colorScaleObj = coreData.encoding.color?.scale;
-		const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : [];
-		const rawStackRange = coreData.encoding.color?.scale?.range;
-	
-		this.stackColorScale = this.createColorScale({
-			domain: stackDomain,
-			range: rawStackRange,
-			dataKeys: stackKeys,
-			fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
-			label: "Color"
-		});
-	
-		this.renderStackLegend(this.finalColorDomain, this.stackColorScale);
-	
-		const stackedData = this.getStackedData(data, xVariable, yVariable, stackVariable, stackKeys, isNormalized);
-		this.renderStackedBars(stackedData, x, y, isHorizontal, xVariable, yVariable, stackVariable, tooltip);
+			this.stackColorScale = this.createColorScale({
+				domain: stackDomain,
+				range: rawStackRange,
+				dataKeys: stackKeys,
+				fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
+				label: "Stacked"
+			});
+		
+			this.renderStackLegend(this.finalColorDomain, this.stackColorScale);
+		
+			const stackedData = this.getStackedData(data, xVariable, yVariable, stackVariable, stackKeys, isNormalized);
+			this.renderStackedBars(stackedData, x, y, isHorizontal, xVariable, yVariable, stackVariable, tooltip);
+		} 
 	}
 
-	// drawNormalizedStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip) {
-	// 	const stackVariable = coreData.encoding.color?.field;
-	// 	const stackKeys = [...new Set(data.map(d => d[stackVariable]))];
-	// 	const colorScaleObj = coreData.encoding.color?.scale;
-	// 	const stackDomain = Array.isArray(colorScaleObj?.domain) ? colorScaleObj.domain : null;
-	// 	// const stackRange = Array.isArray(colorScaleObj?.range) ? colorScaleObj.range : null;
-
-	// 	// Normalize the data -> sum of each group must be 100!
-	// 	const grouped = d3.group(data, d => d[xVariable]);
-	// 	const normalizedData = [];
-	
-	// 	for (const [groupKey, values] of grouped.entries()) {
-	// 		const total = d3.sum(values, d => +d[yVariable]);
-
-	// 		stackKeys.forEach(key => {
-	// 			const item = values.find(d => d[stackVariable] === key);
-	// 			normalizedData.push({
-	// 				[xVariable]: groupKey,
-	// 				[stackVariable]: key,
-	// 				[yVariable]: item ? (+item[yVariable] / total) : 0
-	// 			});
-	// 		});
-	// 	}
-		
-	// 	const rawStackRange = coreData.encoding.color?.scale?.range;
-	// 	let parsedStackColor;
-	// 	let stackRange;
-
-	// 	if (typeof rawStackRange === 'string') {
-	// 		parsedStackColor = parseD3ColorScheme(rawStackRange);
-	// 	} else {
-	// 		// Otherwise assume it's already a valid color array
-	// 		stackRange = rawStackRange;
-	// 	}
-		
-	// 	// Stack the data
-	// 	const stackedData = d3.stack()
-	// 		.keys(stackKeys)
-	// 		.value(([, d], key) => d.get(key)?.[yVariable] || 0)
-	// 		(d3.index(normalizedData, d => d[xVariable], d => d[stackVariable]));
-		
-	// 	this.stackColorScale = this.createColorScale(
-	// 			{
-	// 				domain: stackDomain, 
-	// 				range: rawStackRange,
-	// 				dataKeys: stackKeys,
-	// 				fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
-	// 				label: "Color"
-	// 			})
-
-	// 	this.renderStackLegend(this.finalColorDomain, this.stackColorScale);
-	
-	// 	const bars = this.#svg.append("g")
-	// 		.selectAll("g")
-	// 		.data(stackedData)
-	// 		.join("g")
-	// 		.attr("fill", d => this.stackColorScale(d.key));
-	
-	// 	bars.selectAll("rect")
-	// 		.data(d => d.map(entry => ({
-	// 			...entry,
-	// 			key: d.key,
-	// 			xValue: entry.data[0]
-	// 		})))
-	// 		.join("rect")
-	// 		.attr("x", d => isHorizontal ? x(d[0]) : x(d.data[0]))
-	// 		.attr("y", d => isHorizontal ? y(d.data[0]) : y(d[1]))
-	// 		.attr("height", d => isHorizontal ? y.bandwidth() : y(d[0]) - y(d[1]))
-	// 		.attr("width", d => isHorizontal ? x(d[1]) - x(d[0]) : x.bandwidth())
-	// 		.on("mouseover", (event, d) => {
-	// 			tooltip.style.opacity = 1;
-	// 			tooltip.innerHTML = `
-	// 				${xVariable}: ${d.xValue}<br>
-	// 				${stackVariable}: ${d.key}<br>
-	// 				${yVariable}: ${Math.round(d[1] - d[0])}
-	// 			`;
-	// 			d3.select(event.target).style("stroke", "black").style("opacity", 1);
-	// 		})
-	// 		.on("mousemove", (event) => {
-	// 			tooltip.style.left = (d3.pointer(event)[0] + this.#width / 2 + 120) + "px";
-	// 			tooltip.style.top = (d3.pointer(event)[1] + this.#height / 3 - 50) + "px";
-	// 		})
-	// 		.on("mouseleave", (event) => {
-	// 			tooltip.style.opacity = 0;
-	// 			d3.select(event.target).style("stroke", "none").style("opacity", 1);
-	// 		});
-	// }
-
-	drawNormalizedStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip) {
-		this.drawStackedChart(data, coreData, x, y, xVariable, yVariable, isHorizontal, tooltip, true);
+	drawNormalizedStackedChart(data, x, y, xVariable, yVariable, isHorizontal, tooltip) {
+		this.drawStackedChart(data, x, y, xVariable, yVariable, isHorizontal, tooltip, true);
 	}
-	
-	drawGroupedChart(data, coreData, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, defaultColor, tooltip) {
-		const groupVariable = coreData.encoding.color?.field;
+
+	drawGroupedChart(data, x, y, xVariable, yVariable, colorVariable, colorRange, isHorizontal, hasColors, tooltip) {
+		const groupVariable = this.#coreData.encoding.color?.field;
 		const groups = [...new Set(data.map(d => d[xVariable]))];
 	
 		// Create scale for main group
@@ -685,7 +613,8 @@ class BarChart extends HTMLElement {
 					? fixedSubgroupWidth
 					: y(0) - y(d[yVariable])
 				)
-				.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
+				.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : colorVariable)
+
 				.on("mouseover", (event, d) => {
 					tooltip.style.opacity = 1;
 					tooltip.innerHTML = `${xVariable}: ${d[xVariable]}<br>${groupVariable}: ${d[groupVariable]}<br>${yVariable}: ${d[yVariable]}`;
@@ -703,7 +632,7 @@ class BarChart extends HTMLElement {
 	}
 	
 
-	drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, defaultColor, tooltip) {
+	drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, tooltip) {
 		this.#svg.append("g")
 			.selectAll("rect")
 			.data(data)
@@ -726,10 +655,10 @@ class BarChart extends HTMLElement {
 			})
 			
 			
-			
 			.attr(isHorizontal ? "height" : "width", isHorizontal ? y.bandwidth() : x.bandwidth())
 			// Set bar color using color variable or fallback color
-			.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : defaultColor)
+			.attr("fill", d => hasColors ? this.colorScale(d[colorVariable]) : colorVariable)
+
 			// Tooltip mouse events
 			.on("mouseover", (event, d) => {
 				tooltip.style.opacity = 1;
@@ -782,7 +711,7 @@ class BarChart extends HTMLElement {
 			.data(stackedData)
 			.join("g")
 			.attr("fill", d => this.stackColorScale(d.key));
-	
+
 		bars.selectAll("rect")
 			.data(d => d.map(entry => ({
 				...entry,
@@ -842,7 +771,6 @@ class BarChart extends HTMLElement {
 			}
 			
 			// Final domain is valid values + missing ones from the dataset
-			// finalDomain = [...validDomain, ...missingDomain];
 			// Alphabetically sort missing values not listed in domain
 			missingDomain.sort((a, b) => a.localeCompare(b));
 			finalDomain = [...validDomain, ...missingDomain];
@@ -852,8 +780,6 @@ class BarChart extends HTMLElement {
 			console.warn(`[${label} Warning] Invalid or empty domain. Using dataset values.`);
 			// finalDomain = dataKeys;
 			finalDomain = [...dataKeys].sort((a, b) => a.localeCompare(b));
-			console.log(finalDomain)
-
 		}
 		
 		// Generate color range AFTER finalDomain is known
@@ -892,12 +818,11 @@ class BarChart extends HTMLElement {
 	}
 	
 	// Render color pickers for each bar based on data
-	renderColorPickers(uniqueColors) {
-		let coreData = JSON.parse(this.#dataValue);
+	renderColorPickers(colorField) {
 		const container = this.shadowRoot.querySelector(".color-picker-container");
-		const colorVariable = coreData.encoding.color?.field;
+		const colorVariable = this.#coreData.encoding.color?.field;
 		container.style.display = "block"; // Ensure the color picker container is visible
-		uniqueColors.forEach((d, index) => {
+		colorField.forEach((d, index) => {
 			const colorItem = document.createElement("div");
 			colorItem.classList.add("color-item");
 
@@ -915,13 +840,22 @@ class BarChart extends HTMLElement {
 			container.appendChild(colorItem);
 
 			// Add event listener to handle color changes
-			input.addEventListener("input", (event) => this.updateColor(event, coreData, colorVariable, d));
+			input.addEventListener("input", (event) => this.updateColor(event, colorVariable, d));
 		});
 	}
 	
 	renderStackLegend(stackKeys, stackColorScale) {
 		const container = this.shadowRoot.querySelector(".color-picker-container");
-		container.innerHTML = '<div class="legend-title">Stack Legend</div>';
+		const legendTitle = container.querySelector(".legend-title");
+		if (!legendTitle) {
+			const titleEl = document.createElement("div");
+			titleEl.className = "legend-title";
+			container.appendChild(titleEl);
+		}
+
+		// Clear only color items, not the title
+		container.querySelectorAll(".color-item").forEach(el => el.remove());
+
 	
 		stackKeys.forEach((key, index) => {
 			const colorItem = document.createElement("div");
@@ -966,11 +900,6 @@ class BarChart extends HTMLElement {
 	
 		// Update data color to dataset
 		let data = JSON.parse(this.#dataValue); // Get current data
-		// data.forEach(d => {
-		// 	if (d[stackVariable] === key) { // Match the stack variable to key
-		// 		d.color = newColor;
-		// 	}
-		// });
 	
 		// Save data after updating
 		this.#dataValue = JSON.stringify(data); // Update data
@@ -978,9 +907,8 @@ class BarChart extends HTMLElement {
 	
 
 	// Add event listeners to update color
-	updateColor(event, coreData, colorVariable, label) {
-
-		let data = coreData.data[0].values
+	updateColor(event, colorVariable, label) {
+		let data = this.#coreData.data[0].values
 		let listColorCriteria = data.map(d => d[colorVariable]) // Get list of color-related data attributes
 		const indexs = getAllIndexes(listColorCriteria, label); // Find all indexes of the current label
 		for (const index of indexs) {
