@@ -1,0 +1,20 @@
+{
+  "name": "@dominhhuy1703/kgnovis",
+  "version": "1.0.6",
+  "main": "index.js",
+  "scripts": {
+    "start": "live-server --port=8090 --open=examples/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.0"
+  },
+  "dependencies": {
+    "d3": "^7.9.0"
+  }
+}
