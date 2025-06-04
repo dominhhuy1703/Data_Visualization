@@ -9,6 +9,13 @@ class BarChart extends HTMLElement {
 	#height = 400;
 	#svg = null;
 	#defaultColor = "#cccccc";
+	#tempConfig = {
+		data: null,
+		encoding: null,
+		description: '',
+		width: 400,
+		height: 400,
+	};
 
 	constructor() {
 	  super();
@@ -18,40 +25,98 @@ class BarChart extends HTMLElement {
 	}
 
 	static get observedAttributes() {
-	  return ['data'];
+		return ['data', 'width', 'height', 'description', 'encoding'];
 	}
+
 
 	connectedCallback() {
 	  this.render();
 	}
 
-	attributeChangedCallback(name, oldValue, newValue) {
-	  if (name === "data" && newValue != null) {
-		this.#dataValue = newValue;
-		this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
-		let rawData = Array.isArray(this.#coreData.data)
-		? this.#coreData.data[0].values
-		: this.#coreData.data.values;
+	// attributeChangedCallback(name, oldValue, newValue) {
+	//   if (name === "data" && newValue != null) {
+	// 	this.#dataValue = newValue;
+	// 	this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
+	// 	let rawData = Array.isArray(this.#coreData.data)
+	// 	? this.#coreData.data[0].values
+	// 	: this.#coreData.data.values;
 		
 
-		// Flatten all fields by extracting .value
-		this.#data = rawData.map(d => {
-		const flattened = {};
-		for (const [key, valObj] of Object.entries(d)) {
-			if (valObj?.value !== undefined) {
-			const num = Number(valObj.value);
-			flattened[key] = isNaN(num) ? valObj.value : num;
+	// 	// Flatten all fields by extracting .value
+	// 	this.#data = rawData.map(d => {
+	// 	const flattened = {};
+	// 	for (const [key, valObj] of Object.entries(d)) {
+	// 		if (valObj?.value !== undefined) {
+	// 		const num = Number(valObj.value);
+	// 		flattened[key] = isNaN(num) ? valObj.value : num;
+	// 		}
+	// 	}
+
+	// 	return flattened;
+	// 	});
+
+	// 	// this.#data = Array.isArray(this.#coreData.data) ? this.#coreData.data[0].values : this.#coreData.data.values;
+	// 	this.#width = this.#coreData.width, this.#height = this.#coreData.height;
+	// 	this.removeAttribute("data");
+	// 	this.drawChart();
+	//   }
+	// }
+
+	attributeChangedCallback(name, oldValue, newValue) {
+		if (newValue == null) return;
+		switch (name) {
+			case 'width':
+				this.#tempConfig.width = parseInt(newValue);
+				break;
+			case 'height':
+				this.#tempConfig.height = parseInt(newValue);
+				break;
+			case 'description':
+				this.#tempConfig.description = newValue;
+				break;
+			case 'encoding':
+				try {
+					this.#tempConfig.encoding = JSON.parse(newValue);
+				} catch (e) {
+					console.error('Invalid encoding JSON', e);
+				}
+				break;
+			case 'data':
+			try {
+				const parsedData = JSON.parse(newValue);
+				const rawData = Array.isArray(parsedData) ? parsedData : parsedData.values || parsedData;
+				this.#tempConfig.data = rawData.map(d => {
+					const flattened = {};
+					for (const [key, valObj] of Object.entries(d)) {
+						if (valObj?.value !== undefined) {
+							const num = Number(valObj.value);
+							flattened[key] = isNaN(num) ? valObj.value : num;
+						} else {
+							flattened[key] = d[key]; // fallback for non-SPARQL
+						}
+					}
+					return flattened;
+				});
+			} catch (e) {
+				console.error('Invalid data JSON', e);
 			}
+			break;
 		}
 
-		return flattened;
-		});
-
-		// this.#data = Array.isArray(this.#coreData.data) ? this.#coreData.data[0].values : this.#coreData.data.values;
-		this.#width = this.#coreData.width, this.#height = this.#coreData.height;
-		this.removeAttribute("data");
-		this.drawChart();
-	  }
+		// Check that's enough neccesary data to render
+		if (this.#tempConfig.data && this.#tempConfig.encoding) {
+			this.#data = this.#tempConfig.data;
+			this.#width = this.#tempConfig.width;
+			this.#height = this.#tempConfig.height;
+			this.#coreData = {
+				data: { values: this.#data },
+				encoding: this.#tempConfig.encoding,
+				width: this.#width,
+				height: this.#height,
+				description: this.#tempConfig.description,
+			};
+			this.drawChart();
+		}
 	}
 
 	render() {

@@ -1,36 +1,34 @@
 function drawStackedBarChart(data){
-    document.querySelector('#stackedBarChart').setAttribute('data', JSON.stringify({
-        "description": "Stacked Vertical - Number of films per year",
-        "width": 500, 
-        "height": 400,
-        // "data": [{ "values": data.map(d => ({ 
-        //     "year": d.year.value, 
-        //     "count": d.count?.value ? +d.count.value : 0, 
-        //     "genre": d.genre.value,
-        //     })) }],
-        "data": {
-            "values": data
-        },
-        "encoding": {
-            "x": { "field": "year" },
-            "y": { "field": "count" },
-            // "y": { "field": "count",
-            //         "scale": {
-            //             "type": "pow",
-            //             "exponent": 0.5
-            //         }},
-            "color": {
-                "field": "genre", 
-                "scale": {
-                    "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
-                    // "range": d3.schemePaired
-                    "range": "Category10"
-                },
-                // "scale": [ "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd", "#e7ba52"],
-                "title": "Movie genre" 
+    const barChart = document.querySelector('#stackedBarChart');
+
+    // Set configuration
+    barChart.setAttribute("description", "Stacked Vertical - Number of films per year");
+    barChart.setAttribute("width", "500");
+    barChart.setAttribute("height", "400");
+        
+    // Set data
+    barChart.setAttribute("data", JSON.stringify({ "values": data }));
+
+    // Set encoding
+    barChart.setAttribute("encoding", JSON.stringify({
+        "x": { "field": "year" },
+        "y": { "field": "count" },
+        // "y": { "field": "count",
+        //         "scale": {
+        //             "type": "pow",
+        //             "exponent": 0.5
+        //         }},
+        "color": {
+            "field": "genre", 
+            "scale": {
+                "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
+                // "range": d3.schemePaired
+                "range": "Category10"
             },
-            "stack": true,
-            "direction": "vertical"
-        }
+            // "scale": [ "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd", "#e7ba52"],
+            "title": "Movie genre" 
+        },
+        "stack": true,
+        "direction": "vertical"
     }));
 }

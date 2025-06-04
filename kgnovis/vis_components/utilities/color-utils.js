@@ -1,4 +1,5 @@
 // const scale_d3 = {'ordinal': d3.scaleOrdinal}
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 //function to convert rgb object to hex color
 function componentToHex(c) {

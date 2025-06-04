@@ -1,26 +1,34 @@
 function drawNormalizedStackedBarChart(data){
-    document.querySelector('#normalizedStackedBarChart').setAttribute('data', JSON.stringify({
-        "description": "Percentage Stacked - Number of films per year",
-        "width": 500,
-        "height": 400,
-        // stack: "true",
-        // direction: "horizontal",
-        "data":{
-            "values": data
-        },
-        "encoding": {
-            "x": { "field": "year" } ,
-            "y": { "field": "count" } ,
-            "color": {
-                "field": "genre",
-                "scale": {
-                    // "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
-                    "range": "Paired"
-                },
-                "title": "Movie genre" 
+    const barChart = document.querySelector('#normalizedStackedBarChart');
+
+    // Set configuration
+    barChart.setAttribute("description", "Stacked Vertical - Number of films per year");
+    barChart.setAttribute("width", "500");
+    barChart.setAttribute("height", "400");
+        
+    // Set data
+    barChart.setAttribute("data", JSON.stringify({ "values": data }));
+
+    // Set encoding
+    barChart.setAttribute("encoding", JSON.stringify({
+        "x": { "field": "year" },
+        "y": { "field": "count" },
+        // "y": { "field": "count",
+        //         "scale": {
+        //             "type": "pow",
+        //             "exponent": 0.5
+        //         }},
+        "color": {
+            "field": "genre", 
+            "scale": {
+                "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
+                // "range": d3.schemePaired
+                "range": "Category10"
             },
-            "stack": "normalize",
-            // direction: "horizontal"
-        }
+            // "scale": [ "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd", "#e7ba52"],
+            "title": "Movie genre" 
+        },
+        "stack": "normalize",
+        "direction": "vertical"
     }));
 }
