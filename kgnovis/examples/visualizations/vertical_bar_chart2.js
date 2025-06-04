@@ -1,31 +1,30 @@
 function drawVerticalChart2(data){
-    document.querySelector('#verticalChart2').setAttribute('data', JSON.stringify({
-        "description": "Single Vertical - Population of countries",
-        "width": 500,
-        "height": 400,
-        "data": { 
-            "values": data
+    const barChart = document.querySelector('#verticalChart2');
+
+    // Set configuration
+    barChart.setAttribute("description", "Horizontal Vertical - Population of countries");
+    barChart.setAttribute("width", "500");
+    barChart.setAttribute("height", "400");
+        
+    // Set data
+    barChart.setAttribute("data", JSON.stringify({ "values": data }));
+
+    // Set encoding
+    barChart.setAttribute("encoding", JSON.stringify({
+        "x": {
+            "field": "name"
         },
-        "encoding": {
-            "x": { "field": "name"},
-            "y": { "field": "population",
-                    // "scale": {
-                    //     "type": "log",
-                    //     "exponent": 0.5
-                    // }
-                },
-            "color": { 
-                "field": "randomLang",
-                "scale": {
-                    // "domain": ["Belarusian language", "English language", "Romani language", "Persian language"],
-                    "domain": ["Belarusian language", "aaa", "Russian language", "French language", "لغة تشيلوبا", "English language", "Mongolian language", "Romani language", "Angolar language", "Persian language"],
-                    "range": "Reds"
-                    // "range": ["#c7c7c7", "#aec7e8"]
-                },
-                // "scale": d3.interpolateRdYlBu,
-                "title": "Language" 
+        "y": {
+            "field": "population"
+        },
+        "color": {
+            "field": "randomLang",
+            "scale": {
+                "domain": ["Belarusian language", "aaa", "Russian language", "French language", "لغة تشيلوبا", "English language", "Mongolian language", "Romani language", "Angolar language", "Persian language"],
+                "range": "Reds"
             },
-            "direction": "horizontal",
-        }
+            "title": "Language"
+        },
+        "direction": "horizontal"
     }));
 }

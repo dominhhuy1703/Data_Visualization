@@ -2,7 +2,7 @@
 <html dir="ltr" lang="en">
   <head>
     <link rel="icon" href="data:,">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
 
     <!-- Import for JS files-->
     <script type="module" src="../vis_components/bar-chart.js"></script>
@@ -53,10 +53,10 @@
         <!-- <nodelink-chart id="nodeLinkChart"></nodelink-chart> -->
 
         <bar-chart id="verticalChart1"></bar-chart>
-        <!-- <bar-chart id="verticalChart2"></bar-chart> -->
+        <bar-chart id="verticalChart2"></bar-chart>
         <bar-chart id="stackedBarChart"></bar-chart>
-        <!-- <bar-chart id="normalizedStackedBarChart"></bar-chart>
-        <bar-chart id="groupedVerticalChart"></bar-chart> -->
+        <bar-chart id="normalizedStackedBarChart"></bar-chart>
+        <bar-chart id="groupedVerticalChart"></bar-chart>
 
         <map-chart id="choroplethMapData"></map-chart>
         <!-- <map-chart id="connectionMapData"></map-chart>
@@ -78,21 +78,21 @@
             drawVerticalChart1(verticalChartData1);
             // console.log("BAR-1", JSON.stringify(verticalChartData, null, 2));
 
-            // // Single vertical bar chart
-            // const verticalChartData2 = await fetchBarData();
-            // drawVerticalChart2(verticalChartData2);
+            // Single vertical bar chart
+            const verticalChartData2 = await fetchBarData();
+            drawVerticalChart2(verticalChartData2);
 
             // Stacked vertical bar chart
             const stackedBarChartData = await fetchStackedBarData();
             drawStackedBarChart(stackedBarChartData);
 
-            // // Percentage Stacked bar chart
-            // const normalizedStackedBarData = await fetchStackedBarData();
-            // drawNormalizedStackedBarChart(normalizedStackedBarData);
+            // Percentage Stacked bar chart
+            const normalizedStackedBarData = await fetchStackedBarData();
+            drawNormalizedStackedBarChart(normalizedStackedBarData);
             
-            // //  Grouped Vertical Bar Chart
-            // const groupedVerticalChartData = await fetchStackedBarData();
-            // drawGroupedVerticalChart(groupedVerticalChartData);
+            //  Grouped Vertical Bar Chart
+            const groupedVerticalChartData = await fetchStackedBarData();
+            drawGroupedVerticalChart(groupedVerticalChartData);
             
             // Choropleth Map
             const choroplethMapData = await fetchMapData();
