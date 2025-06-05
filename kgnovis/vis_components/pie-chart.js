@@ -1,70 +1,118 @@
 const scale_d3 = {'ordinal': d3.scaleOrdinal, 'quantitative': d3.scaleLinear, 'nominal': d3.scaleBand} //Define scale type using D3.js
 
-//function to convert rgb object to hex color
-function componentToHex(c) {
-  var hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
-}
-
-function rgbToHex(r, g, b) {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
-
-function getAllIndexes(arr, val) {
-  var indexes = [], i;
-  for(i = 0; i < arr.length; i++)
-      if (arr[i] === val)
-          indexes.push(i);
-  return indexes;
-}
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+import {
+	parseD3ColorScheme,
+	createColorScale,
+	renderColorPickers,
+	updateColor,
+	getAllIndexes
+} from './utilities/color-utils.js';
 
 // PieChart Class
 class PieChart extends HTMLElement {
-  #dataValue = ''; // Store the chart data as a JSON string
   #originalData = null; // Store a copy of the original data for resetting
-
+  #dataValue = '';
+	#coreData = null;
+	#data = null;
+	#width = 400;
+	#height = 400;
+	#svg = null;
+	#defaultColor = "#cccccc";
+	#tempConfig = {
+		data: null,
+		encoding: null,
+		description: '',
+		width: 400,
+		height: 400,
+	};
+  
   constructor() {
     super();
     this.data = null;
-    this.startAngle = 0;
-    this.endAngle = 2 * Math.PI;
-    this.padAngle = 0;
-    this.innerRadius = 0;
-    this.cornerRadius = 0;
     this.attachShadow({ mode: "open" });
   }
 
   //Specify the properties to track changes
   static get observedAttributes() {
-    return ["data"];
+    return ["data", 'width', 'height', 'description', 'encoding'];
   }
 
   connectedCallback() {
     this.render(); //Render the component when it's added to the DOM
   }
-  
+
+  attributeChangedCallback(name, oldValue, newValue) {
+		if (newValue == null) return;
+		switch (name) {
+			case 'width':
+				this.#tempConfig.width = parseInt(newValue);
+				break;
+			case 'height':
+				this.#tempConfig.height = parseInt(newValue);
+				break;
+			case 'description':
+				this.#tempConfig.description = newValue;
+				break;
+			case 'encoding':
+				try {
+					this.#tempConfig.encoding = JSON.parse(newValue);
+				} catch (e) {
+					console.error('Invalid encoding JSON', e);
+				}
+				break;
+			case 'data':
+			try {
+				const parsedData = JSON.parse(newValue);
+				const rawData = Array.isArray(parsedData) ? parsedData : parsedData.values || parsedData;
+				this.#tempConfig.data = rawData.map(d => {
+					const flattened = {};
+					for (const [key, valObj] of Object.entries(d)) {
+						if (valObj?.value !== undefined) {
+							const num = Number(valObj.value);
+							flattened[key] = isNaN(num) ? valObj.value : num;
+						} else {
+							flattened[key] = d[key]; // fallback for non-SPARQL
+						}
+					}
+					return flattened;
+				});
+			} catch (e) {
+				console.error('Invalid data JSON', e);
+			}
+			break;
+		}
+		
+		this.removeAttribute(name);
+
+		// Check that's enough neccesary data to render
+		if (this.#tempConfig.data && this.#tempConfig.encoding) {
+			this.#data = this.#tempConfig.data;
+			this.#width = this.#tempConfig.width;
+			this.#height = this.#tempConfig.height;
+			this.#coreData = {
+				data: { values: this.#data },
+				encoding: this.#tempConfig.encoding,
+				width: this.#width,
+				height: this.#height,
+				description: this.#tempConfig.description,
+			};
+		this.drawChart();
+		}
+	}
 
   // attributeChangedCallback(name, oldValue, newValue) {
   //   if (name === "data" && newValue != null) {
-  //     this.#dataValue = newValue;
-  //     this.#originalData = JSON.parse(newValue); // Save the original data for potential resets
-  //     this.removeAttribute("data"); // Remove the attribute
-  //     this.drawChart();
+  //     try {
+  //       this.#dataValue = newValue;
+  //       this.#originalData = JSON.parse(newValue); // Save original data
+  //       this.removeAttribute("data"); // Remove the attribute
+  //       this.drawChart();
+  //     } catch (error) {
+  //       console.error("Error parsing data attribute:", error);
+  //     }
   //   }
   // }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "data" && newValue != null) {
-      try {
-        this.#dataValue = newValue;
-        this.#originalData = JSON.parse(newValue); // Save original data
-        this.removeAttribute("data"); // Remove the attribute
-        this.drawChart();
-      } catch (error) {
-        console.error("Error parsing data attribute:", error);
-      }
-    }
-  }
 
   render() {
     this.shadowRoot.innerHTML = `
@@ -210,58 +258,10 @@ class PieChart extends HTMLElement {
             <svg></svg>
 					  <div class="description"></div>
           </div>
-          
-          <div class="controls">
-            <label>Start Angle: <input id="input-start-angle" type="range" min="0" max="6.29" step="0.01" value="${this.startAngle}" data-param="startAngle"></label>
-            <label>End Angle: <input type="range" min="0" max="6.29" step="0.01" value="${this.endAngle}" data-param="endAngle"></label>
-            <label>Pad Angle: <input type="range" min="0" max="0.05" step="0.001" value="${this.padAngle}" data-param="padAngle"></label>
-            <label>Inner Radius: <input type="range" min="0" max="180" step="1" value="${this.innerRadius}" data-param="innerRadius"></label>
-            <label>Corner Radius: <input type="range" min="0" max="20" step="0.5" value="${this.cornerRadius}" data-param="cornerRadius"></label>
-            <div class="sort-container">
-              <label for="sort-toggle">Sort</label>
-              <input type="checkbox" id="sort-toggle">
-            </div>
-          </div>
           <div class="tooltip"></div>
         </div>
       </div>
     `;
-
-    // Add event listener to change value on slider
-    this.shadowRoot.querySelectorAll(".controls input").forEach(input => {
-      input.addEventListener("input", (event) => this.updateParams(event));
-    });
-
-    // Add event for data sort button
-    this.shadowRoot.querySelector("#sort-toggle").addEventListener("change", (event) => {
-      if (event.target.checked) {
-        this.sortData(); // If chose, call sortData
-      } else {
-        this.restoreData(); // Else, call restoreData
-      }
-    });
-  }
-
-  // Update parameters when user changes slider
-  updateParams(event) {
-    this[event.target.dataset.param] = parseFloat(event.target.value);
-    this.drawChart();
-  }
-
-  // Sort the data in descending order
-  sortData() {
-    let coreData = JSON.parse(this.#dataValue);
-    coreData.data[0].values.sort((a, b) => b[this.populationVariable] - a[this.populationVariable]);
-    this.#dataValue = JSON.stringify(coreData);
-    this.drawChart();
-  }  
-
-  // Restore the original data order
-  restoreData() {
-    if (this.#originalData) {
-      this.#dataValue = JSON.stringify(this.#originalData);
-    }
-    this.drawChart();
   }
 
   togglePopup(show) {
@@ -271,23 +271,28 @@ class PieChart extends HTMLElement {
 
   drawChart() {
     const tooltip = this.shadowRoot.querySelector(".tooltip");
-    let coreData = JSON.parse(this.#dataValue);
-    let data = coreData.data[0].values; // Extract values from the dataset
-    const width = coreData.width, height = coreData.height;
-    const radius = Math.min(width, height) / 2;
-    const svgElement = this.shadowRoot.querySelector("svg");
-    d3.select(svgElement).selectAll("g").remove(); // Clear previous drawings
-    const countryVariable = coreData.encoding.find(element => element.text)?.text.field; // attribute countryVariable
-    const populationVariable = coreData.encoding.find(element => element.theta)?.theta.field; // attribute populationVariable
 
-    this.populationVariable = populationVariable;
+		let data = this.#data;
+    console.log("AAAAAAA", data)
+    const svgElement = this.shadowRoot.querySelector('svg');
+    d3.select(svgElement).selectAll("g").remove();
+    this.#svg = d3.select(svgElement)
+      .attr("width", this.#width).attr("height", this.#height).style("margin", "50px")
+      .append("g").attr("transform", `translate(${this.#width / 2}, ${this.#height / 2})`);
+
+    const radius = Math.min(this.#width, this.#height) / 2;
+    const textVariable = this.#coreData.encoding.text?.field || null;
+		// const xAxisLabelAngle = this.#coreData.encoding.x?.axis?.labelAngle || 0;
+		const thetaVariable = this.#coreData.encoding.theta?.field || null;
+		// const yAxisLabelAngle = this.#coreData.encoding.y?.axis?.labelAngle || 0;
+
+    this.textVariable = textVariable;
+    this.thetaVariable = thetaVariable;
     // const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
     // legendContainer.innerHTML = '<div class="legend-title">Language</div>';
     
-    const colorVariable = coreData.encoding.find(element => element.color)?.color.field; // attribute colorVariable
-    
-    const hasLanguage = data.some(d => d[colorVariable]); // Check if data has "language"
-    const defaultColor = "#cccccc";
+    const colorVariable = this.#coreData.encoding.color?.field || this.#defaultColor;
+
 
     // Initialize color scale
     // let colorScale = coreData.scales.find((element) => element.name == "color");
@@ -313,32 +318,33 @@ class PieChart extends HTMLElement {
     //   .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), listLanguage.length).reverse());
     
     // Color scale
-    let colorScale = coreData.encoding.find((element) => element.color);
+    const hasColors = data.some(d => d[colorVariable]);
+    let colorField = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
+    let colorScale = this.#coreData.encoding.color?.scale || null;
+    let colorDomain = Array.isArray(colorScale?.domain) ? colorScale.domain : [];
+    let rawColorRange = colorScale?.range;
 
     if (colorScale) {
       this.colorScale = d3.scaleOrdinal();
     }
     
     // Create uniqueLanguage
-    let uniqueLanguages = [];
-    if (hasLanguage) {
-      uniqueLanguages = [...new Set(data.map(d => d[colorVariable]))];
-      this.colorScale
-        .domain(uniqueLanguages)
-        .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), uniqueLanguages.length));
-    }
-
+    const { scale, domain } = createColorScale({
+          domain: colorDomain,
+          range: rawColorRange,
+          dataKeys: colorField,
+          fallbackInterpolator: t => d3.interpolateTurbo(t * 0.8 + 0.1),
+          label: "Pie"
+        });
+        this.colorScale = scale;
+        this.finalColorDomain = domain;
 
     // Define arc shape
     const arcShape = d3.arc()
-      .innerRadius(this.innerRadius)
+      .innerRadius(0)
       .outerRadius(radius - 0.9)
-      .cornerRadius(this.cornerRadius);
+      .cornerRadius(0);
 
-    const radiusVariable = coreData.encoding.find(element => element.radius)?.radius.field;
-    const scaleRadius = d3.scaleSqrt()
-      .domain(d3.extent(data, d => +d[radiusVariable])) // Convert to numeric
-      .range([radius * 0.4, radius - 5]); // Min, max
 
     // const arcShape = d3.arc()
     //   .innerRadius(this.innerRadius)
@@ -351,41 +357,34 @@ class PieChart extends HTMLElement {
     //   })
     //   .cornerRadius(this.cornerRadius);
       
-    // const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
-    const arcShapeLabels = d3.arc()
-      .outerRadius(radius * 0.85)
-      .innerRadius(radius * 0.6);
+    const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
+    const pie = d3.pie()
+      .value(d => {
+  console.log("Theta value:", d[this.thetaVariable]);
+  return +d[this.thetaVariable];
+})
+      .sort(null); // giữ nguyên thứ tự nếu muốn
 
-      
-    // Define pie data structure
-    const pieDataStructure = d3.pie()
-      .sort(null)
-      .startAngle(this.startAngle)
-      .endAngle(this.endAngle)
-      .padAngle(this.padAngle)
-      .value(d => d[populationVariable])(data); // Use `y` values as the pie segment sizes
+      console.log("Raw data", data);
+console.log("Theta variable", this.thetaVariable);
+    const pieData = pie(data);
 
-    // Create SVG element and position the chart in the center
-    const svg = d3.select(svgElement)
-    .attr("width", width).attr("height", height).style("margin", "50px")
-    .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
-    
     // Draw pie chart segments
-    this.paths = svg.selectAll("path")
-      .data(pieDataStructure)
+    this.paths = this.#svg.selectAll("path")
+      .data(pieData)
       .join("path")
-      .attr("fill", d => hasLanguage ? this.colorScale(d.data[colorVariable]) : defaultColor) // Use provided color or generate one
+      .attr("fill", d => hasColors ? this.colorScale(d.data[colorVariable]) : colorVariable) // Use provided color or generate one
       .attr("d", arcShape)
       .attr("stroke", "white")
-      .on("click", (event, d) => alert(`Clicked on: ${d.data[countryVariable]}, ${d.data[populationVariable]}`))
+      .on("click", (event, d) => alert(`Clicked on: ${d.data[this.textVariable]}, ${d.data[this.thetaVariable]}`))
       .on("mouseover", (event, d) => {
         tooltip.style.opacity = 1;
-        tooltip.innerHTML = `<strong>${d.data[countryVariable]}</strong>: ${d.data[populationVariable]}`;
+        tooltip.innerHTML = `<strong>${d.data[this.textVariable]}</strong>: ${d.data[this.thetaVariable]}`;
         d3.select(event.target).style("stroke", "black").style("opacity", 1);
       })
       .on("mousemove", (event) => {
-        tooltip.style.left = (d3.pointer(event)[0] + width) + "px";
-        tooltip.style.top = (d3.pointer(event)[1] + height - 100) + "px";
+        tooltip.style.left = (d3.pointer(event)[0] + this.#width) + "px";
+        tooltip.style.top = (d3.pointer(event)[1] + this.#height - 100) + "px";
       })
       .on("mouseout", (event) => {
         tooltip.style.opacity = 0;
@@ -395,16 +394,16 @@ class PieChart extends HTMLElement {
 
       // Display chart description
       const chartDescription = this.shadowRoot.querySelector(".description");
-      chartDescription.textContent = coreData.description;
+      chartDescription.textContent = this.#coreData.description;
 
-    const textGroup = svg.append("g")
+    const textGroup = this.#svg.append("g")
       .attr("font-family", "arial")
       .attr("font-size", "12px")
       .attr("font-weight", 550)
       .attr("text-anchor", "middle");
 
       textGroup.selectAll("text")
-      .data(pieDataStructure)
+      .data(pieData)
       .join("text")
       .attr("transform", d => {
         const centroid = arcShapeLabels.centroid(d);
@@ -412,72 +411,96 @@ class PieChart extends HTMLElement {
       })
       .each(function(d) {
         const textElement = d3.select(this);
-        const originalText = d.data[countryVariable];
-        const displayText = originalText.length > 5 ? originalText.slice(0, 5) + "..." : originalText; 
 
         textElement.append("tspan")
           .attr("x", 0)
           .attr("dy", "0em")
-          .text(displayText);
+          // .text(displayText);
 
         textElement.append("tspan")
           .attr("x", "0")
           .attr("dy", "1.2em")
-          .text((d.data[populationVariable] / 1_000_000).toFixed(1) + " M");
+          .text((d.data[thetaVariable] / 1_000_000).toFixed(1) + " M");
       });
 
       // Check hasLanguage
-      if (hasLanguage) {
-        this.renderColorPickers(uniqueLanguages);
+      if (hasColors) {
+        this.renderColorPickers(this.finalColorDomain);
+        this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
+
       } else {
-        legendContainer.style.display = "none";
+			this.shadowRoot.querySelector(".color-picker-container").style.display = "none";
       }
   }
 
-  // Render Color Picker
-  renderColorPickers(uniqueLanguages) {
-    let coreData = JSON.parse(this.#dataValue);
-    const container = this.shadowRoot.querySelector(".color-picker-container");
-    container.innerHTML = '<div class="legend-title">Language</div>';
-    const colorVariable = coreData.encoding.find(element => element.color)?.color.field;
-    container.style.display = "block"; // Ensure the color picker container is visible
-    uniqueLanguages.forEach((d, index) => {
-      const colorItem = document.createElement("div");
-      colorItem.classList.add("color-item");
+  // // Render Color Picker
+  // renderColorPickers(colorField) {
+  //   const container = this.shadowRoot.querySelector(".color-picker-container");
+  //   container.innerHTML = '<div class="legend-title">Language</div>';
+  //   container.style.display = "block"; // Ensure the color picker container is visible
+  //   colorField.forEach((d, index) => {
+  //     const colorItem = document.createElement("div");
+  //     colorItem.classList.add("color-item");
   
-      const label = document.createElement("label");
-      label.textContent = d; // Set the text label to the unique language name
+  //     const label = document.createElement("label");
+  //     label.textContent = d; // Set the text label to the unique language name
   
-      const input = document.createElement("input");
-      input.type = "color"; // Create a color input element
-      input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
-      input.setAttribute("data-index", index); // Store index data for reference
+  //     const input = document.createElement("input");
+  //     input.type = "color"; // Create a color input element
+  //     input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
+  //     input.setAttribute("data-index", index); // Store index data for reference
   
-      // Append to color item container
-      colorItem.appendChild(input);
-      colorItem.appendChild(label);
-      container.appendChild(colorItem);
+  //     // Append to color item container
+  //     colorItem.appendChild(input);
+  //     colorItem.appendChild(label);
+  //     container.appendChild(colorItem);
       
-      // Add event listener to handle color changes
-      input.addEventListener("input", (event) => this.updateColor(event, coreData, colorVariable, d));
-    });
-  }
+  //     // Add event listener to handle color changes
+  //     input.addEventListener("input", (event) => this.updateColor(event, colorVariable, d));
+  //   });
+  // }
 
-  // Update Color
-  updateColor(event, coreData, colorVariable, label) {
-    let data = coreData.data[0].values
-    let listColorCriteria = data.map(d => d[colorVariable]) // Get list of color-related data attributes
+  // Render color pickers for each bar based on data
+    renderColorPickers(colorField) {
+      const container = this.shadowRoot.querySelector(".color-picker-container");
+      const colorVariable = this.#coreData.encoding.color?.field;
+      container.style.display = "block"; // Ensure the color picker container is visible
+      colorField.forEach((d, index) => {
+        const colorItem = document.createElement("div");
+        colorItem.classList.add("color-item");
+  
+        const label = document.createElement("label");
+        label.textContent = d; // Set the text label to the unique language name
+  
+        const input = document.createElement("input");
+        input.type = "color"; // Create a color input element
+        input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
+        input.setAttribute("data-index", index); // Store index data for reference
+  
+        
+        colorItem.appendChild(input);
+        colorItem.appendChild(label); // Append to color item container
+        container.appendChild(colorItem);
+  
+        // Add event listener to handle color changes
+        input.addEventListener("input", (event) => this.updateColor(event, colorVariable, d));
+      });
+    }
+
+  // Add event listeners to update color
+  updateColor(event, colorVariable, label) {
+    let listColorCriteria = this.#data.map(d => d[colorVariable]) // Get list of color-related data attributes
     const indexs = getAllIndexes(listColorCriteria, label); // Find all indexes of the current label
     for (const index of indexs) {
       const newColor = event.target.value; // Get the new color selected by the user
-      data[index].color = newColor; // Update color in dataset
+      this.#data[index].color = newColor; // Update color in dataset
       const path = this.shadowRoot.querySelectorAll("path")[index]; // Get the corresponding pie chart segment
       d3.select(path)
         .transition()
         .duration(300)
         .attr("fill", newColor);
     }
-    this.#dataValue = JSON.stringify(data); // Update data
+    this.#dataValue = JSON.stringify(this.#data); // Update data
   }
 
   get dataValue() {
