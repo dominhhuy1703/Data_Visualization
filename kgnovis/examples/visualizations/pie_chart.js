@@ -1,18 +1,35 @@
 function drawPieChart(data) {
-    document.querySelector('#pieChart').setAttribute('data', JSON.stringify({
-        description: "Pie chart - Countries with the largest population",
-        width: 400,
-        height: 400,
-        data: [{ values: data.map(d => ({ 
-            country: d.name.value, 
-            population: d.population.value, 
-            language: d.randomLang.value 
-        })) }],
-        encoding: [
-            { text: { "field": "country" } },
-            { theta: { "field": "population" } },
-            { color: { "field": "language" } },
+    const pieChart = document.querySelector('#pieChart');
+
+    // Set configuration
+    pieChart.setAttribute("description", "Pie chart - Countries with the largest population");
+    pieChart.setAttribute("width", "400");
+    pieChart.setAttribute("height", "400");
+
+    pieChart.setAttribute("data", JSON.stringify({ "values": data }));
+
+    // Set encoding
+    pieChart.setAttribute("encoding", JSON.stringify({
+        "text": {
+            "field": "name"
+        },
+        "theta": {
+            "field": "population"
+        },
+        "color": {
+            "field": "randomLang",
+            // "scale": {
+            //     "domain": [
+            //         "Belarusian language",
+            //         "English language",
+            //         "Romani language",
+            //         "Persian language"
+            //     ],
+            //     "range": "Reds"
+            // },
+            // "title": "Language"
             // { radius: { "field": "population", "scale": { "type": "sqrt", "zero": true, "rangeMin": 20 } } }
-        ]
+
+        },
     }));
 }

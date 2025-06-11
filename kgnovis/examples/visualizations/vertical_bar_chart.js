@@ -50,7 +50,7 @@ function drawVerticalChart1(data) {
 
     // Set configuration
     barChart.setAttribute("description", "Single Vertical - Population of countries");
-    barChart.setAttribute("width", "500");
+    barChart.setAttribute("width", "600");
     barChart.setAttribute("height", "400");
 
     // Set data
@@ -79,4 +79,6 @@ function drawVerticalChart1(data) {
         },
         "direction": "vertical"
     }));
+    
+    barChart.setAttribute("legend", true);
 }

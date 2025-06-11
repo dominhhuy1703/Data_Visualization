@@ -1,4 +1,5 @@
 // const scale_d3 = {'ordinal': d3.scaleOrdinal}
+// import * as d3 from 'd3';
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 //function to convert rgb object to hex color
@@ -26,11 +27,6 @@ function hexToRgb(hex) {
 	let b = parseInt(hex.substring(4, 6), 16);
 
 	return `rgb(${r}, ${g}, ${b})`;
-}
-
-// Function to truncate long labels
-function truncateLabel(label, maxLength = 5) {
-	return label.length > maxLength ? label.slice(0, maxLength) + "..." : label;
 }
 
 function parseD3ColorScheme(input) {
@@ -107,33 +103,117 @@ function parseD3ColorScheme(input) {
 	console.warn(`D3 doesn't have ${fullScheme} or ${fullInterpolate}`);
 	return null;
 }
+function createColorScale({ domain, range, dataKeys, fallbackInterpolator = d3.interpolateTurbo, label = "Color" }) {
+	const isDomainArray = Array.isArray(domain) && domain.length > 0;
 
-function toSuperscript(num) {
-	const superscripts = {
-		"0": "⁰",
-		"1": "¹",
-		"2": "²",
-		"3": "³",
-		"4": "⁴",
-		"5": "⁵",
-		"6": "⁶",
-		"7": "⁷",
-		"8": "⁸",
-		"9": "⁹",
-		".": ".", 
-		"-": "⁻"   
+	if (isDomainArray) {
+		const duplicates = domain.filter((item, index) => domain.indexOf(item) !== index);
+		if (duplicates.length > 0) {
+			console.warn(`[${label} Warning] Duplicate domain values: ${[...new Set(duplicates)].join(', ')}`);
+		}
+	}
+
+	let finalDomain;
+	if (isDomainArray) {
+		const validDomain = domain.filter(d => dataKeys.includes(d));
+		const extraDomain = domain.filter(d => !dataKeys.includes(d));
+		const missingDomain = dataKeys.filter(d => !validDomain.includes(d));
+		if (extraDomain.length > 0) {
+			console.warn(`[${label} Warning] Extra domain values not in data: ${extraDomain.join(', ')}`);
+		}
+		if (missingDomain.length > 0) {
+			console.warn(`[${label} Warning] Missing domain values from data: ${missingDomain.join(', ')}`);
+		}
+		missingDomain.sort((a, b) => a.localeCompare(b));
+		finalDomain = [...validDomain, ...missingDomain];
+	} else {
+		console.warn(`[${label} Warning] Invalid or empty domain. Using dataset values.`);
+		finalDomain = [...dataKeys].sort((a, b) => a.localeCompare(b));
+	}
+
+	let finalRange = range;
+	if (typeof range === 'string') {
+		const parsed = parseD3ColorScheme(range);
+		if (parsed?.type === "interpolate") {
+			finalRange = d3.quantize(parsed.value, finalDomain.length);
+		} else if (parsed?.type === "scheme") {
+			finalRange = parsed.value;
+		}
+	}
+
+	if (!Array.isArray(finalRange) || finalRange.length === 0) {
+		console.warn(`[${label} Warning] Invalid color range. Using default interpolator.`);
+		finalRange = d3.quantize(t => fallbackInterpolator(t), finalDomain.length);
+	}
+
+	if (finalRange.length < finalDomain.length) {
+		console.warn(`[${label} Warning] Color range (${finalRange.length}) < domain (${finalDomain.length}). Colors will repeat.`);
+	} else if (finalRange.length > finalDomain.length) {
+		console.warn(`[${label} Warning] Color range (${finalRange.length}) > domain (${finalDomain.length}). Extra colors ignored.`);
+	}
+
+	const finalColors = finalDomain.map((_, i) => finalRange[i % finalRange.length]);
+
+	return {
+		scale: d3.scaleOrdinal().domain(finalDomain).range(finalColors),
+		domain: finalDomain,
+		range: finalRange
 	};
-	return String(num)
-		.split("")
-		.map(c => superscripts[c] || c) 
-		.join("");
+}
+
+function renderColorPickers(container, domain, colorScale, colorVariable, onChangeCallback) {
+	container.innerHTML = "";
+	domain.forEach((d, index) => {
+		const colorItem = document.createElement("div");
+		colorItem.classList.add("color-item");
+
+		const label = document.createElement("label");
+		label.textContent = d;
+
+		const input = document.createElement("input");
+		input.type = "color";
+		input.value = d3.color(colorScale(d)).formatHex();
+		input.setAttribute("data-index", index);
+
+		colorItem.appendChild(input);
+		colorItem.appendChild(label);
+		container.appendChild(colorItem);
+
+		input.addEventListener("input", (event) => onChangeCallback(event, colorVariable, d));
+	});
+}
+
+function getAllIndexes(array, value) {
+	const indexes = [];
+	let i = -1;
+	while ((i = array.indexOf(value, i + 1)) !== -1) {
+		indexes.push(i);
+	}
+	return indexes;
+}
+
+function updateColor(event, colorVariable, label, data, rects) {
+	const listColorCriteria = data.map(d => d[colorVariable]);
+	const indexes = getAllIndexes(listColorCriteria, label);
+	for (const index of indexes) {
+		const newColor = event.target.value;
+		data[index].color = newColor;
+		const rect = rects[index];
+		d3.select(rect)
+			.transition()
+			.duration(300)
+			.attr("fill", newColor);
+	}
+	return data;
 }
 
 export {
 	componentToHex,
 	rgbToHex,
 	hexToRgb,
-	truncateLabel,
 	parseD3ColorScheme,
-	toSuperscript
+	createColorScale,
+	renderColorPickers,
+	updateColor,
+	getAllIndexes
 };

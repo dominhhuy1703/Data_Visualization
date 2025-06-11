@@ -43,14 +43,14 @@ async function fetchMapData() {
         PREFIX bd: <http://www.bigdata.com/rdf#>
         PREFIX wd: <http://www.wikidata.org/entity/>
         PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-        PREFIX wikibase: <http://wikiba.se/ontology#>
 
-        SELECT DISTINCT ?countryLabel ?population ?isoCode
+        SELECT ?countryLabel ?population ?isoCode ?geoShape
         WHERE {
-            ?country wdt:P31 wd:Q6256 ;
-                     wdt:P1082 ?population ;
-                     wdt:P298 ?isoCode .
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+        ?country wdt:P31 wd:Q6256;
+                wdt:P1082 ?population;
+                wdt:P298 ?isoCode;
+                wdt:P3896 ?geoShape .  # lấy shape geometry
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
         }
         ORDER BY DESC(?population)
     `;

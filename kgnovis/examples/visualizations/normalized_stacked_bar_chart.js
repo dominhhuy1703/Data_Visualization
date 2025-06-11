@@ -19,7 +19,7 @@ function drawNormalizedStackedBarChart(data){
         //             "exponent": 0.5
         //         }},
         "color": {
-            "field": "genre", 
+            "field": "genre",
             "scale": {
                 "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
                 // "range": d3.schemePaired

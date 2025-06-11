@@ -1,55 +1,44 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
   <head>
-    <link rel="icon" href="data:,">
-    <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
+      <link rel="icon" href="data:,">
+      <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
+      <script type="module" src="../dist/kgnovis.bundle.js"></script>
 
-    <!-- Import for JS files-->
-    <script type="module" src="../vis_components/bar-chart.js"></script>
-    <!-- <script type="module" src="../vis_components/pie-chart.js"></script>
-    <script type="module" src="../vis_components/map-chart.js"></script>
-    <script type="module" src="../vis_components/nodelink-chart.js"></script>
-    <script type="module" src="../vis_components/window-chart.js"></script>
-    <script type="module" src="../vis_components/utilities/color-utils.js"></script> -->
+      <!-- Import for JS files-->
+      <!-- <script type="module" src="../vis_components/bar-chart.js"></script>
+      <script type="module" src="../vis_components/pie-chart.js"></script>
+      <script type="module" src="../vis_components/map-chart.js"></script>
+      <script type="module" src="../vis_components/nodelink-chart.js"></script> -->
 
-    <!-- Import for configuration-->
-    <script src="visualizations/vertical_bar_chart.js"></script>
-    <script src="visualizations/pie_chart.js"></script>
-    <script src="visualizations/vertical_bar_chart2.js"></script>
-    <script src="visualizations/group_vertical_bar_chart.js"></script>
-    <script src="visualizations/normalized_stacked_bar_chart.js"></script>
-    <script src="visualizations/stacked_bar_chart.js"></script>
-    <script src="visualizations/choropleth_map.js"></script>
-    <script src="visualizations/connection_map.js"></script>
-    <script src="visualizations/bubble_map.js"></script>
-    <script src="visualizations/hexbin_map.js"></script>
+      <!-- Import for configuration-->
+      <script src="visualizations/vertical_bar_chart.js"></script>
+      <script src="visualizations/pie_chart.js"></script>
+      <script src="visualizations/vertical_bar_chart2.js"></script>
+      <script src="visualizations/group_vertical_bar_chart.js"></script>
+      <script src="visualizations/normalized_stacked_bar_chart.js"></script>
+      <script src="visualizations/stacked_bar_chart.js"></script>
+      <script src="visualizations/choropleth_map.js"></script>
+      <script src="visualizations/connection_map.js"></script>
+      <script src="visualizations/bubble_map.js"></script>
+      <script src="visualizations/hexbin_map.js"></script>
 
-    <!-- Import for data-->
-    <script src="data/pie_data.js"></script>
-    <script src="data/bar_data.js"></script>
-    <script src="data/stacked_bar_data.js"></script>
-    <script src="data/map_data.js"></script>
-    <script src="data/node_link_data.js"></script>
+      <!-- Import for data-->
+      <script src="data/pie_data.js"></script>
+      <script src="data/bar_data.js"></script>
+      <script src="data/stacked_bar_data.js"></script>
+      <script src="data/map_data.js"></script>
+      <script src="data/node_link_data.js"></script>
 
-    <link rel="stylesheet" href="index.css">
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-    <title>Internship's Project</title>
+      <link rel="stylesheet" href="index.css">
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+      <title>Internship's Project</title>
   </head>
   <body>
     <div class="container">
-        <!-- Using chart-selector to choose what chart-->
-        <!-- <div class="chart-selector">
-            <h4>Select Chart</h4>
-            <label><input type="radio" name="chartType" value="pie-chart" checked> Pie Chart</label><br>
-            <label><input type="radio" name="chartType" value="bar-chart"> Bar Chart</label><br>
-            <label><input type="radio" name="chartType" value="horizontal-bar-chart"> Horizontal Chart</label><br>
-            <label><input type="radio" name="chartType" value="nodelink-chart"> Node Link</label><br>
-            <label><input type="radio" name="chartType" value="map-chart"> Map Chart</label><br>
-            <button id="run">Run</button>
-        </div> -->
 
-        <!-- <pie-chart id="pieChart"></pie-chart> -->
+        <pie-chart id="pieChart"></pie-chart>
         <!-- <nodelink-chart id="nodeLinkChart"></nodelink-chart> -->
 
         <bar-chart id="verticalChart1"></bar-chart>
@@ -70,13 +59,14 @@
         async function updateCharts() {
 
             // Pie Chart
-            // const pieChartData = await fetchPieData();
-            // drawPieChart(pieChartData);
-            
+            const pieChartData = await fetchPieData();
+            drawPieChart(pieChartData);
+            // console.log("Pie", JSON.stringify(pieChartData, null, 2));
+
             // Single vertical bar chart
             const verticalChartData1 = await fetchBarData();
             drawVerticalChart1(verticalChartData1);
-            // console.log("BAR-1", JSON.stringify(verticalChartData, null, 2));
+            // console.log("BAR-1", JSON.stringify(verticalChartData1, null, 2));
 
             // Single vertical bar chart
             const verticalChartData2 = await fetchBarData();
