@@ -3,27 +3,16 @@ A modular JavaScript library for visualizing SPARQL query results using reusable
 
 📦 Installation
 
-Install via npm: npm i @dominhhuy1703/mdn_webcomponent
+Install via npm: npm i kgnovis
 
 🚀 Usage
 
-1. Add dependencies (via CDN or copy files locally)
-<!-- Required D3 & dependencies -->
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+1. Add the bundled script (Or use from CDN after publishing to a public registry.)
+<!-- Required bundled script -->
+<script type="module" src="dist/kgnovis.bundle.js"></script>
 
-<!-- Web Components -->
-<script src="components/my-component/pie-chart.js"></script>
-<script src="components/my-component/bar-chart.js"></script>
-<script src="components/my-component/nodelink-chart.js"></script>
-<script src="components/my-component/map-chart.js"></script>
-<script src="components/my-component/window-chart.js"></script>
-<script src="components/my-component/color-utils.js"></script>
-
-2. Use the custom elements in HTML
-<bar-chart id="verticalChart1"></bar-chart>
+2. Use the custom elements of Web Components in HTML
+<bar-chart id="verticalChart"></bar-chart>
 <bar-chart id="stackedBarChart"></bar-chart>
 <pie-chart id="pieChart"></pie-chart>
 <map-chart id="choroplethMap"></map-chart>
@@ -31,30 +20,43 @@ Install via npm: npm i @dominhhuy1703/mdn_webcomponent
 
 3. Provide your own data (Vega-Lite inspired format)
 
+<!-- Example for Bar Chart Component -->
 ✅ Supported Vega-Lite-style fields:
 const barChartData = {
   data: [{ category: "A", value: 30 }, { category: "B", value: 70 }],
   encoding: {
     x: { field: "category"},
-    y: { field: "value"}
+    y: { field: "value"},
   },
 };
 
 drawVerticalChart1(barChartData); // Example usage
 
 📌 Note:
-Format largely follows Vega-Lite bar chart specification
+For Bar Chart:
+  Format largely follows Vega-Lite bar chart specification
 
-Some enhancements and custom extensions are supported:
-  - Support for vertical or horizontal display mode of the chart via "direction" parameter in encoding section:
-    + default will be vertical
-    + direction = "horizontal" => B
-  - Support for stacked, grouped and normalized modes via stack parameter in encoding section:
-    + stack = true => type Stacked Bar Chart
-    + stack = false => type Grouped Bar Chart
-    + stack = "normalize" => Normalized Stacked Bar Chart
+  Some enhancements and custom extensions are supported:
+    - Support for vertical or horizontal display mode of the chart via "direction" parameter in encoding section:
+      + default will be vertical
+      + direction = "horizontal" => B
+    - Support for stacked, grouped and normalized modes via stack parameter in encoding section:
+      + stack = true => type Stacked Bar Chart
+      + stack = false => type Grouped Bar Chart
+      + stack = "normalize" => Normalized Stacked Bar Chart
 
 Automatically extract scales and domains
+
+✅ Features
+📊 Bar Charts: stacked, grouped, normalized; vertical/horizontal
+
+🥧 Pie Charts
+
+🗺 Map Charts: choropleth, bubble, connection arcs, hexbin
+
+🔗 Node-Link Diagrams
+
+🎨 Custom color utils, dynamic updates, transitions
 
 Allow dynamic switching between chart modes via additional fields:
 

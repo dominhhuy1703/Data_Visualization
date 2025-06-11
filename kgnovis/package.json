@@ -1,20 +1,38 @@
 {
-  "name": "@dominhhuy1703/kgnovis",
-  "version": "1.0.6",
-  "main": "index.js",
+  "name": "kgnovis",
+  "version": "1.0.2",
+  "main": "dist/kgnovis.bundle.js",
+  "module": "dist/kgnovis.bundle.js",
+  "type": "module",
+  "exports": {
+    "import": "./dist/vis-muvin.bundle.js"
+  },
+  "files": [
+    "dist",
+    "examples"
+  ],
   "scripts": {
     "start": "live-server --port=8090 --open=examples/index.html",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "author": "Minh Huy Do",
+  "license": "MIT",
+  "description": "KGNoVis - Visual components for D3",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-url": "^8.0.2",
     "http-server": "^14.1.1",
-    "live-server": "^1.2.0"
+    "live-server": "^1.2.0",
+    "rollup": "^4.41.1",
+    "rollup-plugin-import-css": "^4.0.1"
   },
   "dependencies": {
-    "d3": "^7.9.0"
+    "d3": "^7.9.0",
+    "d3-hexbin": "^0.2.2"
   }
 }

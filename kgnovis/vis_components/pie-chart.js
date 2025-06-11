@@ -1,17 +1,16 @@
 const scale_d3 = {'ordinal': d3.scaleOrdinal, 'quantitative': d3.scaleLinear, 'nominal': d3.scaleBand} //Define scale type using D3.js
 
+// import * as d3 from 'd3';
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
 import {
 	parseD3ColorScheme,
 	createColorScale,
-	renderColorPickers,
-	updateColor,
 	getAllIndexes
 } from './utilities/color-utils.js';
 
 // PieChart Class
-class PieChart extends HTMLElement {
-  #originalData = null; // Store a copy of the original data for resetting
+export default class PieChart extends HTMLElement {
   #dataValue = '';
 	#coreData = null;
 	#data = null;
@@ -100,19 +99,6 @@ class PieChart extends HTMLElement {
 		this.drawChart();
 		}
 	}
-
-  // attributeChangedCallback(name, oldValue, newValue) {
-  //   if (name === "data" && newValue != null) {
-  //     try {
-  //       this.#dataValue = newValue;
-  //       this.#originalData = JSON.parse(newValue); // Save original data
-  //       this.removeAttribute("data"); // Remove the attribute
-  //       this.drawChart();
-  //     } catch (error) {
-  //       console.error("Error parsing data attribute:", error);
-  //     }
-  //   }
-  // }
 
   render() {
     this.shadowRoot.innerHTML = `
@@ -251,7 +237,7 @@ class PieChart extends HTMLElement {
       <div class="main-container">
         <div class="content">
           <div class="color-picker-container">
-            <div class="legend-title">Language</div>
+            <div class="legend-title"></div>
           </div>
 
           <div class="chart-container">
@@ -282,53 +268,33 @@ class PieChart extends HTMLElement {
 
     const radius = Math.min(this.#width, this.#height) / 2;
     const textVariable = this.#coreData.encoding.text?.field || null;
-		// const xAxisLabelAngle = this.#coreData.encoding.x?.axis?.labelAngle || 0;
 		const thetaVariable = this.#coreData.encoding.theta?.field || null;
-		// const yAxisLabelAngle = this.#coreData.encoding.y?.axis?.labelAngle || 0;
 
     this.textVariable = textVariable;
     this.thetaVariable = thetaVariable;
-    // const legendContainer = this.shadowRoot.querySelector(".color-picker-container");
-    // legendContainer.innerHTML = '<div class="legend-title">Language</div>';
     
     const colorVariable = this.#coreData.encoding.color?.field || this.#defaultColor;
 
-
-    // Initialize color scale
-    // let colorScale = coreData.scales.find((element) => element.name == "color");
-    // if (colorScale) {
-    //   this.colorScale = scale_d3[colorScale.type]();
-    // }
-    // else {
-    //   this.colorScale = d3.scaleOrdinal();
-    // }
-
-    // let a = coreData.scales.find(element => element.name === "color")?.domain.field;
-
-    // const truthCheckCollection = (collection, pre) =>
-    //   collection.every(obj => obj[pre]);
-    // console.log(truthCheckCollection(data, "c"));
-
-    // const colorVariable = coreData.scales.find(element => element.name === "color")?.domain.field;
-    // const listLanguage = [...new Set(data.map((material) => material.language))];
-    // this.colorScale
-    //   .domain(data.map(d => d.language)) // Use `x` values for colors
-    //   // .range(["#ff6347", "#4682b4", "#32cd32", "#ffcc00", "#8a2be2", "#9faecd"]);
-    //   //.range(["#ff6347"]);
-    //   .range(d3.quantize(t => d3.interpolateTurbo(t * 0.8 + 0.1), listLanguage.length).reverse());
-    
     // Color scale
     const hasColors = data.some(d => d[colorVariable]);
     let colorField = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
     let colorScale = this.#coreData.encoding.color?.scale || null;
     let colorDomain = Array.isArray(colorScale?.domain) ? colorScale.domain : [];
     let rawColorRange = colorScale?.range;
+    let colorRange;
 
     if (colorScale) {
       this.colorScale = d3.scaleOrdinal();
     }
-    
-    // Create uniqueLanguage
+    // Parse the raw color range if it's a string (i.e., D3 scheme or interpolator name)
+		if (typeof rawColorRange === 'string') {
+			parsedColor = parseD3ColorScheme(rawColorRange);
+		} else {
+			// Otherwise assume it's already a valid color array
+			colorRange = rawColorRange;
+    }
+
+    // Use function createColorScale from color-utils.js
     const { scale, domain } = createColorScale({
           domain: colorDomain,
           range: rawColorRange,
@@ -344,18 +310,6 @@ class PieChart extends HTMLElement {
       .innerRadius(0)
       .outerRadius(radius - 0.9)
       .cornerRadius(0);
-
-
-    // const arcShape = d3.arc()
-    //   .innerRadius(this.innerRadius)
-    //   .outerRadius(d => {
-    //     if (radiusVariable) {
-    //       return scaleRadius(+d.data[radiusVariable]);
-    //     } else {
-    //       return radius - 5;
-    //     }
-    //   })
-    //   .cornerRadius(this.cornerRadius);
       
     const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
     const pie = d3.pie()
@@ -423,7 +377,7 @@ console.log("Theta variable", this.thetaVariable);
           .text((d.data[thetaVariable] / 1_000_000).toFixed(1) + " M");
       });
 
-      // Check hasLanguage
+      // Check hasColors
       if (hasColors) {
         this.renderColorPickers(this.finalColorDomain);
         this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
@@ -432,33 +386,6 @@ console.log("Theta variable", this.thetaVariable);
 			this.shadowRoot.querySelector(".color-picker-container").style.display = "none";
       }
   }
-
-  // // Render Color Picker
-  // renderColorPickers(colorField) {
-  //   const container = this.shadowRoot.querySelector(".color-picker-container");
-  //   container.innerHTML = '<div class="legend-title">Language</div>';
-  //   container.style.display = "block"; // Ensure the color picker container is visible
-  //   colorField.forEach((d, index) => {
-  //     const colorItem = document.createElement("div");
-  //     colorItem.classList.add("color-item");
-  
-  //     const label = document.createElement("label");
-  //     label.textContent = d; // Set the text label to the unique language name
-  
-  //     const input = document.createElement("input");
-  //     input.type = "color"; // Create a color input element
-  //     input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
-  //     input.setAttribute("data-index", index); // Store index data for reference
-  
-  //     // Append to color item container
-  //     colorItem.appendChild(input);
-  //     colorItem.appendChild(label);
-  //     container.appendChild(colorItem);
-      
-  //     // Add event listener to handle color changes
-  //     input.addEventListener("input", (event) => this.updateColor(event, colorVariable, d));
-  //   });
-  // }
 
   // Render color pickers for each bar based on data
     renderColorPickers(colorField) {
@@ -470,7 +397,7 @@ console.log("Theta variable", this.thetaVariable);
         colorItem.classList.add("color-item");
   
         const label = document.createElement("label");
-        label.textContent = d; // Set the text label to the unique language name
+        label.textContent = d; // Set the text label
   
         const input = document.createElement("input");
         input.type = "color"; // Create a color input element

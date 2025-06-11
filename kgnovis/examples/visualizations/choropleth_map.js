@@ -28,6 +28,10 @@ function drawChoroplethMap(data) {
                     // "range": d3.schemeOrRd[9]
                 },
             },
+            "shape": {
+                "field": "geoShape",
+                "type": "shape"  // hoặc "geojson"
+            },
         }
     }));
 }

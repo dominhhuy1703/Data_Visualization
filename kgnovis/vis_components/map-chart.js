@@ -1,4 +1,15 @@
-class MapChart extends HTMLElement {
+// import * as d3 from 'd3';
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+import { hexbin as d3Hexbin } from 'd3-hexbin';
+import {
+	parseD3ColorScheme,
+	createColorScale,
+	renderColorPickers,
+	updateColor,
+	getAllIndexes
+} from './utilities/color-utils.js';
+
+export default class MapChart extends HTMLElement {
     #dataValue = '';
     #coreData = null;
     #data = null;
@@ -38,7 +49,6 @@ class MapChart extends HTMLElement {
                     flattened[key] = isNaN(num) ? valObj.value : num;
                 }
             }
-            console.log("flat", flattened)
             return flattened;
         });
 
@@ -165,7 +175,7 @@ class MapChart extends HTMLElement {
             const points = pointData.map(d => d.projected).filter(Boolean);
     
             // Create hexbin
-            const hexbin = d3.hexbin()
+            const hexbin = d3Hexbin()
                 .radius(5);
                 // .extent([[0, 0], [this.#width, this.#height]]);
     
@@ -414,7 +424,6 @@ class MapChart extends HTMLElement {
         const mapLayer = layers.find(l => l.mark?.type === "geoshape");
     
         const mapUrl = mapLayer?.data?.url;
-        console.log("MAP", mapUrl)
         const airportsUrl = airportLayer?.data?.url;
         const flightsUrl = connectionLayer?.data?.url;
         const originFilter = connectionLayer?.transform?.find(t => t.filter)?.filter?.equal;
@@ -458,7 +467,6 @@ class MapChart extends HTMLElement {
                     
                     // Filter theo originFilter
                     const filteredFlights = flightsData.filter(f => f.origin === originFilter);
-                    console.log
 
                     // Calculate the number of route flights from each airport
                     const routeCounts = {};
@@ -555,11 +563,8 @@ class MapChart extends HTMLElement {
         const valueVariable = this.#coreData.encoding.value?.field;
         const colorField = this.#coreData.encoding.color?.field;
         const colorRange = this.#coreData.encoding.color?.scale?.range || d3.schemeBlues[6];
-        console.log("colorRange", colorRange)
         const colorValues = this.#data.map(d => d[colorField]);
-        console.log("colorValues", colorValues)
         const colorData = new Map(this.#data.map(d => [d[idVariable], d[colorField]]));
-        console.log("colorField", colorData)
 
         let projection;
         if (this.#coreData.projection.type === "mercator") {
@@ -572,11 +577,6 @@ class MapChart extends HTMLElement {
         const path = d3.geoPath().projection(projection);
         
         const userData = new Map(this.#data.map(d => [d[idVariable], d[valueVariable]]));
-        // const minValue = d3.min(this.#data, d => d[valueVariable]);
-        // const maxValue = d3.max(this.#data, d => d[valueVariable]);
-        // const colorScale = d3.scaleThreshold()
-        //     .domain([minValue, (minValue + maxValue) / 8, (minValue + maxValue) / 6, (minValue + maxValue) / 4, (minValue + maxValue) / 2, maxValue / 1.5])
-        //     .range(d3.schemeBlues[6]);
 
         
         const minColor = d3.min(colorValues);
@@ -691,32 +691,30 @@ class MapChart extends HTMLElement {
             tooltip.style.opacity = 0;
             legendPointer.style("opacity", 0);
             };
-    
-            function clicked(event, d) {
-            const [[x0, y0], [x1, y1]] = path.bounds(d);
-            event.stopPropagation();
             
-            // Reset all the colors
-            g.selectAll(".Country")
-                .transition().duration(200)
-                .attr("fill", d => d.originalColor);
-            
-            // Fill red to the choosen nation
-            d3.select(this)
-                .transition().duration(200)
-                .attr("fill", "red");
-            
-            // Zoom in the choosen nation
-            this.#svg.transition().duration(750).call(
-                zoom.transform,
-                d3.zoomIdentity
-                .translate(this.#width / 2, this.#height / 2)
-                .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.#width, (y1 - y0) / this.#height)))
-                .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-                d3.pointer(event, this.#svg.node())
-            );
-            }
-            
+            const clicked = (event, d) => {
+                const [[x0, y0], [x1, y1]] = path.bounds(d);
+                event.stopPropagation();
+
+                g.selectAll(".Country")
+                    .transition().duration(200)
+                    .attr("fill", d => d.originalColor);
+
+                d3.select(event.currentTarget)
+                    .transition().duration(200)
+                    .attr("fill", "red");
+
+                this.#svg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity
+                        .translate(this.#width / 2, this.#height / 2)
+                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.#width, (y1 - y0) / this.#height)))
+                        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                    d3.pointer(event, this.#svg.node())
+                );
+            };
+
+
             function reset() {
                 g.selectAll(".Country")
                     .transition().duration(200)
@@ -765,7 +763,8 @@ class MapChart extends HTMLElement {
                 .style("opacity", 0.8)
                 .on("mouseover", mouseOver)
                 .on("mouseleave", mouseLeave)
-                .on("click", clicked);
+                // .on("click", clicked);
+                .on("click", (event, d) => clicked(event, d));
         });
     }
 }
