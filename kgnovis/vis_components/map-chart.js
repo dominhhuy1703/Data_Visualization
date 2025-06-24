@@ -1,13 +1,16 @@
 // import * as d3 from 'd3';
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { hexbin as d3Hexbin } from 'd3-hexbin';
+
 import {
-	parseD3ColorScheme,
 	createColorScale,
-	renderColorPickers,
-	updateColor,
 	getAllIndexes
 } from './utilities/color-utils.js';
+
+import {
+	dataParser,
+	encodingParser,
+} from './utilities/utilities.js';
 
 export default class MapChart extends HTMLElement {
     #dataValue = '';
@@ -15,7 +18,14 @@ export default class MapChart extends HTMLElement {
     #data = null;
     #width = 400;
     #height = 400;
+    #description = '';
+    #projection = '';
+    #mark = '';
+    #url = '';
+    #encoding = null;
     #svg = null;
+    #node = '';
+    #link = '';
 
     constructor() {
         super();
@@ -24,41 +34,78 @@ export default class MapChart extends HTMLElement {
      }
 
     static get observedAttributes() {
-        return ["data"];
-    }
+		return ['data', 'width', 'height', 'description', 'encoding', 'legend', 'projection', 'mark', 'node', 'link'];
+	}
 
-    connectedCallback() {
-        this.render();
-    }
+	connectedCallback() {
+	  this.render();
+	}
 
-    attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "data" && newValue != null) {
-        this.#dataValue = newValue;
-        this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
+	attributeChangedCallback(name, oldValue, newValue) {
+	if (newValue == null) return;
 
-        let rawData = Array.isArray(this.#coreData.data)
-            ? this.#coreData.data[0].values
-            : this.#coreData.data.values;
+		try {
+			switch (name) {
+				case 'width':
+					this.width = parseInt(newValue);
+					break;
+				case 'height':
+					this.height = parseInt(newValue);
+					break;
+				case 'description':
+					this.#description = newValue;
+					this.removeAttribute(name);
+					break;
+				case 'data':
+                    const parsed = JSON.parse(newValue);
+                    this.#url = parsed.url
+					this.#data = dataParser(newValue);
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					break;
+                case 'node':
+                    const parsedNode = JSON.parse(newValue);
+                    this.#node = parsedNode.url
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					break;
+                case 'link':
+                    const parsedLink = JSON.parse(newValue);
+                    this.#link = parsedLink.url
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					break;
+                case 'projection':
+					this.projection = newValue;
+					break;
+                case 'mark':
+                    this.mark = newValue;
+                    break;
+				case 'encoding':
+					this.#encoding = encodingParser(newValue);
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					// this.#encoding = JSON.parse(newValue);
+					break;
+				case 'legend':
+					this.legend = newValue === "true";
+					this.removeAttribute(name);
+					break;
+			}
+		} catch (e) {
+			console.error(`Invalid value for ${name}`, e);
+		}
+		
+	}
 
-        // Flatten SPARQL-style fields (i.e., { value: "..." })
-        this.#data = rawData.map(d => {
-            const flattened = {};
-            for (const [key, valObj] of Object.entries(d)) {
-                if (valObj && typeof valObj === "object" && "value" in valObj) {
-                    const num = Number(valObj.value);
-                    flattened[key] = isNaN(num) ? valObj.value : num;
-                }
-            }
-            return flattened;
-        });
-
-        this.#width = this.#coreData.width;
-        this.#height = this.#coreData.height;
-
-        this.removeAttribute("data");
-        this.drawChart();
-    }
-}
 
 
     render() {
@@ -125,21 +172,15 @@ export default class MapChart extends HTMLElement {
         const svgElement = this.shadowRoot.querySelector('svg');
         d3.select(svgElement).selectAll("g").remove();
         this.#svg = d3.select(svgElement)
-            .attr("width", this.#width)
-            .attr("height", this.#height);
-    
-        const isChoropleth = this.#coreData.mark === "geoshape" && !this.#coreData.layer;
-        const isConnection = Array.isArray(this.#coreData.layer) && this.#coreData.layer.some(l => l.mark === "rule");
-        const isBubbled = this.#coreData.bubble;
-        const isHexbin = this.#coreData.hexbin;
-
-        if (isChoropleth) {
+            .attr("width", this.width)
+            .attr("height", this.height);
+        if (this.mark === "geoShape") {
             this.drawGeoChart();
-        } else if (isConnection) {
+        } else if (this.mark === "connective") {
             this.drawConnectionMap();
-        } else if (isBubbled) {
+        } else if (this.mark === "point") {
             this.drawBubbleMap();
-        } else if (isHexbin) {
+        } else if (this.mark === "hexbin") {
             this.drawHexbinMap();
         } else {
             console.warn("Unable to determine chart type from metadata");
@@ -148,16 +189,22 @@ export default class MapChart extends HTMLElement {
     
     
     drawHexbinMap() {
-        const projection = d3.geoMercator()
+
+        let projection
+        if(this.projection === "mercator") {
+        // Projection setup
+            projection = d3.geoMercator()
+            // .center([0, 20])
             .scale(80)
-            .translate([this.#width / 2, this.#height / 2]);
+            .translate([this.width / 2, this.height / 2]);
+        }
         
             
         const path = d3.geoPath().projection(projection);
     
         // attach with data's url
         Promise.all([
-            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            d3.json(this.#url),
             d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
         ]).then(([geoData, pointData]) => {
         
@@ -177,7 +224,6 @@ export default class MapChart extends HTMLElement {
             // Create hexbin
             const hexbin = d3Hexbin()
                 .radius(5);
-                // .extent([[0, 0], [this.#width, this.#height]]);
     
             const bins = hexbin(points);
     
@@ -241,7 +287,7 @@ export default class MapChart extends HTMLElement {
             const legendValues = [1, 50, 90];
     
             const legend = this.#svg.append("g")
-                .attr("transform", `translate(${this.#width - 120}, ${this.#height/2 + 150})`);
+                .attr("transform", `translate(${this.width - 120}, ${this.height/2 + 150})`);
     
             legendValues.forEach((val, i) => {
                 const y = i * 20;
@@ -269,19 +315,25 @@ export default class MapChart extends HTMLElement {
     
     
     drawBubbleMap() {
-        const height = this.#height;
-        const width = this.#width;
-
+        
+        let width = this.width;
+        let height = this.height;
+        // const geoData = this.#url;
+        console.log("thisData", this.#data)
+        console.log("thisURL", this.#url)
+        let projection
+        if(this.projection === "mercator") {
         // Projection setup
-        const projection = d3.geoMercator()
+            projection = d3.geoMercator()
             // .center([0, 20])
             .scale(80)
-            .translate([this.#width / 2, this.#height / 2]);
-    
-        const geoPath = d3.geoPath().projection(projection);
+            .translate([this.width / 2, this.height / 2]);
+        }
+
+        const path = d3.geoPath().projection(projection);
     
         Promise.all([
-            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            d3.json(this.#url),
             d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
         ]).then(([geoData, bubbleData]) => {
     
@@ -343,8 +395,8 @@ export default class MapChart extends HTMLElement {
         this.#svg.append("text")
             .attr("text-anchor", "end")
             .style("fill", "black")
-            .attr("x", this.#width - 10)
-            .attr("y", this.#height - 30)
+            .attr("x", this.width - 10)
+            .attr("y", this.height - 30)
             .attr("width", 90)
             .text("WHERE SURFERS LIVE")
             .style("font-size", 14);
@@ -391,7 +443,7 @@ export default class MapChart extends HTMLElement {
             
         // === Color legend (continent) ===
         const legendContainer = this.#svg.append("g")
-            .attr("transform", `translate(${this.#width - 150}, 20)`);
+            .attr("transform", `translate(${this.width - 150}, 20)`);
     
         allContinents.forEach((continent, i) => {
             const legendRow = legendContainer.append("g")
@@ -414,20 +466,15 @@ export default class MapChart extends HTMLElement {
         console.error("Error loading data:", error);
         });
     }      
-
+    
     // drawConnectionMap() {
     drawConnectionMap() {
         const tooltip = this.shadowRoot.querySelector(".tooltip");
-        const layers = this.#coreData.layer;
-        const connectionLayer = layers.find(l => l.mark === "rule");
-        const airportLayer = layers.find(l => l.mark === "circle");
-        const mapLayer = layers.find(l => l.mark?.type === "geoshape");
     
-        const mapUrl = mapLayer?.data?.url;
-        const airportsUrl = airportLayer?.data?.url;
-        const flightsUrl = connectionLayer?.data?.url;
-        const originFilter = connectionLayer?.transform?.find(t => t.filter)?.filter?.equal;
-        const projectionType = connectionLayer?.projection?.type || "albersUsa";
+        const mapUrl = this.#url;
+        const airportsUrl = this.#node;
+        const flightsUrl = this.#link;
+        const projectionType = this.projection;
 
         // const projection = d3.geoAlbersUsa()
         //     .scale(1280)
@@ -435,7 +482,7 @@ export default class MapChart extends HTMLElement {
         console.log("Projection Type from grammar:", projectionType);
 
         const projection = d3[`geo${projectionType.charAt(0).toUpperCase() + projectionType.slice(1)}`]()
-    .fitSize([this.#width, this.#height], { type: "Sphere" });
+    .fitSize([this.width, this.height], { type: "Sphere" });
 
             console.log("D3 Projection Object:", projection);
 
@@ -448,7 +495,6 @@ export default class MapChart extends HTMLElement {
         console.log("mapUrl:", mapUrl);
         console.log("airportsUrl:", airportsUrl);
         console.log("flightsUrl:", flightsUrl);
-        console.log("originFilter:", originFilter);
 
         d3.json(mapUrl).then(geoData => {
             const states = topojson.feature(geoData, geoData.objects.states).features;
@@ -464,9 +510,7 @@ export default class MapChart extends HTMLElement {
             d3.csv(airportsUrl).then(airportsData => {
                 d3.csv(flightsUrl).then(flightsData => {
                     const airportMap = new Map(airportsData.map(d => [d.iata, d]));
-                    
-                    // Filter theo originFilter
-                    const filteredFlights = flightsData.filter(f => f.origin === originFilter);
+            
 
                     // Calculate the number of route flights from each airport
                     const routeCounts = {};
@@ -548,30 +592,27 @@ export default class MapChart extends HTMLElement {
                 });
             });
         });
-    }
-    
-    
+    }    
     
   
     drawGeoChart() {
         const tooltip = this.shadowRoot.querySelector(".tooltip");
-        
-        const geoData = this.#coreData.data.url;
-        const idVariable = this.#coreData.encoding.id?.field;
-        const labelVariable = this.#coreData.encoding.label?.field;
+        const geoData = this.#url;
+        const idVariable = this.#encoding.id?.field;
+        const labelVariable = this.#encoding.label?.field;
         const labelData = new Map(this.#data.map(d => [d[idVariable], d[labelVariable]]));
-        const valueVariable = this.#coreData.encoding.value?.field;
-        const colorField = this.#coreData.encoding.color?.field;
-        const colorRange = this.#coreData.encoding.color?.scale?.range || d3.schemeBlues[6];
+        const valueVariable = this.#encoding.value?.field;
+        const colorField = this.#encoding.color?.field;
+        const colorRange = this.#encoding.color?.scale?.range || d3.schemeBlues[6];
         const colorValues = this.#data.map(d => d[colorField]);
         const colorData = new Map(this.#data.map(d => [d[idVariable], d[colorField]]));
 
         let projection;
-        if (this.#coreData.projection.type === "mercator") {
+        if (this.projection === "mercator") {
             projection = d3.geoMercator()
             .scale(70)
             .center([0, 20])
-            .translate([this.#width / 2, this.#height / 2]);;
+            .translate([this.width / 2, this.height / 2]);;
         }      
     
         const path = d3.geoPath().projection(projection);
@@ -609,7 +650,7 @@ export default class MapChart extends HTMLElement {
             const legendWidth = 300;
             const legendHeight = 20;
             const legendsvg = this.#svg.append("g")
-            .attr("transform", `translate(${this.#width / 2 - legendWidth / 2}, ${this.#height - 40})`);
+            .attr("transform", `translate(${this.width / 2 - legendWidth / 2}, ${this.height - 40})`);
     
             const defs = this.#svg.append("defs");
             const linearGradient = defs.append("linearGradient")
@@ -707,8 +748,8 @@ export default class MapChart extends HTMLElement {
                 this.#svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity
-                        .translate(this.#width / 2, this.#height / 2)
-                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.#width, (y1 - y0) / this.#height)))
+                        .translate(this.width / 2, this.height / 2)
+                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)))
                         .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
                     d3.pointer(event, this.#svg.node())
                 );
@@ -723,7 +764,7 @@ export default class MapChart extends HTMLElement {
                 this.#svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity,
-                    d3.zoomTransform(this.#svg.node()).invert([this.#width / 2, this.#height / 2])
+                    d3.zoomTransform(this.#svg.node()).invert([this.width / 2, this.height / 2])
                 );
             }
             
@@ -737,7 +778,7 @@ export default class MapChart extends HTMLElement {
                 this.#svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity,
-                    d3.zoomTransform(this.#svg.node()).invert([this.#width / 2, this.#height / 2])
+                    d3.zoomTransform(this.#svg.node()).invert([this.width / 2, this.height / 2])
                 );
             });
     

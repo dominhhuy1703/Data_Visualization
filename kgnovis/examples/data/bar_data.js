@@ -37,25 +37,49 @@ async function fetchBarData() {
         GROUP BY ?name ?population
         LIMIT 10
     `;
+    
     return await fetchSPARQLData(query);
 }
 
-// Function to get SPARQLData
-async function fetchSPARQLData(query) {
-    const endpointUrl = "https://dbpedia.org/sparql";
-    const url = `${endpointUrl}?query=${encodeURIComponent(query)}`;
+// // Function to get SPARQLData
+// async function fetchSPARQLData(query) {
+//     const endpointUrl = "https://dbpedia.org/sparql";
+//     const url = `${endpointUrl}?query=${encodeURIComponent(query)}`;
+//     try {
+//         const response = await fetch(url, {
+//             method: 'GET',
+//             headers: { 'Accept': 'application/sparql-results+json' }
+//         });
 
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'Accept': 'application/sparql-results+json' }
-        });
+//         const jsonData = await response.json();
 
-        const jsonData = await response.json();
+//         return jsonData.results ? jsonData.results.bindings : [];
+//     } catch (error) {
+//         console.error("Error fetching SPARQL data:", error);
+//         return [];
+//     }
+// }
 
-        return jsonData.results ? jsonData.results.bindings : [];
-    } catch (error) {
-        console.error("Error fetching SPARQL data:", error);
-        return [];
-    }
-}
+// async function fetchSPARQLData(query) {
+//     const endpointUrl = "https://dbpedia.org/sparql";
+//     const url = `${endpointUrl}?query=${encodeURIComponent(query)}`;
+
+//     console.log("Fetching data from SPARQL endpoint...");  // Đoạn log này kiểm tra trước khi gọi fetch()
+
+//     try {
+//         const response = await fetch(url, {
+//             method: 'GET',
+//             headers: { 'Accept': 'application/sparql-results+json' }
+//         });
+
+//         const jsonData = await response.json();
+
+//         console.log("Fetched SPARQL Data:", jsonData);  // In ra dữ liệu raw (bao gồm cả head và results)
+//         return jsonData;  // Trả về toàn bộ dữ liệu bao gồm cả head và results
+//     } catch (error) {
+//         console.error("Error fetching SPARQL data:", error);
+//         return [];
+//     }
+// }
+
+

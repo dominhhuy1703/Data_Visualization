@@ -16,7 +16,13 @@ export default class BarChart extends HTMLElement {
 	#data = null;
 	width = null;
 	height = null;
+	#svgWidth = null;
+	#svgHeight = null;
+	#legendWidth = null;
+	#legendHeight = null;
 	#description = '';
+	#descriptionWidth = null;
+	#descriptionHeight = null;
 	#encoding = null;
 	legend = null;
 	#svg = null;
@@ -50,24 +56,25 @@ export default class BarChart extends HTMLElement {
 					break;
 				case 'description':
 					this.#description = newValue;
+					this.removeAttribute(name);
 					break;
 				case 'data':
 					this.#data = dataParser(newValue);
-					console.log("Data", this.#data)
+					this.removeAttribute(name);
 					break;
 				case 'encoding':
 					this.#encoding = encodingParser(newValue);
+					this.removeAttribute(name);
 					// this.#encoding = JSON.parse(newValue);
 					break;
 				case 'legend':
 					this.legend = newValue === "true";
+					this.removeAttribute(name);
 					break;
 			}
 		} catch (e) {
 			console.error(`Invalid value for ${name}`, e);
 		}
-
-		this.removeAttribute(name);
 
 		// Render when data & encoding is ready
 		if (this.#data && this.#encoding) {
@@ -78,13 +85,13 @@ export default class BarChart extends HTMLElement {
 	render() {
 		this.shadowRoot.innerHTML = `
 		<style>
-			:host { display: block; width: 100%; height: 100%; position: relative; }
+			// :host { display: block; width: 100%; height: 100%; position: relative; }
 			.main-container {
 				display: flex;
-				flex-direction: column;
+				flex-direction: row;
 				align-items: center;
-				width: 100%;
-				height: 100%;
+				width: ${this.width}px;
+				height: ${this.height}px;
 			}
 
 			.content {
@@ -105,41 +112,36 @@ export default class BarChart extends HTMLElement {
 			.legend-container {
 				display: flex;
 				flex-direction: column;
-				align-items: center;
-				width: 220 px;
-				gap: 5px;
-				margin-left: 20px;
+				flex-wrap: wrap;
+				justify-content: center;
+				max-height: 100%;
 			}
 
 			.legend-title {
 				font-weight: bold;
-				font-size: 20px;
-				margin-bottom: 10px;
 				text-align: center;
 				color: black;
-				padding: 5px;
 			}
 
 			.color-item {
 				display: flex;
 				align-items: center;
-				font-size: 14px;
 				gap: 10px;
-				margin-bottom: 5px;
 			}
 
 			.color-item label {
-				min-width: 150px;
 				font-weight: bold;
 				text-align: left;
 			}
 
-			.color-item input {
-				width: 30px;
-				height: 30px;
+			.color-item input[type="color"] {
 				border: none;
-				border: 1px solid #ccc;
-				cursor: pointer;
+				outline: none;
+				appearance: none;
+				-webkit-appearance: none;
+				-moz-appearance: none;
+				padding: 0;
+				background: transparent;
 			}
 			.tooltip {
 				position: absolute;
@@ -157,9 +159,8 @@ export default class BarChart extends HTMLElement {
 				text-align: center;
 				font-size: 22px;
 				font-weight: bold;
-				margin-bottom: 20px;
+				margin-top: 20px;
 				display: block;
-				width: 100%;
 			}
 		</style>
 		<div class="main-container">
@@ -195,26 +196,26 @@ export default class BarChart extends HTMLElement {
 				x = d3.scaleLog()
 					.base(10)
 					.domain([1, logMax * 10])
-					.range([this.margin.left, this.width - this.margin.right]);
+					.range([this.margin.left, this.svgWidth - this.margin.right]);
 			} else if (yScaleType === "pow") {
 				x = d3.scalePow()
 					.exponent(exponent)
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
-					.range([this.margin.left, this.width - this.margin.right]);
+					.range([this.margin.left, this.svgWidth - this.margin.right]);
 			} else {
 				x = d3.scaleLinear()
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.nice()
-					.range([this.margin.left, this.width - this.margin.right]);
+					.range([this.margin.left, this.svgWidth - this.margin.right]);
 			}
 			y = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
-				.range([this.margin.top, this.height - this.margin.bottom])
+				.range([this.margin.top, this.svgHeight - this.margin.bottom])
 				.padding(0.1);
 		} else {
 			x = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
-				.range([this.margin.left, this.width - this.margin.right])
+				.range([this.margin.left, this.svgWidth - this.margin.right])
 				.padding(0.3);
 		
 			if (yScaleType === "log") {
@@ -223,17 +224,17 @@ export default class BarChart extends HTMLElement {
 				y = d3.scaleLog()
 					.base(10)
 					.domain([1, logMax * 10])
-					.range([this.height - this.margin.bottom, this.margin.top]);
+					.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 			} else if (yScaleType === "pow") {
 				y = d3.scalePow()
 					.exponent(exponent)
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
-					.range([this.height - this.margin.bottom, this.margin.top]);
+					.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 			} else {
 				y = d3.scaleLinear()
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.nice()
-					.range([this.height - this.margin.bottom, this.margin.top]);
+					.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 			}
 		}
 		
@@ -259,36 +260,36 @@ export default class BarChart extends HTMLElement {
 					x = d3.scaleLog()
 						.base(10)
 						.domain([1, maxY])
-						.range([this.margin.left, this.width - this.margin.right]);
+						.range([this.margin.left, this.svgWidth - this.margin.right]);
 				} else if (yScaleType === "pow") {
 					x = d3.scalePow()
 						.exponent(exponent)
 						.domain([0, maxY])
-						.range([this.margin.left, this.width - this.margin.right]);
+						.range([this.margin.left, this.svgWidth - this.margin.right]);
 				} else {
 					x = d3.scaleLinear()
 						.domain([0, maxY])
-						.range([this.margin.left, this.width - this.margin.right]);
+						.range([this.margin.left, this.svgWidth - this.margin.right]);
 				}
 				y = d3.scaleBand()
 					.domain(result.map(d => d.x))
-					.range([this.margin.top, this.height - this.margin.bottom])
+					.range([this.margin.top, this.svgHeight - this.margin.bottom])
 					.padding(0.1);
 			} else {
 				if (yScaleType === "log") {
 					y = d3.scaleLog()
 						.base(10)
 						.domain([1, maxY])
-						.range([this.height - this.margin.bottom, this.margin.top]);
+						.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 				} else if (yScaleType === "pow") {
 					y = d3.scalePow()
 						.exponent(exponent)
 						.domain([0, maxY])
-						.range([this.height - this.margin.bottom, this.margin.top]);
+						.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 				} else {
 					y = d3.scaleLinear()
 						.domain([0, maxY])
-						.range([this.height - this.margin.bottom, this.margin.top]);
+						.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 				}
 			}
 			
@@ -312,11 +313,11 @@ export default class BarChart extends HTMLElement {
 				: d
 			);
 
-		this.#svg.append("g")
-			.attr("transform", `translate(0, ${this.height - this.margin.bottom})`)
+		this.svg.append("g")
+			.attr("transform", `translate(0, ${this.svgHeight - this.margin.bottom})`)
 			.call(xAxis)
 			.selectAll("text")
-			.style("font-size", "10px")
+			.style("font-size", this.svgWidth * 0.025 + 'px')
 			.attr("transform", `rotate(${xAxisLabelAngle})`)
 			.style("text-anchor", xAxisLabelAngle !== 0 ? "start" : "middle");
 
@@ -338,21 +339,21 @@ export default class BarChart extends HTMLElement {
 					: d / 1000000 + " M"
 			);
 			
-		this.#svg.append("g")
+		this.svg.append("g")
 			.attr("transform", `translate(${this.margin.left}, 0)`)
 			.call(yAxis)
 			.selectAll("text")
-			.style("font-size", "10px")
+			.style("font-size", this.svgHeight * 0.025 + 'px')
 			.attr("transform", `translate(-15,5) rotate(${yAxisLabelAngle})`)
 			.style("text-anchor", "middle");
 
 		// X axis label
-		this.#svg.append("text")
+		this.svg.append("text")
 			.attr("class", "x-axis-label")
-			.attr("x", (this.width- this.margin.right) / 2)
-			.attr("y", this.height - this.margin.bottom / 3)
+			.attr("x", (this.svgWidth- this.margin.right) / 2)
+			.attr("y", this.svgHeight - this.margin.bottom / 2.5)
 			.style("text-anchor", "middle")
-			.style("font-size", "18px")
+			.style("font-size", this.svgWidth * 0.05 + 'px')
 			.text(isHorizontal ? yVariable : xVariable);
 
 		// Y axis label
@@ -364,12 +365,12 @@ export default class BarChart extends HTMLElement {
 				? `${yVariable} ^ ${exponent}`
 				: yVariable));
 
-		this.#svg.append("text")
+		this.svg.append("text")
 			.attr("class", "y-axis-label")
-			.attr("x", -(this.height - this.margin.top - this.margin.bottom) / 2)
+			.attr("x", -(this.svgHeight - this.margin.top - this.margin.bottom) / 2)
 			.attr("y", -this.margin.left + 20)
 			.style("text-anchor", "middle")
-			.style("font-size", "18px")
+			.style("font-size", this.svgHeight * 0.05 + 'px')
 			.text(yAxisTitle)
 			.attr("transform", "rotate(-90)");
 
@@ -383,9 +384,9 @@ export default class BarChart extends HTMLElement {
 		let data = this.#data;
 		const svgElement = this.shadowRoot.querySelector('svg');
 		d3.select(svgElement).selectAll("g").remove();
-		this.#svg = d3.select(svgElement)
-			.attr("width", this.width).attr("height", this.height)
-			.style("margin", "30px")
+		this.svg = d3.select(svgElement)
+			.attr("width", this.svgWidth).attr("height", this.svgHeight)
+			// .style("margin", "30px")
 			.append("g")
 			.attr("transform",
 				 "translate(" + this.margin.left + "," + this.margin.top + ")");
@@ -402,7 +403,16 @@ export default class BarChart extends HTMLElement {
 		const xVariable = this.#encoding.x?.field || null;
 		const yVariable = this.#encoding.y?.field || null;
 		
+		
+		this.svgHeight = this.height * 0.8;
+		this.descriptionHeight = this.height * 0.2;
+		this.legendHeight = this.height * 0.8;
+		
+		
+
 		const legendDescription = this.shadowRoot.querySelector(".legend-title");
+		legendDescription.style.fontSize = this.legendHeight * 0.04 + 'px';
+		legendDescription.style.marginBottom = this.legendHeight * 0.03 + 'px';
 
 		if (legendDescription) {
 			legendDescription.textContent = this.#encoding.color?.title || "";
@@ -426,6 +436,17 @@ export default class BarChart extends HTMLElement {
 		let rawColorRange = colorScaleObj?.range;
 
 		let colorRange;
+
+		if (this.legend && hasColors) {
+			// Set the width for visualization when legend is displayed
+			this.svgWidth = this.width * 0.7;
+			this.legendWidth = this.width * 0.3;
+			this.descriptionWidth = this.width * 0.7;
+		} else {
+			this.svgWidth = this.width;
+			this.legendWidth = 0;
+			this.descriptionWidth = this.width;
+		}
 
 		// xVariable or yVariable is missing
 		if (!xVariable || !yVariable) {
@@ -492,6 +513,12 @@ export default class BarChart extends HTMLElement {
 			this.shadowRoot.querySelector(".legend-container").style.display = "none";
 		}
 		this.shadowRoot.querySelector(".description").textContent = this.#description;
+		const descriptionElement = this.shadowRoot.querySelector(".description");
+		if (descriptionElement) {
+			descriptionElement.style.fontSize = `${this.descriptionWidth * 0.05}px`;
+			descriptionElement.style.width = `${this.descriptionWidth}px`;
+			descriptionElement.style.height = `${this.descriptionHeight}px`;
+		};
 	}
 
 	fillMissingStackData(data, xVariable, yVariable) {
@@ -556,12 +583,12 @@ export default class BarChart extends HTMLElement {
 		// Create scale for main group
 		const x0 = isHorizontal ? null : d3.scaleBand()
 			.domain(groups)
-			.range([this.margin.left, this.width - this.margin.right])
+			.range([this.margin.left, this.svgWidth - this.margin.right])
 			.paddingOuter(0.2).padding(0.3);
 	
 		const y0 = isHorizontal ? d3.scaleBand()
 			.domain(groups)
-			.range([this.margin.top, this.height - this.margin.bottom])
+			.range([this.margin.top, this.svgHeight - this.margin.bottom])
 			.paddingOuter(0.2).padding(0.3) : null;
 		
 	
@@ -569,7 +596,7 @@ export default class BarChart extends HTMLElement {
 		
 		const fixedSubgroupWidth = (isHorizontal ? y0.bandwidth() : x0.bandwidth()) / d3.max(groupedData.map((e) => e[1].length)) * 1.2;
 	
-		const group = this.#svg.append("g")
+		const group = this.svg.append("g")
 			.selectAll("g")
 			.data(groupedData)
 			.join("g")
@@ -618,8 +645,8 @@ export default class BarChart extends HTMLElement {
 					d3.select(event.target).style("stroke", "black").style("opacity", 1);
 				})
 				.on("mousemove", (event) => {
-					tooltip.style.left = (d3.pointer(event)[0] + this.width / 2 + 120) + "px";
-					tooltip.style.top = (d3.pointer(event)[1] + this.height / 3 - 50) + "px";
+					tooltip.style.left = (d3.pointer(event)[0] + this.svgWidth / 2 + 120) + "px";
+					tooltip.style.top = (d3.pointer(event)[1] + this.svgHeight / 3 - 50) + "px";
 				})
 				.on("mouseleave", (event) => {
 					tooltip.style.opacity = 0;
@@ -629,7 +656,7 @@ export default class BarChart extends HTMLElement {
 	}
 	
 	drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, tooltip) {
-		this.#svg.append("g")
+		this.svg.append("g")
 			.selectAll("rect")
 			.data(data)
 			.join("rect")
@@ -701,7 +728,7 @@ export default class BarChart extends HTMLElement {
 	}
 
 	renderStackedBars(stackedData, x, y, isHorizontal, xVariable, yVariable, stackVariable, tooltip) {
-		const bars = this.#svg.append("g")
+		const bars = this.svg.append("g")
 			.selectAll("g")
 			.data(stackedData)
 			.join("g")
@@ -728,8 +755,8 @@ export default class BarChart extends HTMLElement {
 				d3.select(event.target).style("stroke", "black").style("opacity", 1);
 			})
 			.on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + this.width / 2 + 120) + "px";
-				tooltip.style.top = (d3.pointer(event)[1] + this.height / 3 - 50) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + this.svgWidth / 2 + 120) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.svgHeight / 3 - 50) + "px";
 			})
 			.on("mouseleave", (event) => {
 				tooltip.style.opacity = 0;
@@ -741,16 +768,26 @@ export default class BarChart extends HTMLElement {
 	renderLegend(colorField) {
 		const container = this.shadowRoot.querySelector(".legend-container");
 		const colorVariable = this.#encoding.color?.field;
+		container.style.width = this.legendWidth + 'px';
+		container.style.height = this.legendHeight + 'px';
 		container.style.display = "block"; // Ensure the color picker container is visible
+		const fontSize = Math.max(4, this.legendHeight * 0.03); 
+		const inputSize = Math.max(10, this.legendHeight * 0.05)
+		const marginBottom = this.legendHeight * 0.02;
+
 		colorField.forEach((d, index) => {
 			const colorItem = document.createElement("div");
 			colorItem.classList.add("color-item");
+			colorItem.style.fontSize = `${fontSize}px`;
+			colorItem.style.marginBottom = `${marginBottom}px`;
 
 			const label = document.createElement("label");
 			label.textContent = d; // Set the text label to the unique language name
 
 			const input = document.createElement("input");
 			input.type = "color"; // Create a color input element
+			input.style.width = input.style.height = `${inputSize}px`;
+
 			input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
 			input.setAttribute("data-index", index); // Store index data for reference
 
@@ -765,13 +802,19 @@ export default class BarChart extends HTMLElement {
 
 	renderStackLegend(stackKeys, stackColorScale) {
 		const container = this.shadowRoot.querySelector(".legend-container");
+		container.style.width = this.#legendWidth + 'px';
+		container.style.height = this.legendHeight + 'px';
 		const legendTitle = container.querySelector(".legend-title");
+		legendTitle.style.fontSize = this.legendHeight * 0.04 + 'px';
 		if (!legendTitle) {
 			const titleEl = document.createElement("div");
 			titleEl.className = "legend-title";
 			container.appendChild(titleEl);
 		}
 
+		const fontSize = Math.max(4, this.legendHeight * 0.03); 
+		const inputSize = Math.max(10, this.legendHeight * 0.05)
+		const marginBottom = this.legendHeight * 0.02;
 		// Clear only color items, not the title
 		container.querySelectorAll(".color-item").forEach(el => el.remove());
 
@@ -779,12 +822,15 @@ export default class BarChart extends HTMLElement {
 		stackKeys.forEach((key, index) => {
 			const colorItem = document.createElement("div");
 			colorItem.classList.add("color-item");
-	
+			colorItem.style.fontSize = `${fontSize}px`;
+			colorItem.style.marginBottom = `${marginBottom}px`;
+
 			const label = document.createElement("label");
 			label.textContent = key;
 	
 			const input = document.createElement("input");
 			input.type = "color";
+			input.style.width = input.style.height = `${inputSize}px`;
 			input.value = d3.color(stackColorScale(key)).formatHex();
 			input.setAttribute("data-key", key);
 			
@@ -810,7 +856,7 @@ export default class BarChart extends HTMLElement {
 		});
 	
 		// Find all rects related to key and update color
-		this.#svg.selectAll("g") // Find all group (g) of stacked bars
+		this.svg.selectAll("g") // Find all group (g) of stacked bars
 			.filter(d => d && d.key === key) // Filter to key of stack
 			.selectAll("rect") // Choose all rect in that group
 			.transition()

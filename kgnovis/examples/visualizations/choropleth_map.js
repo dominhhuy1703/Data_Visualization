@@ -1,37 +1,40 @@
 function drawChoroplethMap(data) {
-    document.querySelector('#choroplethMapData').setAttribute('data', JSON.stringify({
-        "description": "Map Chart - Population of Countries",
-        "width": 600,
-        "height": 600,
+    const mapChart = document.querySelector('#choroplethMapData');
 
-        "data": {
-            "values": data,
-            "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
+    // Set configuration
+    mapChart.setAttribute("description", "Map Chart - Population of Countries");
+    mapChart.setAttribute("width", "600");
+    mapChart.setAttribute("height", "600");
+
+    // Set data
+    mapChart.setAttribute("data", JSON.stringify({ 
+        "values": data,
+        "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
+     }));
+    console.log("Data", data)
+
+    mapChart.setAttribute("projection", "mercator");
+
+    mapChart.setAttribute("mark", "geoShape");
+    // Set encoding
+    mapChart.setAttribute("encoding", JSON.stringify({
+        "id": {
+            "field": "isoCode"
         },
-        "projection": {
-            "type": "mercator"
+        "label": {
+            "field": "countryLabel",
         },
-        "mark": "geoshape",
-        "encoding": {
-            "id": {
-                "field": "isoCode"
+        "value": {
+            "field": "population",
+        },
+        "color": {
+            "field": "population",
+            "scale": {
+                // "range": d3.schemeOrRd[9]
             },
-            "label": {
-                "field": "countryLabel"
-            },
-            "value": {
-                "field": "population"
-            },
-            "color": {
-                "field": "population",
-                "scale": {
-                    // "range": d3.schemeOrRd[9]
-                },
-            },
-            "shape": {
-                "field": "geoShape",
-                "type": "shape"  // hoặc "geojson"
-            },
-        }
+        // "projection": {"fieldt": "mercator")}; //Put the "projection" into the encoding
+        },
     }));
+    
+    mapChart.setAttribute("legend", true );
 }

@@ -9,22 +9,21 @@ import {
 	getAllIndexes
 } from './utilities/color-utils.js';
 
+import {
+	dataParser,
+	encodingParser,
+} from './utilities/utilities.js';
+
 // PieChart Class
 export default class PieChart extends HTMLElement {
   #dataValue = '';
-	#coreData = null;
 	#data = null;
 	#width = 400;
 	#height = 400;
 	#svg = null;
 	#defaultColor = "#cccccc";
-	#tempConfig = {
-		data: null,
-		encoding: null,
-		description: '',
-		width: 400,
-		height: 400,
-	};
+  #description = '';
+	#encoding = null;
   
   constructor() {
     super();
@@ -34,69 +33,49 @@ export default class PieChart extends HTMLElement {
 
   //Specify the properties to track changes
   static get observedAttributes() {
-    return ["data", 'width', 'height', 'description', 'encoding'];
-  }
+		return ['data', 'width', 'height', 'description', 'encoding', 'legend'];
+	}
 
-  connectedCallback() {
-    this.render(); //Render the component when it's added to the DOM
-  }
+	connectedCallback() {
+	  this.render();
+	}
 
-  attributeChangedCallback(name, oldValue, newValue) {
-		if (newValue == null) return;
-		switch (name) {
-			case 'width':
-				this.#tempConfig.width = parseInt(newValue);
-				break;
-			case 'height':
-				this.#tempConfig.height = parseInt(newValue);
-				break;
-			case 'description':
-				this.#tempConfig.description = newValue;
-				break;
-			case 'encoding':
-				try {
-					this.#tempConfig.encoding = JSON.parse(newValue);
-				} catch (e) {
-					console.error('Invalid encoding JSON', e);
-				}
-				break;
-			case 'data':
-			try {
-				const parsedData = JSON.parse(newValue);
-				const rawData = Array.isArray(parsedData) ? parsedData : parsedData.values || parsedData;
-				this.#tempConfig.data = rawData.map(d => {
-					const flattened = {};
-					for (const [key, valObj] of Object.entries(d)) {
-						if (valObj?.value !== undefined) {
-							const num = Number(valObj.value);
-							flattened[key] = isNaN(num) ? valObj.value : num;
-						} else {
-							flattened[key] = d[key]; // fallback for non-SPARQL
-						}
-					}
-					return flattened;
-				});
-			} catch (e) {
-				console.error('Invalid data JSON', e);
+	attributeChangedCallback(name, oldValue, newValue) {
+	if (newValue == null) return;
+
+		try {
+			switch (name) {
+				case 'width':
+					this.width = parseInt(newValue);
+					break;
+				case 'height':
+					this.height = parseInt(newValue);
+					break;
+				case 'description':
+					this.#description = newValue;
+					this.removeAttribute(name);
+					break;
+				case 'data':
+					this.#data = dataParser(newValue);
+					this.removeAttribute(name);
+					break;
+				case 'encoding':
+					this.#encoding = encodingParser(newValue);
+					this.removeAttribute(name);
+					// this.#encoding = JSON.parse(newValue);
+					break;
+				case 'legend':
+					this.legend = newValue === "true";
+					this.removeAttribute(name);
+					break;
 			}
-			break;
+		} catch (e) {
+			console.error(`Invalid value for ${name}`, e);
 		}
-		
-		this.removeAttribute(name);
 
-		// Check that's enough neccesary data to render
-		if (this.#tempConfig.data && this.#tempConfig.encoding) {
-			this.#data = this.#tempConfig.data;
-			this.#width = this.#tempConfig.width;
-			this.#height = this.#tempConfig.height;
-			this.#coreData = {
-				data: { values: this.#data },
-				encoding: this.#tempConfig.encoding,
-				width: this.#width,
-				height: this.#height,
-				description: this.#tempConfig.description,
-			};
-		this.drawChart();
+		// Render when data & encoding is ready
+		if (this.#data && this.#encoding) {
+			this.drawChart();
 		}
 	}
 
@@ -259,7 +238,6 @@ export default class PieChart extends HTMLElement {
     const tooltip = this.shadowRoot.querySelector(".tooltip");
 
 		let data = this.#data;
-    console.log("AAAAAAA", data)
     const svgElement = this.shadowRoot.querySelector('svg');
     d3.select(svgElement).selectAll("g").remove();
     this.#svg = d3.select(svgElement)
@@ -267,31 +245,27 @@ export default class PieChart extends HTMLElement {
       .append("g").attr("transform", `translate(${this.#width / 2}, ${this.#height / 2})`);
 
     const radius = Math.min(this.#width, this.#height) / 2;
-    const textVariable = this.#coreData.encoding.text?.field || null;
-		const thetaVariable = this.#coreData.encoding.theta?.field || null;
+    const textVariable = this.#encoding.text?.field || null;
+		const thetaVariable = this.#encoding.theta?.field || null;
 
     this.textVariable = textVariable;
     this.thetaVariable = thetaVariable;
     
-    const colorVariable = this.#coreData.encoding.color?.field || this.#defaultColor;
+    const legendDescription = this.shadowRoot.querySelector(".legend-title");
+    legendDescription.textContent = this.#encoding.color?.title
+
+    const colorVariable = this.#encoding.color?.field || this.#defaultColor;
 
     // Color scale
     const hasColors = data.some(d => d[colorVariable]);
     let colorField = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
-    let colorScale = this.#coreData.encoding.color?.scale || null;
+    let colorScale = this.#encoding.color?.scale || null;
     let colorDomain = Array.isArray(colorScale?.domain) ? colorScale.domain : [];
     let rawColorRange = colorScale?.range;
     let colorRange;
 
     if (colorScale) {
       this.colorScale = d3.scaleOrdinal();
-    }
-    // Parse the raw color range if it's a string (i.e., D3 scheme or interpolator name)
-		if (typeof rawColorRange === 'string') {
-			parsedColor = parseD3ColorScheme(rawColorRange);
-		} else {
-			// Otherwise assume it's already a valid color array
-			colorRange = rawColorRange;
     }
 
     // Use function createColorScale from color-utils.js
@@ -314,13 +288,10 @@ export default class PieChart extends HTMLElement {
     const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
     const pie = d3.pie()
       .value(d => {
-  console.log("Theta value:", d[this.thetaVariable]);
   return +d[this.thetaVariable];
 })
-      .sort(null); // giữ nguyên thứ tự nếu muốn
+      .sort(null);
 
-      console.log("Raw data", data);
-console.log("Theta variable", this.thetaVariable);
     const pieData = pie(data);
 
     // Draw pie chart segments
@@ -348,12 +319,12 @@ console.log("Theta variable", this.thetaVariable);
 
       // Display chart description
       const chartDescription = this.shadowRoot.querySelector(".description");
-      chartDescription.textContent = this.#coreData.description;
+      chartDescription.textContent = this.#description;
 
     const textGroup = this.#svg.append("g")
       .attr("font-family", "arial")
       .attr("font-size", "12px")
-      .attr("font-weight", 550)
+      .attr("font-weight", 500)
       .attr("text-anchor", "middle");
 
       textGroup.selectAll("text")
@@ -373,12 +344,12 @@ console.log("Theta variable", this.thetaVariable);
 
         textElement.append("tspan")
           .attr("x", "0")
-          .attr("dy", "1.2em")
+          .attr("dy", "1.0em")
           .text((d.data[thetaVariable] / 1_000_000).toFixed(1) + " M");
       });
 
       // Check hasColors
-      if (hasColors) {
+      if (this.legend && hasColors) {
         this.renderColorPickers(this.finalColorDomain);
         this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
 
@@ -390,7 +361,7 @@ console.log("Theta variable", this.thetaVariable);
   // Render color pickers for each bar based on data
     renderColorPickers(colorField) {
       const container = this.shadowRoot.querySelector(".color-picker-container");
-      const colorVariable = this.#coreData.encoding.color?.field;
+      const colorVariable = this.#encoding.color?.field;
       container.style.display = "block"; // Ensure the color picker container is visible
       colorField.forEach((d, index) => {
         const colorItem = document.createElement("div");
