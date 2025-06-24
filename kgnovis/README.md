@@ -73,8 +73,15 @@ encoding={
 legend=true
 ></bar-chart>
 ```
+![Regular Bar Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/verticalBarChart.png)
 
 ##### 3.1.2 Stacked Bar Chart
+
+| Field    | Value   | Mandatory   |
+  |-------------|---------------|------------------------------ |
+  | color      | |✓  |
+  | stack        | true | ✓  |
+  
 ```html
 <bar-chart id="stackedBarChart" 
 ...
@@ -85,13 +92,17 @@ encoding={...,
   }
 ></barchart>
 ```
-| Field    | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |
-  | color      | |✓  |
-  | stack        | true | ✓  |
+
+![Stacked Bar Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/stackBarChart.png)
 
 
 ##### 3.1.3 Normalized Stacked Bar Chart
+
+| Field    | Value   | Mandatory   |
+  |-------------|---------------|------------------------------ |
+  | color      | |✓  |
+  | stack        | "normalize" | ✓  |
+
 ```html
 <bar-chart id="normalizeBarChart" 
 ...
@@ -102,12 +113,16 @@ encoding={...,
 }
 ></barchart>
 ```
+
+
+![Normalized Bar Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/normalizedStackBarChart.png)
+
+##### 3.1.4 Grouped Bar Chart
 | Field    | Value   | Mandatory   |
   |-------------|---------------|------------------------------ |
   | color      | |✓  |
-  | stack        | "normalize" | ✓  |
+  | stack        | false | ✓  |
 
-##### 3.1.4 Grouped Bar Chart
 ```html
 <bar-chart id="groupedBarChart" 
 ...
@@ -118,10 +133,9 @@ encoding={...,
 }
 ></barchart>
 ```
-| Field    | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |
-  | color      | |✓  |
-  | stack        | false | ✓  |
+
+
+![Grouped Bar Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/groupBarChart.png)
 
 #### 3.2 Pie chart
 In the Pie Chart encoding configuration, the fields provided include:
@@ -159,6 +173,7 @@ legend=true
 }
 ></pie-chart>
 ```
+![Pie Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/pieChart.png)
 
 #### 3.3 Geographic Map
 In the data of Geographic Map configuration, the fields provided include:
@@ -204,3 +219,5 @@ encoding={
   }
 ></map-chart>
 ```
+
+![Choropleth Map](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/choroplethMap.png)
