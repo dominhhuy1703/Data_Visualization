@@ -147,9 +147,8 @@ function getAllIndexes(array, value) {
 function dataParser(newValue) {
 	try {
 		const parsed = JSON.parse(newValue);
-		const rawData = Array.isArray(parsed) ? parsed : parsed.values || parsed;
 
-		return rawData.map(d => {
+		const normalize = (arr) => arr.map(d => {
 			const flat = {};
 			for (const [k, v] of Object.entries(d)) {
 				flat[k] = v?.value !== undefined
@@ -158,11 +157,27 @@ function dataParser(newValue) {
 			}
 			return flat;
 		});
+
+		if (Array.isArray(parsed)) {
+			return normalize(parsed);
+		}
+
+		if (parsed.values && Array.isArray(parsed.values)) {
+			return normalize(parsed.values);
+		}
+
+		if (typeof parsed === 'object') {
+			return normalize([parsed]);
+		}
+
+		console.warn("Unrecognized data format", parsed);
+		return [];
 	} catch (e) {
 		console.error("Invalid data attribute", e);
 		return null;
 	}
 }
+
 
 function encodingParser(newValue) {
 	const parsed = JSON.parse(newValue);
@@ -194,7 +209,13 @@ class BarChart extends HTMLElement {
 	#data = null;
 	width = null;
 	height = null;
+	#svgWidth = null;
+	#svgHeight = null;
+	#legendWidth = null;
+	#legendHeight = null;
 	#description = '';
+	#descriptionWidth = null;
+	#descriptionHeight = null;
 	#encoding = null;
 	legend = null;
 	#svg = null;
@@ -228,24 +249,25 @@ class BarChart extends HTMLElement {
 					break;
 				case 'description':
 					this.#description = newValue;
+					this.removeAttribute(name);
 					break;
 				case 'data':
 					this.#data = dataParser(newValue);
-					console.log("Data", this.#data);
+					this.removeAttribute(name);
 					break;
 				case 'encoding':
 					this.#encoding = encodingParser(newValue);
+					this.removeAttribute(name);
 					// this.#encoding = JSON.parse(newValue);
 					break;
 				case 'legend':
 					this.legend = newValue === "true";
+					this.removeAttribute(name);
 					break;
 			}
 		} catch (e) {
 			console.error(`Invalid value for ${name}`, e);
 		}
-
-		this.removeAttribute(name);
 
 		// Render when data & encoding is ready
 		if (this.#data && this.#encoding) {
@@ -256,13 +278,13 @@ class BarChart extends HTMLElement {
 	render() {
 		this.shadowRoot.innerHTML = `
 		<style>
-			:host { display: block; width: 100%; height: 100%; position: relative; }
+			// :host { display: block; width: 100%; height: 100%; position: relative; }
 			.main-container {
 				display: flex;
-				flex-direction: column;
+				flex-direction: row;
 				align-items: center;
-				width: 100%;
-				height: 100%;
+				width: ${this.width}px;
+				height: ${this.height}px;
 			}
 
 			.content {
@@ -283,41 +305,36 @@ class BarChart extends HTMLElement {
 			.legend-container {
 				display: flex;
 				flex-direction: column;
-				align-items: center;
-				width: 220 px;
-				gap: 5px;
-				margin-left: 20px;
+				flex-wrap: wrap;
+				justify-content: center;
+				max-height: 100%;
 			}
 
 			.legend-title {
 				font-weight: bold;
-				font-size: 20px;
-				margin-bottom: 10px;
 				text-align: center;
 				color: black;
-				padding: 5px;
 			}
 
 			.color-item {
 				display: flex;
 				align-items: center;
-				font-size: 14px;
 				gap: 10px;
-				margin-bottom: 5px;
 			}
 
 			.color-item label {
-				min-width: 150px;
 				font-weight: bold;
 				text-align: left;
 			}
 
-			.color-item input {
-				width: 30px;
-				height: 30px;
+			.color-item input[type="color"] {
 				border: none;
-				border: 1px solid #ccc;
-				cursor: pointer;
+				outline: none;
+				appearance: none;
+				-webkit-appearance: none;
+				-moz-appearance: none;
+				padding: 0;
+				background: transparent;
 			}
 			.tooltip {
 				position: absolute;
@@ -335,9 +352,8 @@ class BarChart extends HTMLElement {
 				text-align: center;
 				font-size: 22px;
 				font-weight: bold;
-				margin-bottom: 20px;
+				margin-top: 20px;
 				display: block;
-				width: 100%;
 			}
 		</style>
 		<div class="main-container">
@@ -373,26 +389,26 @@ class BarChart extends HTMLElement {
 				x = d3.scaleLog()
 					.base(10)
 					.domain([1, logMax * 10])
-					.range([this.margin.left, this.width - this.margin.right]);
+					.range([this.margin.left, this.svgWidth - this.margin.right]);
 			} else if (yScaleType === "pow") {
 				x = d3.scalePow()
 					.exponent(exponent)
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
-					.range([this.margin.left, this.width - this.margin.right]);
+					.range([this.margin.left, this.svgWidth - this.margin.right]);
 			} else {
 				x = d3.scaleLinear()
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.nice()
-					.range([this.margin.left, this.width - this.margin.right]);
+					.range([this.margin.left, this.svgWidth - this.margin.right]);
 			}
 			y = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
-				.range([this.margin.top, this.height - this.margin.bottom])
+				.range([this.margin.top, this.svgHeight - this.margin.bottom])
 				.padding(0.1);
 		} else {
 			x = d3.scaleBand()
 				.domain(data.map(d => d[xVariable]))
-				.range([this.margin.left, this.width - this.margin.right])
+				.range([this.margin.left, this.svgWidth - this.margin.right])
 				.padding(0.3);
 		
 			if (yScaleType === "log") {
@@ -401,17 +417,17 @@ class BarChart extends HTMLElement {
 				y = d3.scaleLog()
 					.base(10)
 					.domain([1, logMax * 10])
-					.range([this.height - this.margin.bottom, this.margin.top]);
+					.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 			} else if (yScaleType === "pow") {
 				y = d3.scalePow()
 					.exponent(exponent)
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
-					.range([this.height - this.margin.bottom, this.margin.top]);
+					.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 			} else {
 				y = d3.scaleLinear()
 					.domain([0, d3.max(data, d => +d[yVariable]) * 1.2])
 					.nice()
-					.range([this.height - this.margin.bottom, this.margin.top]);
+					.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 			}
 		}
 		
@@ -437,36 +453,36 @@ class BarChart extends HTMLElement {
 					x = d3.scaleLog()
 						.base(10)
 						.domain([1, maxY])
-						.range([this.margin.left, this.width - this.margin.right]);
+						.range([this.margin.left, this.svgWidth - this.margin.right]);
 				} else if (yScaleType === "pow") {
 					x = d3.scalePow()
 						.exponent(exponent)
 						.domain([0, maxY])
-						.range([this.margin.left, this.width - this.margin.right]);
+						.range([this.margin.left, this.svgWidth - this.margin.right]);
 				} else {
 					x = d3.scaleLinear()
 						.domain([0, maxY])
-						.range([this.margin.left, this.width - this.margin.right]);
+						.range([this.margin.left, this.svgWidth - this.margin.right]);
 				}
 				y = d3.scaleBand()
 					.domain(result.map(d => d.x))
-					.range([this.margin.top, this.height - this.margin.bottom])
+					.range([this.margin.top, this.svgHeight - this.margin.bottom])
 					.padding(0.1);
 			} else {
 				if (yScaleType === "log") {
 					y = d3.scaleLog()
 						.base(10)
 						.domain([1, maxY])
-						.range([this.height - this.margin.bottom, this.margin.top]);
+						.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 				} else if (yScaleType === "pow") {
 					y = d3.scalePow()
 						.exponent(exponent)
 						.domain([0, maxY])
-						.range([this.height - this.margin.bottom, this.margin.top]);
+						.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 				} else {
 					y = d3.scaleLinear()
 						.domain([0, maxY])
-						.range([this.height - this.margin.bottom, this.margin.top]);
+						.range([this.svgHeight - this.margin.bottom, this.margin.top]);
 				}
 			}
 			
@@ -490,11 +506,11 @@ class BarChart extends HTMLElement {
 				: d
 			);
 
-		this.#svg.append("g")
-			.attr("transform", `translate(0, ${this.height - this.margin.bottom})`)
+		this.svg.append("g")
+			.attr("transform", `translate(0, ${this.svgHeight - this.margin.bottom})`)
 			.call(xAxis)
 			.selectAll("text")
-			.style("font-size", "10px")
+			.style("font-size", this.svgWidth * 0.025 + 'px')
 			.attr("transform", `rotate(${xAxisLabelAngle})`)
 			.style("text-anchor", xAxisLabelAngle !== 0 ? "start" : "middle");
 
@@ -516,21 +532,21 @@ class BarChart extends HTMLElement {
 					: d / 1000000 + " M"
 			);
 			
-		this.#svg.append("g")
+		this.svg.append("g")
 			.attr("transform", `translate(${this.margin.left}, 0)`)
 			.call(yAxis)
 			.selectAll("text")
-			.style("font-size", "10px")
+			.style("font-size", this.svgHeight * 0.025 + 'px')
 			.attr("transform", `translate(-15,5) rotate(${yAxisLabelAngle})`)
 			.style("text-anchor", "middle");
 
 		// X axis label
-		this.#svg.append("text")
+		this.svg.append("text")
 			.attr("class", "x-axis-label")
-			.attr("x", (this.width- this.margin.right) / 2)
-			.attr("y", this.height - this.margin.bottom / 3)
+			.attr("x", (this.svgWidth- this.margin.right) / 2)
+			.attr("y", this.svgHeight - this.margin.bottom / 2.5)
 			.style("text-anchor", "middle")
-			.style("font-size", "18px")
+			.style("font-size", this.svgWidth * 0.05 + 'px')
 			.text(isHorizontal ? yVariable : xVariable);
 
 		// Y axis label
@@ -542,12 +558,12 @@ class BarChart extends HTMLElement {
 				? `${yVariable} ^ ${exponent}`
 				: yVariable));
 
-		this.#svg.append("text")
+		this.svg.append("text")
 			.attr("class", "y-axis-label")
-			.attr("x", -(this.height - this.margin.top - this.margin.bottom) / 2)
+			.attr("x", -(this.svgHeight - this.margin.top - this.margin.bottom) / 2)
 			.attr("y", -this.margin.left + 20)
 			.style("text-anchor", "middle")
-			.style("font-size", "18px")
+			.style("font-size", this.svgHeight * 0.05 + 'px')
 			.text(yAxisTitle)
 			.attr("transform", "rotate(-90)");
 
@@ -561,9 +577,9 @@ class BarChart extends HTMLElement {
 		let data = this.#data;
 		const svgElement = this.shadowRoot.querySelector('svg');
 		d3.select(svgElement).selectAll("g").remove();
-		this.#svg = d3.select(svgElement)
-			.attr("width", this.width).attr("height", this.height)
-			.style("margin", "30px")
+		this.svg = d3.select(svgElement)
+			.attr("width", this.svgWidth).attr("height", this.svgHeight)
+			// .style("margin", "30px")
 			.append("g")
 			.attr("transform",
 				 "translate(" + this.margin.left + "," + this.margin.top + ")");
@@ -580,7 +596,16 @@ class BarChart extends HTMLElement {
 		const xVariable = this.#encoding.x?.field || null;
 		const yVariable = this.#encoding.y?.field || null;
 		
+		
+		this.svgHeight = this.height * 0.8;
+		this.descriptionHeight = this.height * 0.2;
+		this.legendHeight = this.height * 0.8;
+		
+		
+
 		const legendDescription = this.shadowRoot.querySelector(".legend-title");
+		legendDescription.style.fontSize = this.legendHeight * 0.04 + 'px';
+		legendDescription.style.marginBottom = this.legendHeight * 0.03 + 'px';
 
 		if (legendDescription) {
 			legendDescription.textContent = this.#encoding.color?.title || "";
@@ -604,6 +629,17 @@ class BarChart extends HTMLElement {
 		let rawColorRange = colorScaleObj?.range;
 
 		let colorRange;
+
+		if (this.legend && hasColors) {
+			// Set the width for visualization when legend is displayed
+			this.svgWidth = this.width * 0.7;
+			this.legendWidth = this.width * 0.3;
+			this.descriptionWidth = this.width * 0.7;
+		} else {
+			this.svgWidth = this.width;
+			this.legendWidth = 0;
+			this.descriptionWidth = this.width;
+		}
 
 		// xVariable or yVariable is missing
 		if (!xVariable || !yVariable) {
@@ -670,7 +706,12 @@ class BarChart extends HTMLElement {
 			this.shadowRoot.querySelector(".legend-container").style.display = "none";
 		}
 		this.shadowRoot.querySelector(".description").textContent = this.#description;
-	}
+		const descriptionElement = this.shadowRoot.querySelector(".description");
+		if (descriptionElement) {
+			descriptionElement.style.fontSize = `${this.descriptionWidth * 0.05}px`;
+			descriptionElement.style.width = `${this.descriptionWidth}px`;
+			descriptionElement.style.height = `${this.descriptionHeight}px`;
+		}	}
 
 	fillMissingStackData(data, xVariable, yVariable) {
 		const stackVariable = this.#encoding.color?.field || null;
@@ -734,12 +775,12 @@ class BarChart extends HTMLElement {
 		// Create scale for main group
 		const x0 = isHorizontal ? null : d3.scaleBand()
 			.domain(groups)
-			.range([this.margin.left, this.width - this.margin.right])
+			.range([this.margin.left, this.svgWidth - this.margin.right])
 			.paddingOuter(0.2).padding(0.3);
 	
 		const y0 = isHorizontal ? d3.scaleBand()
 			.domain(groups)
-			.range([this.margin.top, this.height - this.margin.bottom])
+			.range([this.margin.top, this.svgHeight - this.margin.bottom])
 			.paddingOuter(0.2).padding(0.3) : null;
 		
 	
@@ -747,7 +788,7 @@ class BarChart extends HTMLElement {
 		
 		const fixedSubgroupWidth = (isHorizontal ? y0.bandwidth() : x0.bandwidth()) / d3.max(groupedData.map((e) => e[1].length)) * 1.2;
 	
-		const group = this.#svg.append("g")
+		const group = this.svg.append("g")
 			.selectAll("g")
 			.data(groupedData)
 			.join("g")
@@ -796,8 +837,8 @@ class BarChart extends HTMLElement {
 					d3.select(event.target).style("stroke", "black").style("opacity", 1);
 				})
 				.on("mousemove", (event) => {
-					tooltip.style.left = (d3.pointer(event)[0] + this.width / 2 + 120) + "px";
-					tooltip.style.top = (d3.pointer(event)[1] + this.height / 3 - 50) + "px";
+					tooltip.style.left = (d3.pointer(event)[0] + this.svgWidth / 2 + 120) + "px";
+					tooltip.style.top = (d3.pointer(event)[1] + this.svgHeight / 3 - 50) + "px";
 				})
 				.on("mouseleave", (event) => {
 					tooltip.style.opacity = 0;
@@ -807,7 +848,7 @@ class BarChart extends HTMLElement {
 	}
 	
 	drawRegularChart(data, x, y, xVariable, yVariable, isHorizontal, colorVariable, hasColors, tooltip) {
-		this.#svg.append("g")
+		this.svg.append("g")
 			.selectAll("rect")
 			.data(data)
 			.join("rect")
@@ -879,7 +920,7 @@ class BarChart extends HTMLElement {
 	}
 
 	renderStackedBars(stackedData, x, y, isHorizontal, xVariable, yVariable, stackVariable, tooltip) {
-		const bars = this.#svg.append("g")
+		const bars = this.svg.append("g")
 			.selectAll("g")
 			.data(stackedData)
 			.join("g")
@@ -906,8 +947,8 @@ class BarChart extends HTMLElement {
 				d3.select(event.target).style("stroke", "black").style("opacity", 1);
 			})
 			.on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + this.width / 2 + 120) + "px";
-				tooltip.style.top = (d3.pointer(event)[1] + this.height / 3 - 50) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + this.svgWidth / 2 + 120) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.svgHeight / 3 - 50) + "px";
 			})
 			.on("mouseleave", (event) => {
 				tooltip.style.opacity = 0;
@@ -919,16 +960,26 @@ class BarChart extends HTMLElement {
 	renderLegend(colorField) {
 		const container = this.shadowRoot.querySelector(".legend-container");
 		const colorVariable = this.#encoding.color?.field;
+		container.style.width = this.legendWidth + 'px';
+		container.style.height = this.legendHeight + 'px';
 		container.style.display = "block"; // Ensure the color picker container is visible
+		const fontSize = Math.max(4, this.legendHeight * 0.03); 
+		const inputSize = Math.max(10, this.legendHeight * 0.05);
+		const marginBottom = this.legendHeight * 0.02;
+
 		colorField.forEach((d, index) => {
 			const colorItem = document.createElement("div");
 			colorItem.classList.add("color-item");
+			colorItem.style.fontSize = `${fontSize}px`;
+			colorItem.style.marginBottom = `${marginBottom}px`;
 
 			const label = document.createElement("label");
 			label.textContent = d; // Set the text label to the unique language name
 
 			const input = document.createElement("input");
 			input.type = "color"; // Create a color input element
+			input.style.width = input.style.height = `${inputSize}px`;
+
 			input.value = d3.color(this.colorScale(d)).formatHex(); // Set the initial color from the color scale
 			input.setAttribute("data-index", index); // Store index data for reference
 
@@ -943,13 +994,19 @@ class BarChart extends HTMLElement {
 
 	renderStackLegend(stackKeys, stackColorScale) {
 		const container = this.shadowRoot.querySelector(".legend-container");
+		container.style.width = this.#legendWidth + 'px';
+		container.style.height = this.legendHeight + 'px';
 		const legendTitle = container.querySelector(".legend-title");
+		legendTitle.style.fontSize = this.legendHeight * 0.04 + 'px';
 		if (!legendTitle) {
 			const titleEl = document.createElement("div");
 			titleEl.className = "legend-title";
 			container.appendChild(titleEl);
 		}
 
+		const fontSize = Math.max(4, this.legendHeight * 0.03); 
+		const inputSize = Math.max(10, this.legendHeight * 0.05);
+		const marginBottom = this.legendHeight * 0.02;
 		// Clear only color items, not the title
 		container.querySelectorAll(".color-item").forEach(el => el.remove());
 
@@ -957,12 +1014,15 @@ class BarChart extends HTMLElement {
 		stackKeys.forEach((key, index) => {
 			const colorItem = document.createElement("div");
 			colorItem.classList.add("color-item");
-	
+			colorItem.style.fontSize = `${fontSize}px`;
+			colorItem.style.marginBottom = `${marginBottom}px`;
+
 			const label = document.createElement("label");
 			label.textContent = key;
 	
 			const input = document.createElement("input");
 			input.type = "color";
+			input.style.width = input.style.height = `${inputSize}px`;
 			input.value = d3.color(stackColorScale(key)).formatHex();
 			input.setAttribute("data-key", key);
 			
@@ -988,7 +1048,7 @@ class BarChart extends HTMLElement {
 		});
 	
 		// Find all rects related to key and update color
-		this.#svg.selectAll("g") // Find all group (g) of stacked bars
+		this.svg.selectAll("g") // Find all group (g) of stacked bars
 			.filter(d => d && d.key === key) // Filter to key of stack
 			.selectAll("rect") // Choose all rect in that group
 			.transition()
@@ -1068,19 +1128,13 @@ set height(value) {
 // PieChart Class
 class PieChart extends HTMLElement {
   #dataValue = '';
-	#coreData = null;
 	#data = null;
 	#width = 400;
 	#height = 400;
 	#svg = null;
 	#defaultColor = "#cccccc";
-	#tempConfig = {
-		data: null,
-		encoding: null,
-		description: '',
-		width: 400,
-		height: 400,
-	};
+  #description = '';
+	#encoding = null;
   
   constructor() {
     super();
@@ -1090,69 +1144,49 @@ class PieChart extends HTMLElement {
 
   //Specify the properties to track changes
   static get observedAttributes() {
-    return ["data", 'width', 'height', 'description', 'encoding'];
-  }
+		return ['data', 'width', 'height', 'description', 'encoding', 'legend'];
+	}
 
-  connectedCallback() {
-    this.render(); //Render the component when it's added to the DOM
-  }
+	connectedCallback() {
+	  this.render();
+	}
 
-  attributeChangedCallback(name, oldValue, newValue) {
-		if (newValue == null) return;
-		switch (name) {
-			case 'width':
-				this.#tempConfig.width = parseInt(newValue);
-				break;
-			case 'height':
-				this.#tempConfig.height = parseInt(newValue);
-				break;
-			case 'description':
-				this.#tempConfig.description = newValue;
-				break;
-			case 'encoding':
-				try {
-					this.#tempConfig.encoding = JSON.parse(newValue);
-				} catch (e) {
-					console.error('Invalid encoding JSON', e);
-				}
-				break;
-			case 'data':
-			try {
-				const parsedData = JSON.parse(newValue);
-				const rawData = Array.isArray(parsedData) ? parsedData : parsedData.values || parsedData;
-				this.#tempConfig.data = rawData.map(d => {
-					const flattened = {};
-					for (const [key, valObj] of Object.entries(d)) {
-						if (valObj?.value !== undefined) {
-							const num = Number(valObj.value);
-							flattened[key] = isNaN(num) ? valObj.value : num;
-						} else {
-							flattened[key] = d[key]; // fallback for non-SPARQL
-						}
-					}
-					return flattened;
-				});
-			} catch (e) {
-				console.error('Invalid data JSON', e);
+	attributeChangedCallback(name, oldValue, newValue) {
+	if (newValue == null) return;
+
+		try {
+			switch (name) {
+				case 'width':
+					this.width = parseInt(newValue);
+					break;
+				case 'height':
+					this.height = parseInt(newValue);
+					break;
+				case 'description':
+					this.#description = newValue;
+					this.removeAttribute(name);
+					break;
+				case 'data':
+					this.#data = dataParser(newValue);
+					this.removeAttribute(name);
+					break;
+				case 'encoding':
+					this.#encoding = encodingParser(newValue);
+					this.removeAttribute(name);
+					// this.#encoding = JSON.parse(newValue);
+					break;
+				case 'legend':
+					this.legend = newValue === "true";
+					this.removeAttribute(name);
+					break;
 			}
-			break;
+		} catch (e) {
+			console.error(`Invalid value for ${name}`, e);
 		}
-		
-		this.removeAttribute(name);
 
-		// Check that's enough neccesary data to render
-		if (this.#tempConfig.data && this.#tempConfig.encoding) {
-			this.#data = this.#tempConfig.data;
-			this.#width = this.#tempConfig.width;
-			this.#height = this.#tempConfig.height;
-			this.#coreData = {
-				data: { values: this.#data },
-				encoding: this.#tempConfig.encoding,
-				width: this.#width,
-				height: this.#height,
-				description: this.#tempConfig.description,
-			};
-		this.drawChart();
+		// Render when data & encoding is ready
+		if (this.#data && this.#encoding) {
+			this.drawChart();
 		}
 	}
 
@@ -1315,7 +1349,6 @@ class PieChart extends HTMLElement {
     const tooltip = this.shadowRoot.querySelector(".tooltip");
 
 		let data = this.#data;
-    console.log("AAAAAAA", data);
     const svgElement = this.shadowRoot.querySelector('svg');
     d3.select(svgElement).selectAll("g").remove();
     this.#svg = d3.select(svgElement)
@@ -1323,28 +1356,27 @@ class PieChart extends HTMLElement {
       .append("g").attr("transform", `translate(${this.#width / 2}, ${this.#height / 2})`);
 
     const radius = Math.min(this.#width, this.#height) / 2;
-    const textVariable = this.#coreData.encoding.text?.field || null;
-		const thetaVariable = this.#coreData.encoding.theta?.field || null;
+    const textVariable = this.#encoding.text?.field || null;
+		const thetaVariable = this.#encoding.theta?.field || null;
 
     this.textVariable = textVariable;
     this.thetaVariable = thetaVariable;
     
-    const colorVariable = this.#coreData.encoding.color?.field || this.#defaultColor;
+    const legendDescription = this.shadowRoot.querySelector(".legend-title");
+    legendDescription.textContent = this.#encoding.color?.title;
+
+    const colorVariable = this.#encoding.color?.field || this.#defaultColor;
 
     // Color scale
     const hasColors = data.some(d => d[colorVariable]);
     let colorField = hasColors ? [...new Set(data.map(d => d[colorVariable]))] : [];
-    let colorScale = this.#coreData.encoding.color?.scale || null;
+    let colorScale = this.#encoding.color?.scale || null;
     let colorDomain = Array.isArray(colorScale?.domain) ? colorScale.domain : [];
     let rawColorRange = colorScale?.range;
 
     if (colorScale) {
       this.colorScale = d3.scaleOrdinal();
     }
-    // Parse the raw color range if it's a string (i.e., D3 scheme or interpolator name)
-		if (typeof rawColorRange === 'string') {
-			parsedColor = parseD3ColorScheme(rawColorRange);
-		}
 
     // Use function createColorScale from color-utils.js
     const { scale, domain } = createColorScale({
@@ -1366,13 +1398,10 @@ class PieChart extends HTMLElement {
     const arcShapeLabels = d3.arc().outerRadius(radius - 0.85).innerRadius(radius * 0.6);
     const pie = d3.pie()
       .value(d => {
-  console.log("Theta value:", d[this.thetaVariable]);
   return +d[this.thetaVariable];
 })
-      .sort(null); // giữ nguyên thứ tự nếu muốn
+      .sort(null);
 
-      console.log("Raw data", data);
-console.log("Theta variable", this.thetaVariable);
     const pieData = pie(data);
 
     // Draw pie chart segments
@@ -1400,12 +1429,12 @@ console.log("Theta variable", this.thetaVariable);
 
       // Display chart description
       const chartDescription = this.shadowRoot.querySelector(".description");
-      chartDescription.textContent = this.#coreData.description;
+      chartDescription.textContent = this.#description;
 
     const textGroup = this.#svg.append("g")
       .attr("font-family", "arial")
       .attr("font-size", "12px")
-      .attr("font-weight", 550)
+      .attr("font-weight", 500)
       .attr("text-anchor", "middle");
 
       textGroup.selectAll("text")
@@ -1425,12 +1454,12 @@ console.log("Theta variable", this.thetaVariable);
 
         textElement.append("tspan")
           .attr("x", "0")
-          .attr("dy", "1.2em")
+          .attr("dy", "1.0em")
           .text((d.data[thetaVariable] / 1_000_000).toFixed(1) + " M");
       });
 
       // Check hasColors
-      if (hasColors) {
+      if (this.legend && hasColors) {
         this.renderColorPickers(this.finalColorDomain);
         this.shadowRoot.querySelector(".color-picker-container").style.display = "flex";
 
@@ -1442,7 +1471,7 @@ console.log("Theta variable", this.thetaVariable);
   // Render color pickers for each bar based on data
     renderColorPickers(colorField) {
       const container = this.shadowRoot.querySelector(".color-picker-container");
-      const colorVariable = this.#coreData.encoding.color?.field;
+      const colorVariable = this.#encoding.color?.field;
       container.style.display = "block"; // Ensure the color picker container is visible
       colorField.forEach((d, index) => {
         const colorItem = document.createElement("div");
@@ -1770,7 +1799,14 @@ class MapChart extends HTMLElement {
     #data = null;
     #width = 400;
     #height = 400;
+    #description = '';
+    #projection = '';
+    #mark = '';
+    #url = '';
+    #encoding = null;
     #svg = null;
+    #node = '';
+    #link = '';
 
     constructor() {
         super();
@@ -1779,41 +1815,78 @@ class MapChart extends HTMLElement {
      }
 
     static get observedAttributes() {
-        return ["data"];
-    }
+		return ['data', 'width', 'height', 'description', 'encoding', 'legend', 'projection', 'mark', 'node', 'link'];
+	}
 
-    connectedCallback() {
-        this.render();
-    }
+	connectedCallback() {
+	  this.render();
+	}
 
-    attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "data" && newValue != null) {
-        this.#dataValue = newValue;
-        this.#coreData = JSON.parse(this.#dataValue); // Parse JSON data
+	attributeChangedCallback(name, oldValue, newValue) {
+	if (newValue == null) return;
 
-        let rawData = Array.isArray(this.#coreData.data)
-            ? this.#coreData.data[0].values
-            : this.#coreData.data.values;
+		try {
+			switch (name) {
+				case 'width':
+					this.width = parseInt(newValue);
+					break;
+				case 'height':
+					this.height = parseInt(newValue);
+					break;
+				case 'description':
+					this.#description = newValue;
+					this.removeAttribute(name);
+					break;
+				case 'data':
+                    const parsed = JSON.parse(newValue);
+                    this.#url = parsed.url;
+					this.#data = dataParser(newValue);
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					break;
+                case 'node':
+                    const parsedNode = JSON.parse(newValue);
+                    this.#node = parsedNode.url;
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					break;
+                case 'link':
+                    const parsedLink = JSON.parse(newValue);
+                    this.#link = parsedLink.url;
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					break;
+                case 'projection':
+					this.projection = newValue;
+					break;
+                case 'mark':
+                    this.mark = newValue;
+                    break;
+				case 'encoding':
+					this.#encoding = encodingParser(newValue);
+					this.removeAttribute(name);
+                    if (this.#data && this.#encoding) {
+                        this.drawChart();
+                    }
+					// this.#encoding = JSON.parse(newValue);
+					break;
+				case 'legend':
+					this.legend = newValue === "true";
+					this.removeAttribute(name);
+					break;
+			}
+		} catch (e) {
+			console.error(`Invalid value for ${name}`, e);
+		}
+		
+	}
 
-        // Flatten SPARQL-style fields (i.e., { value: "..." })
-        this.#data = rawData.map(d => {
-            const flattened = {};
-            for (const [key, valObj] of Object.entries(d)) {
-                if (valObj && typeof valObj === "object" && "value" in valObj) {
-                    const num = Number(valObj.value);
-                    flattened[key] = isNaN(num) ? valObj.value : num;
-                }
-            }
-            return flattened;
-        });
-
-        this.#width = this.#coreData.width;
-        this.#height = this.#coreData.height;
-
-        this.removeAttribute("data");
-        this.drawChart();
-    }
-}
 
 
     render() {
@@ -1880,21 +1953,15 @@ class MapChart extends HTMLElement {
         const svgElement = this.shadowRoot.querySelector('svg');
         d3.select(svgElement).selectAll("g").remove();
         this.#svg = d3.select(svgElement)
-            .attr("width", this.#width)
-            .attr("height", this.#height);
-    
-        const isChoropleth = this.#coreData.mark === "geoshape" && !this.#coreData.layer;
-        const isConnection = Array.isArray(this.#coreData.layer) && this.#coreData.layer.some(l => l.mark === "rule");
-        const isBubbled = this.#coreData.bubble;
-        const isHexbin = this.#coreData.hexbin;
-
-        if (isChoropleth) {
+            .attr("width", this.width)
+            .attr("height", this.height);
+        if (this.mark === "geoShape") {
             this.drawGeoChart();
-        } else if (isConnection) {
+        } else if (this.mark === "connective") {
             this.drawConnectionMap();
-        } else if (isBubbled) {
+        } else if (this.mark === "point") {
             this.drawBubbleMap();
-        } else if (isHexbin) {
+        } else if (this.mark === "hexbin") {
             this.drawHexbinMap();
         } else {
             console.warn("Unable to determine chart type from metadata");
@@ -1903,16 +1970,22 @@ class MapChart extends HTMLElement {
     
     
     drawHexbinMap() {
-        const projection = d3.geoMercator()
+
+        let projection;
+        if(this.projection === "mercator") {
+        // Projection setup
+            projection = d3.geoMercator()
+            // .center([0, 20])
             .scale(80)
-            .translate([this.#width / 2, this.#height / 2]);
+            .translate([this.width / 2, this.height / 2]);
+        }
         
             
         d3.geoPath().projection(projection);
     
         // attach with data's url
         Promise.all([
-            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            d3.json(this.#url),
             d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
         ]).then(([geoData, pointData]) => {
         
@@ -1932,7 +2005,6 @@ class MapChart extends HTMLElement {
             // Create hexbin
             const hexbin = d3Hexbin()
                 .radius(5);
-                // .extent([[0, 0], [this.#width, this.#height]]);
     
             const bins = hexbin(points);
     
@@ -1996,7 +2068,7 @@ class MapChart extends HTMLElement {
             const legendValues = [1, 50, 90];
     
             const legend = this.#svg.append("g")
-                .attr("transform", `translate(${this.#width - 120}, ${this.#height/2 + 150})`);
+                .attr("transform", `translate(${this.width - 120}, ${this.height/2 + 150})`);
     
             legendValues.forEach((val, i) => {
                 const y = i * 20;
@@ -2024,19 +2096,25 @@ class MapChart extends HTMLElement {
     
     
     drawBubbleMap() {
-        const height = this.#height;
-        this.#width;
-
+        
+        this.width;
+        let height = this.height;
+        // const geoData = this.#url;
+        console.log("thisData", this.#data);
+        console.log("thisURL", this.#url);
+        let projection;
+        if(this.projection === "mercator") {
         // Projection setup
-        const projection = d3.geoMercator()
+            projection = d3.geoMercator()
             // .center([0, 20])
             .scale(80)
-            .translate([this.#width / 2, this.#height / 2]);
-    
+            .translate([this.width / 2, this.height / 2]);
+        }
+
         d3.geoPath().projection(projection);
     
         Promise.all([
-            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            d3.json(this.#url),
             d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
         ]).then(([geoData, bubbleData]) => {
     
@@ -2098,8 +2176,8 @@ class MapChart extends HTMLElement {
         this.#svg.append("text")
             .attr("text-anchor", "end")
             .style("fill", "black")
-            .attr("x", this.#width - 10)
-            .attr("y", this.#height - 30)
+            .attr("x", this.width - 10)
+            .attr("y", this.height - 30)
             .attr("width", 90)
             .text("WHERE SURFERS LIVE")
             .style("font-size", 14);
@@ -2146,7 +2224,7 @@ class MapChart extends HTMLElement {
             
         // === Color legend (continent) ===
         const legendContainer = this.#svg.append("g")
-            .attr("transform", `translate(${this.#width - 150}, 20)`);
+            .attr("transform", `translate(${this.width - 150}, 20)`);
     
         allContinents.forEach((continent, i) => {
             const legendRow = legendContainer.append("g")
@@ -2169,20 +2247,15 @@ class MapChart extends HTMLElement {
         console.error("Error loading data:", error);
         });
     }      
-
+    
     // drawConnectionMap() {
     drawConnectionMap() {
         const tooltip = this.shadowRoot.querySelector(".tooltip");
-        const layers = this.#coreData.layer;
-        const connectionLayer = layers.find(l => l.mark === "rule");
-        const airportLayer = layers.find(l => l.mark === "circle");
-        const mapLayer = layers.find(l => l.mark?.type === "geoshape");
     
-        const mapUrl = mapLayer?.data?.url;
-        const airportsUrl = airportLayer?.data?.url;
-        const flightsUrl = connectionLayer?.data?.url;
-        const originFilter = connectionLayer?.transform?.find(t => t.filter)?.filter?.equal;
-        const projectionType = connectionLayer?.projection?.type || "albersUsa";
+        const mapUrl = this.#url;
+        const airportsUrl = this.#node;
+        const flightsUrl = this.#link;
+        const projectionType = this.projection;
 
         // const projection = d3.geoAlbersUsa()
         //     .scale(1280)
@@ -2190,7 +2263,7 @@ class MapChart extends HTMLElement {
         console.log("Projection Type from grammar:", projectionType);
 
         const projection = d3[`geo${projectionType.charAt(0).toUpperCase() + projectionType.slice(1)}`]()
-    .fitSize([this.#width, this.#height], { type: "Sphere" });
+    .fitSize([this.width, this.height], { type: "Sphere" });
 
             console.log("D3 Projection Object:", projection);
 
@@ -2203,7 +2276,6 @@ class MapChart extends HTMLElement {
         console.log("mapUrl:", mapUrl);
         console.log("airportsUrl:", airportsUrl);
         console.log("flightsUrl:", flightsUrl);
-        console.log("originFilter:", originFilter);
 
         d3.json(mapUrl).then(geoData => {
             const states = topojson.feature(geoData, geoData.objects.states).features;
@@ -2219,9 +2291,7 @@ class MapChart extends HTMLElement {
             d3.csv(airportsUrl).then(airportsData => {
                 d3.csv(flightsUrl).then(flightsData => {
                     const airportMap = new Map(airportsData.map(d => [d.iata, d]));
-                    
-                    // Filter theo originFilter
-                    flightsData.filter(f => f.origin === originFilter);
+            
 
                     // Calculate the number of route flights from each airport
                     const routeCounts = {};
@@ -2303,30 +2373,27 @@ class MapChart extends HTMLElement {
                 });
             });
         });
-    }
-    
-    
+    }    
     
   
     drawGeoChart() {
         const tooltip = this.shadowRoot.querySelector(".tooltip");
-        
-        const geoData = this.#coreData.data.url;
-        const idVariable = this.#coreData.encoding.id?.field;
-        const labelVariable = this.#coreData.encoding.label?.field;
+        const geoData = this.#url;
+        const idVariable = this.#encoding.id?.field;
+        const labelVariable = this.#encoding.label?.field;
         const labelData = new Map(this.#data.map(d => [d[idVariable], d[labelVariable]]));
-        const valueVariable = this.#coreData.encoding.value?.field;
-        const colorField = this.#coreData.encoding.color?.field;
-        const colorRange = this.#coreData.encoding.color?.scale?.range || d3.schemeBlues[6];
+        const valueVariable = this.#encoding.value?.field;
+        const colorField = this.#encoding.color?.field;
+        const colorRange = this.#encoding.color?.scale?.range || d3.schemeBlues[6];
         const colorValues = this.#data.map(d => d[colorField]);
         const colorData = new Map(this.#data.map(d => [d[idVariable], d[colorField]]));
 
         let projection;
-        if (this.#coreData.projection.type === "mercator") {
+        if (this.projection === "mercator") {
             projection = d3.geoMercator()
             .scale(70)
             .center([0, 20])
-            .translate([this.#width / 2, this.#height / 2]);        }      
+            .translate([this.width / 2, this.height / 2]);        }      
     
         const path = d3.geoPath().projection(projection);
         
@@ -2363,7 +2430,7 @@ class MapChart extends HTMLElement {
             const legendWidth = 300;
             const legendHeight = 20;
             const legendsvg = this.#svg.append("g")
-            .attr("transform", `translate(${this.#width / 2 - legendWidth / 2}, ${this.#height - 40})`);
+            .attr("transform", `translate(${this.width / 2 - legendWidth / 2}, ${this.height - 40})`);
     
             const defs = this.#svg.append("defs");
             const linearGradient = defs.append("linearGradient")
@@ -2461,8 +2528,8 @@ class MapChart extends HTMLElement {
                 this.#svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity
-                        .translate(this.#width / 2, this.#height / 2)
-                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.#width, (y1 - y0) / this.#height)))
+                        .translate(this.width / 2, this.height / 2)
+                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)))
                         .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
                     d3.pointer(event, this.#svg.node())
                 );
@@ -2478,7 +2545,7 @@ class MapChart extends HTMLElement {
                 this.#svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity,
-                    d3.zoomTransform(this.#svg.node()).invert([this.#width / 2, this.#height / 2])
+                    d3.zoomTransform(this.#svg.node()).invert([this.width / 2, this.height / 2])
                 );
             });
     

@@ -7,7 +7,7 @@ function drawStackedBarChart(data){
     barChart.setAttribute("height", "400");
         
     // Set data
-    barChart.setAttribute("data", JSON.stringify({ "values": data }));
+    barChart.setAttribute("data", JSON.stringify(data));
 
     // Set encoding
     barChart.setAttribute("encoding", JSON.stringify({
@@ -21,7 +21,7 @@ function drawStackedBarChart(data){
         "color": {
             "field": "genre", 
             "scale": {
-                "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
+                // "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
                 // "range": d3.schemePaired
                 "range": "Category10"
             },
@@ -31,4 +31,5 @@ function drawStackedBarChart(data){
         "stack": true,
         "direction": "vertical"
     }));
+    barChart.setAttribute("legend", true);
 }

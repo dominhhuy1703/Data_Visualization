@@ -6,7 +6,7 @@ function drawPieChart(data) {
     pieChart.setAttribute("width", "400");
     pieChart.setAttribute("height", "400");
 
-    pieChart.setAttribute("data", JSON.stringify({ "values": data }));
+    pieChart.setAttribute("data", JSON.stringify(data));
 
     // Set encoding
     pieChart.setAttribute("encoding", JSON.stringify({
@@ -18,18 +18,21 @@ function drawPieChart(data) {
         },
         "color": {
             "field": "randomLang",
-            // "scale": {
-            //     "domain": [
-            //         "Belarusian language",
-            //         "English language",
-            //         "Romani language",
-            //         "Persian language"
-            //     ],
-            //     "range": "Reds"
-            // },
+            "title": "Language",
+            "scale": {
+                "domain": [
+                    "Belarusian language",
+                    "English language",
+                    "Romani language",
+                    "Persian language"
+                ],
+                "range": "Blues"
+            },
             // "title": "Language"
             // { radius: { "field": "population", "scale": { "type": "sqrt", "zero": true, "rangeMin": 20 } } }
 
         },
     }));
+
+    pieChart.setAttribute("legend", false);
 }

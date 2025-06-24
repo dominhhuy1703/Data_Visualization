@@ -4,10 +4,10 @@ function drawVerticalChart2(data){
     // Set configuration
     barChart.setAttribute("description", "Horizontal Vertical - Population of countries");
     barChart.setAttribute("width", "500");
-    barChart.setAttribute("height", "400");
+    barChart.setAttribute("height", "500");
         
     // Set data
-    barChart.setAttribute("data", JSON.stringify({ "values": data }));
+    barChart.setAttribute("data", JSON.stringify(data));
 
     // Set encoding
     barChart.setAttribute("encoding", JSON.stringify({
@@ -27,4 +27,5 @@ function drawVerticalChart2(data){
         },
         "direction": "horizontal"
     }));
+    barChart.setAttribute("legend", true);
 }

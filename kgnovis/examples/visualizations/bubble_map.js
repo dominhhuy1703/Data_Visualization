@@ -1,38 +1,39 @@
 function drawBubbleMap(data) {
-    document.querySelector('#bubbleMapData').setAttribute('data', JSON.stringify({
-        "description": "Map Chart - Population of Countries",
-        "width": 600,
-        "height": 600,
-        "bubble": "true",
+    const mapChart = document.querySelector('#bubbleMapData');
 
-        "data": {
-            "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
+    // Set configuration
+    mapChart.setAttribute("description", "Map Chart - Population of Countries");
+    mapChart.setAttribute("width", "600");
+    mapChart.setAttribute("height", "600");
+
+    // Set data
+    mapChart.setAttribute("data", JSON.stringify({ 
+        "values": data,
+        "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
+     }));
+    console.log("Data", data)
+
+    mapChart.setAttribute("projection", "mercator");
+
+    mapChart.setAttribute("mark", "point");
+    // Set encoding
+    mapChart.setAttribute("encoding", JSON.stringify({
+        "id": {
+            "field": "isoCode"
         },
-        "transform": [
-            {
-            "lookup": "id",
-            "from": {
-                "data": {
-                "values": data.map(d => ({
-                    "id": d.isoCode.value,
-                    "country": d.countryLabel.value,
-                    "population": +d.population.value
-                }))
-                },
-                "key": "id",
-                "fields": ["population", "country"]
-            }
-            }
-        ],
-        "projection": {
-            "type": "mercator"
+        "label": {
+            "field": "countryLabel",
         },
-        // "mark": "geoshape",
-        "encoding": {
-            "color": {
+        "value": {
             "field": "population",
-            "type": "quantitative"
+        },
+        "color": {
+            "field": "population",
+            "scale": {
+                // "range": d3.schemeOrRd[9]
             },
-        }
+        },
     }));
+    
+    mapChart.setAttribute("legend", true );
 }

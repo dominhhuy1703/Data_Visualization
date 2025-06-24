@@ -3,6 +3,7 @@
   <head>
       <link rel="icon" href="data:,">
       <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
+      <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
       <script type="module" src="../dist/kgnovis.bundle.js"></script>
 
       <!-- Import for JS files-->
@@ -39,8 +40,6 @@
     <div class="container">
 
         <pie-chart id="pieChart"></pie-chart>
-        <!-- <nodelink-chart id="nodeLinkChart"></nodelink-chart> -->
-
         <bar-chart id="verticalChart1"></bar-chart>
         <bar-chart id="verticalChart2"></bar-chart>
         <bar-chart id="stackedBarChart"></bar-chart>
@@ -48,9 +47,9 @@
         <bar-chart id="groupedVerticalChart"></bar-chart>
 
         <map-chart id="choroplethMapData"></map-chart>
-        <!-- <map-chart id="connectionMapData"></map-chart>
+        <map-chart id="connectionMapData"></map-chart>
         <map-chart id="bubbleMapData"></map-chart>
-        <map-chart id="hexbinMapData"></map-chart> -->
+        <map-chart id="hexbinMapData"></map-chart>
 
     </div>
     <script>
@@ -87,19 +86,18 @@
             // Choropleth Map
             const choroplethMapData = await fetchMapData();
             drawChoroplethMap(choroplethMapData);
-            // console.log("ChoroplethMapData: ", JSON.stringify(choroplethMapData, null, 2));
 
-            // // Connection Map
-            // const connectionMapData = await fetchMapData();
-            // drawConnectionMap(connectionMapData);
+            // Connection Map
+            const connectionMapData = await fetchMapData();
+            drawConnectionMap(connectionMapData);
 
-            // // Bubble Map
-            // const bubbleMapData = await fetchMapData();
-            // drawBubbleMap(bubbleMapData);
+            // Bubble Map
+            const bubbleMapData = await fetchMapData();
+            drawBubbleMap(bubbleMapData);
 
-            // // Hexbin Map
-            // const hexbinMapData = await fetchMapData();
-            // drawHexbinMap(hexbinMapData);
+            // Hexbin Map
+            const hexbinMapData = await fetchMapData();
+            drawHexbinMap(hexbinMapData);
         }
         // Call updateCharts() when the page is loaded
         document.addEventListener('DOMContentLoaded', updateCharts);
