@@ -11,7 +11,6 @@ function drawChoroplethMap(data) {
         "values": data,
         "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
      }));
-    console.log("Data", data)
 
     mapChart.setAttribute("projection", "mercator");
 

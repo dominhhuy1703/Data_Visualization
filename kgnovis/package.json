@@ -1,6 +1,6 @@
 {
   "name": "kgnovis",
-  "version": "1.0.8",
+  "version": "1.0.12",
   "main": "dist/kgnovis.bundle.js",
   "module": "dist/kgnovis.bundle.js",
   "type": "module",
@@ -12,7 +12,7 @@
     "examples"
   ],
   "scripts": {
-    "start": "live-server --port=50798 --open=examples/index.html",
+    "start": "live-server --port=8080 --open=examples/index.html",
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "test": "echo \"Error: no test specified\" && exit 1"

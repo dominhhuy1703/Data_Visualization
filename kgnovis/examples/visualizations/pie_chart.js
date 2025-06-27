@@ -26,7 +26,7 @@ function drawPieChart(data) {
                     "Romani language",
                     "Persian language"
                 ],
-                "range": "Blues"
+                "range": "Sinebow"
             },
             // "title": "Language"
             // { radius: { "field": "population", "scale": { "type": "sqrt", "zero": true, "rangeMin": 20 } } }
@@ -34,5 +34,5 @@ function drawPieChart(data) {
         },
     }));
 
-    pieChart.setAttribute("legend", false);
+    pieChart.setAttribute("legend", true);
 }

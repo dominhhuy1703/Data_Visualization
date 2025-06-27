@@ -1,5 +1,4 @@
 function drawVerticalChart1(data) {
-    console.log("rawDataa:", data);
     const barChart = document.querySelector('#verticalChart1');
     
     // Set configuration
@@ -17,9 +16,9 @@ function drawVerticalChart1(data) {
         },
         "y": {
             "field": "population",
-            "axis": {
-                    "labelAngle": 45,
-                },
+            // "axis": {
+            //         "labelAngle": 45,
+            //     },
                     // "scale": {
                     //     "type": "pow", //("type": "log")
                     //     "exponent": 0.5
@@ -41,5 +40,5 @@ function drawVerticalChart1(data) {
         "direction": "vertical"
     }));
     
-    barChart.setAttribute("legend", false );
+    barChart.setAttribute("legend", true );
 }
