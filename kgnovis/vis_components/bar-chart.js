@@ -16,6 +16,8 @@ export default class BarChart extends HTMLElement {
 	#data = null;
 	width = null;
 	height = null;
+	#width = null;
+	#height = null;
 	#svgWidth = null;
 	#svgHeight = null;
 	#legendWidth = null;
@@ -50,9 +52,11 @@ export default class BarChart extends HTMLElement {
 			switch (name) {
 				case 'width':
 					this.width = parseInt(newValue);
+					this.#width = parseInt(newValue);
 					break;
 				case 'height':
 					this.height = parseInt(newValue);
+					this.#height = parseInt(newValue);
 					break;
 				case 'description':
 					this.#description = newValue;
@@ -406,7 +410,7 @@ export default class BarChart extends HTMLElement {
 		
 		this.svgHeight = this.height * 0.8;
 		this.descriptionHeight = this.height * 0.2;
-		this.legendHeight = this.height * 0.8;
+		this.legendHeight = this.height * 0.9;
 		
 		
 
@@ -439,9 +443,9 @@ export default class BarChart extends HTMLElement {
 
 		if (this.legend && hasColors) {
 			// Set the width for visualization when legend is displayed
-			this.svgWidth = this.width * 0.7;
+			this.svgWidth = this.width * 0.9;
 			this.legendWidth = this.width * 0.3;
-			this.descriptionWidth = this.width * 0.7;
+			this.descriptionWidth = this.width * 0.9;
 		} else {
 			this.svgWidth = this.width;
 			this.legendWidth = 0;
@@ -643,10 +647,12 @@ export default class BarChart extends HTMLElement {
 					tooltip.style.opacity = 1;
 					tooltip.innerHTML = `${xVariable}: ${d[xVariable]}<br>${groupVariable}: ${d[groupVariable]}<br>${yVariable}: ${d[yVariable]}`;
 					d3.select(event.target).style("stroke", "black").style("opacity", 1);
+					tooltip.style.left = (d3.pointer(event)[0] + this.getBoundingClientRect().x + this.width /2 + + window.scrollX + 30) + "px";
+					tooltip.style.top = (d3.pointer(event)[1] + this.getBoundingClientRect().y + window.scrollY +50) + "px";
 				})
 				.on("mousemove", (event) => {
-					tooltip.style.left = (d3.pointer(event)[0] + this.svgWidth / 2 + 120) + "px";
-					tooltip.style.top = (d3.pointer(event)[1] + this.svgHeight / 3 - 50) + "px";
+					tooltip.style.left = (d3.pointer(event)[0] + this.getBoundingClientRect().x + this.width /2 + + window.scrollX + 30) + "px";
+					tooltip.style.top = (d3.pointer(event)[1] + this.getBoundingClientRect().y + window.scrollY +50) + "px";
 				})
 				.on("mouseleave", (event) => {
 					tooltip.style.opacity = 0;
@@ -686,10 +692,16 @@ export default class BarChart extends HTMLElement {
 				tooltip.style.opacity = 1;
 				tooltip.innerHTML = `${xVariable}: ${d[xVariable]}<br>${yVariable}: ${d[yVariable]}`;
 				d3.select(event.target).style("stroke", "black").style("opacity", 1);
+				tooltip.style.left = (d3.pointer(event)[0] + this.getBoundingClientRect().x + this.width /2 + + window.scrollX + 30) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.getBoundingClientRect().y + window.scrollY + 50) + "px";
 			})
 			.on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + this.width / 2 + 120) + "px";
-                tooltip.style.top = (d3.pointer(event)[1] + this.height / 3 - 50) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + this.getBoundingClientRect().x + this.width /2 + + window.scrollX + 30) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.getBoundingClientRect().y + window.scrollY +50) + "px";
+
+				// tooltip.style.left = (d3.pointer(event)[0] + this.width ) + "px";
+                // tooltip.style.top = (d3.pointer(event)[1] + this.height ) + "px";
+
 			})
 			.on("mouseleave", (event) => {
 				tooltip.style.opacity = 0;
@@ -753,10 +765,12 @@ export default class BarChart extends HTMLElement {
 					${yVariable}: ${Math.round(d[1] - d[0])}
 				`;
 				d3.select(event.target).style("stroke", "black").style("opacity", 1);
+				tooltip.style.left = (d3.pointer(event)[0] + this.getBoundingClientRect().x + this.width /2 + + window.scrollX + 30) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.getBoundingClientRect().y + window.scrollY  + 50) + "px";
 			})
 			.on("mousemove", (event) => {
-				tooltip.style.left = (d3.pointer(event)[0] + this.svgWidth / 2 + 120) + "px";
-				tooltip.style.top = (d3.pointer(event)[1] + this.svgHeight / 3 - 50) + "px";
+				tooltip.style.left = (d3.pointer(event)[0] + this.getBoundingClientRect().x + this.width /2 + + window.scrollX + 30) + "px";
+				tooltip.style.top = (d3.pointer(event)[1] + this.getBoundingClientRect().y+ window.scrollY  + 50) + "px";
 			})
 			.on("mouseleave", (event) => {
 				tooltip.style.opacity = 0;

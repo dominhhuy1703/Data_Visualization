@@ -319,8 +319,6 @@ export default class MapChart extends HTMLElement {
         let width = this.width;
         let height = this.height;
         // const geoData = this.#url;
-        console.log("thisData", this.#data)
-        console.log("thisURL", this.#url)
         let projection
         if(this.projection === "mercator") {
         // Projection setup
@@ -479,12 +477,10 @@ export default class MapChart extends HTMLElement {
         // const projection = d3.geoAlbersUsa()
         //     .scale(1280)
         //     .translate([this.#width / 2, this.#height / 2]);
-        console.log("Projection Type from grammar:", projectionType);
 
         const projection = d3[`geo${projectionType.charAt(0).toUpperCase() + projectionType.slice(1)}`]()
     .fitSize([this.width, this.height], { type: "Sphere" });
 
-            console.log("D3 Projection Object:", projection);
 
 
         const path = d3.geoPath().projection(projection);
@@ -492,9 +488,6 @@ export default class MapChart extends HTMLElement {
         const map = this.#svg.append("g").attr("class", "map");
         const routes = this.#svg.append("g").attr("class", "routes");
         const points = this.#svg.append("g").attr("class", "airports");
-        console.log("mapUrl:", mapUrl);
-        console.log("airportsUrl:", airportsUrl);
-        console.log("flightsUrl:", flightsUrl);
 
         d3.json(mapUrl).then(geoData => {
             const states = topojson.feature(geoData, geoData.objects.states).features;

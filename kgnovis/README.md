@@ -23,31 +23,31 @@
   <pie-chart id="pieChart"></pie-chart>
   <map-chart id="choroplethMap"></map-chart>
   ```
-  ### 3. The configuration charts
+  ### 3. The Chart Configuration
   The library provides components with common properties for each default component as shown in the table below.
   | Property    | Type          | Description                   | Mandatory   |
   |-------------|---------------|------------------------------ |-------------|
-  | description | String        | The description of the chart  | ✗          |
+  | description | String        | The description of the chart. This will be the title of the visualization and it will be located below the chart.  | ✗          |
   | width       | Number        | The width of the component    | ✗          |
   | height      | Number        | The height of the component   | ✗          |
-  | data        | SPARQL Json Object | The input data to be visualized. It is an array of object that each object in the array represents one data point. | ✓  |
+  | data        | SPARQL Json Object | The input data to be visualized. It is an array of object that each object in the array represents one data point. The input data must conform to the [W3C SPARQL 1.1 Query Results JSON Format](https://www.w3.org/TR/sparql11-results-json/). | ✓  |
   | encoding  | Object    | The encoding property of a single view specification represents the mapping between data and visual variables  | ✓  |
   | legend  | Boolean    | The presence of legend for visualization  | ✗  |
   #### 3.1 Bar Chart
   In the bar chart encoding configuration, the fields provided include:
   | Field    | Type          | Description                   | Value   | Mandatory   |
   |-------------|---------------|------------------------------ |------------|-------------|
-  | x | Object        | The specification of x axis for Bar Chart  | Ex: {...}  | ✓          |
-  | y       | Object        | The specification of y axis for Bar Chart    | Ex: {...}  | ✓          |
-  | color      | Object        | The specification color for each bar   | Ex: {...}  | ✗          |
+  | x | Object        | The specification of x axis for Bar Chart  | | ✓          |
+  | y       | Object        | The specification of y axis for Bar Chart    | | ✓          |
+  | color      | Object        | The specification color for each bar   |   | ✗          |
   | direction        | String | The orientation of Bar Chart | "vertical" or "horizontal"  | ✗  |
-  | stack        | String & Boolean | The subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart. <br>When the stack is true, then draw Stacked Bar Chart. <br>Else if the stack is "normalize", then draw Normalized Stacked Bar Chart. <br>Else the stack is false, then draw Grouped Bar Chart | true/false or "normalize"  | ✗  |
+  | stack        | String & Boolean | This attribute is required to define subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart. <br>When the stack is true, then draw Stacked Bar Chart. <br>Else if the stack is "normalize", then draw Normalized Stacked Bar Chart. <br>Else the stack is false, then draw Grouped Bar Chart | true/false or "normalize"  | ✗  |
 
   In each object, the library provide some properties:
   | Field    | Type          | Description                   | Value   |
   |-------------|---------------|------------------------------ |------------|
-  | x | "field":"..."<br>"axis":{"labelAngle": ...}        | The field that "x" axis will map to the data  | Ex: x: {<br>"field": "name"<br> "axis":{"labelAngle":45}<br>}   |
-  | y | "field":"..."<br>"axis":{"labelAngle": ...}        | The field that "y" axis will map to the data  | Ex: y: {<br>"field": "population"<br> "axis":{"labelAngle":45}<br>}   |
+  | x | "field":"..."<br>"axis":{"labelAngle": ...}        | The details about the internal structure of object "x". Including:<br>- Attribute "field": The "data" field that the "x" axis maps to.<br>- Attribute "axis": "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis.   | Ex: x: {<br>"field": "name"<br> "axis":{"labelAngle":45}<br>}   |
+  | y | "field":"..."<br>"axis":{"labelAngle": ...<br>"scale":{<br> "type":...}<br>}        | The details about the internal structure of object "y". Including:<br>- Attribute "field": The "data" field that the "y" axis maps to<br>- Attribute "axis": <br>+ "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis. <br>+ "scale": inside axis property will permit user to change the scaleType through "type" (Linear, Power, Logarithmic) // Power Scale need one more attribute "exponent" to set     | Ex: y: {<br>"field": "population"<br> "axis":{"labelAngle":45}<br>"scale":{<br>"type":"pow",<br>"exponent":0.5<br>}<br>}   |
   | color | "field":"..."<br>"scale":{<br>"domain": [...],<br>"range":"..."<br>},<br>"title":"..."<br>        | Consist of 5 parts: <br>- The field that "color" attribute will map to the data.<br>- The scale for color including domain (list of domain in the field that be attached color) and range (color palette)<br>- The title for "color" will represent   | Ex: color: {"field":"language"<br>"scale":{<br>"domain": [English,...],<br>"range":"Reds"<br>},<br>"title":"Language"<br>}   |
   ##### 3.1.1 Regular Bar Chart
 
@@ -77,10 +77,6 @@ legend=true
 
 ##### 3.1.2 Stacked Bar Chart
 
-| Field    | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |
-  | color      | |✓  |
-  | stack        | true | ✓  |
   
 ```html
 <bar-chart id="stackedBarChart" 
@@ -98,10 +94,6 @@ encoding={...,
 
 ##### 3.1.3 Normalized Stacked Bar Chart
 
-| Field    | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |
-  | color      | |✓  |
-  | stack        | "normalize" | ✓  |
 
 ```html
 <bar-chart id="normalizeBarChart" 
@@ -118,10 +110,6 @@ encoding={...,
 ![Normalized Bar Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/normalizedStackBarChart.png)
 
 ##### 3.1.4 Grouped Bar Chart
-| Field    | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |
-  | color      | |✓  |
-  | stack        | false | ✓  |
 
 ```html
 <bar-chart id="groupedBarChart" 
@@ -131,7 +119,7 @@ encoding={...,
   direction: "vertical",
   stack: false
 }
-></barchart>
+></bar-chart>
 ```
 
 
@@ -141,17 +129,17 @@ encoding={...,
 In the Pie Chart encoding configuration, the fields provided include:
   | Field    | Type          | Description                   | Value   | Mandatory   |
   |-------------|---------------|------------------------------ |------------|-------------|
-  | text | Object        | The label for each section of visualization  | Ex: {...}  | ✓          |
-  | theta       | Object        | The quantitative value for each category    | Ex: {...}  | ✓          |
-  | color      | Object        | The color for each slice   | Ex: {...}  | ✓          |
+  | text | Object        | The label for each section of visualization  |   | ✓          |
+  | theta       | Object        | The quantitative value for each category    |  | ✓          |
+  | color      | Object        | The color for each slice   |  | ✓          |
   
   In each object, the library provide some properties:
   | Field    | Type          | Description                   | Value   |
   |-------------|---------------|------------------------------ |------------|
-  | text | "field":"..."| The field that text from data will map to the label of each section  | Ex: text: {"field": "name"}   |
+  | text | "field":"..."| The field from data that will map to the label of each section  | Ex: text: {"field": "name"}   |
   | theta | "field":"..."| The field that is the quantitative value for each category  | Ex: theta: {field": "population"} |
 
-  **The way to use the color part in the encoding of Pie Chart is similar to Bar Chart.**
+  **The way to use the color attribute in the encoding of Pie Chart is similar to Bar Chart.**
 ```html
 <pie-chart id="pieChart"
 description="..."
@@ -179,20 +167,20 @@ legend=true
 In the data of Geographic Map configuration, the fields provided include:
   | Field    | Type          | Description                   | Value   | Mandatory   |
   |-------------|---------------|------------------------------ |------------|-------------|
-  | values | SPARQL Json Object        | The input data to be visualized. It is an array of object that each object in the array represents one data point.  | Ex: [{...}, {...}]  | ✓          |
-  | url       | String        | The link of geoJson's file    | Ex: "...geojson"  | ✓          |
+  | values | SPARQL Json Object        | The input data to be visualized. It is an array of object that each object in the array represents one data point. The input data must conform to the [W3C SPARQL 1.1 Query Results JSON Format](https://www.w3.org/TR/sparql11-results-json/)  | Ex: [{...}, {...}]  | ✓          |
+  | url       | String        | The URL to a GeoJSON file that contains the geographic features (e.g., country boundaries, regions). This file is used to define the shapes and boundaries on the map. Each feature in the file will be matched with data points from the SPARQL results using the id field. [geoJson File Format](https://geojson.org/)    | Ex: "path/to/world_countries.geojson"  | ✓          |
 ##### 3.3.1 Choropleth Map
 In the encoding of Choropleth Map configuration, the fields provided include:
   | Field    | Type          | Description                   | Value   | Mandatory   |
   |-------------|---------------|------------------------------ |------------|-------------|
-  | id | Object        | The id that used for matching the data from geoJson file and SPARQL query's result  | Ex: {...}  | ✓          |
-  | label       | Object       | The name of the label, which provides additional details for describing the id     | Ex: {...}  | ✓  |
-  | color       | Object       | This field will color the regions based on data from the SPARQL query's result    | Ex: {...}  | ✓          |
+  | id | Object        | The id that used for matching the data from geoJson file and SPARQL query's result  | Ex: "id":{<br>"field": "isoCode"<br>}  | ✓          |
+  | label       | Object       | A human-readable name that describes the geographic feature represented by the id. This is typically shown in tooltips or legends to provide a meaningful name (e.g., country or region name) instead of a technical identifier.     | Ex: "label":{<br>"field": "countryName"<br>}  | ✓  |
+  | color       | Object       | This field will color the regions based on data from the SPARQL query's result    | Ex: "color":{<br>"field": "population"<br>}  | ✓          |
 
   In each object, the library provide some properties:
   | Field    | Type          |Description          | Value   |
   |-------------|---------------|---------------|------------------------------ |
-  | id | "field":"..."  | The id that used for matching the data from geoJson file and SPARQL query's result  | Ex: id: {"field": "isoCode"}   |
+  | id | "field":"..."  | The id is used for matching the data from geoJson file and SPARQL query's result. This attribute comes from the geoJson file.  | Ex: id: {"field": "isoCode"}   |
   | label | "field":"..."| The name of the label, which provides additional details for describing the id     | Ex: label: {field": "countryName"}   |
   | color | "field":"..."<br>"scale":{"range":"..."<br>}| The field that "color" attribute will map to the data. The scale for color including range (color palette)| Ex: color: {"field":"population",<br>"scale":{"range":"Reds"<br>}}   |
 
@@ -211,7 +199,6 @@ data={
 encoding={
   id: {"field": "isoCode"},
   label: {"field": "countryLabel"},
-  value: {"field": "population"},
   color: {
     "field": "population",
     "scale": {"range": ...},

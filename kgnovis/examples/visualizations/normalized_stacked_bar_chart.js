@@ -23,7 +23,7 @@ function drawNormalizedStackedBarChart(data){
             "scale": {
                 // "domain": ["Children's television series", "Soap opera", "Drama", "Situation comedy", "Music", "Anthology series", "Traditional pop", "Sitcom", "Adventure", "Historical drama", "Animation", "Comedy"],
                 // "range": d3.schemePaired
-                "range": "Category10"
+                "range": "PiYG"
             },
             // "scale": [ "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd", "#e7ba52"],
             "title": "Movie genre" 
