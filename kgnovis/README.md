@@ -39,16 +39,16 @@
   |-------------|---------------|------------------------------ |------------|-------------|
   | x | Object        | The specification of x axis for Bar Chart  | | ✓          |
   | y       | Object        | The specification of y axis for Bar Chart    | | ✓          |
-  | color      | Object        | The specification color for each bar   |   | ✗          |
-  | direction        | String | The orientation of Bar Chart | "vertical" or "horizontal"  | ✗  |
-  | stack        | String & Boolean | This attribute is required to define subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart. <br>When the stack is true, then draw Stacked Bar Chart. <br>Else if the stack is "normalize", then draw Normalized Stacked Bar Chart. <br>Else the stack is false, then draw Grouped Bar Chart | true/false or "normalize"  | ✗  |
+  | color      | Object        | The specification color for each bar. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values.    |   | ✗          |
+  | direction        | String | The orientation of Bar Chart | "vertical" or "horizontal"  | ✗ (✓ Required for subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart)  |
+  | stack        | String & Boolean | This attribute is required to define subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart. <br>  - When the stack is true, then draw Stacked Bar Chart. <br>  - Else if the stack is "normalize", then draw Normalized Stacked Bar Chart. <br>  - Else the stack is false, then draw Grouped Bar Chart | true/false or "normalize"  | ✗  |
 
   In each object, the library provide some properties:
   | Field    | Type          | Description                   | Value   |
   |-------------|---------------|------------------------------ |------------|
   | x | "field":"..."<br>"axis":{"labelAngle": ...}        | The details about the internal structure of object "x". Including:<br>- Attribute "field": The "data" field that the "x" axis maps to.<br>- Attribute "axis": "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis.   | Ex: x: {<br>"field": "name"<br> "axis":{"labelAngle":45}<br>}   |
   | y | "field":"..."<br>"axis":{"labelAngle": ...<br>"scale":{<br> "type":...}<br>}        | The details about the internal structure of object "y". Including:<br>- Attribute "field": The "data" field that the "y" axis maps to<br>- Attribute "axis": <br>+ "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis. <br>+ "scale": inside axis property will permit user to change the scaleType through "type" (Linear, Power, Logarithmic) // Power Scale need one more attribute "exponent" to set     | Ex: y: {<br>"field": "population"<br> "axis":{"labelAngle":45}<br>"scale":{<br>"type":"pow",<br>"exponent":0.5<br>}<br>}   |
-  | color | "field":"..."<br>"scale":{<br>"domain": [...],<br>"range":"..."<br>},<br>"title":"..."<br>        | Consist of 5 parts: <br>- The field that "color" attribute will map to the data.<br>- The scale for color including domain (list of domain in the field that be attached color) and range (color palette)<br>- The title for "color" will represent   | Ex: color: {"field":"language"<br>"scale":{<br>"domain": [English,...],<br>"range":"Reds"<br>},<br>"title":"Language"<br>}   |
+
   ##### 3.1.1 Regular Bar Chart
 
 ```html
@@ -131,7 +131,7 @@ In the Pie Chart encoding configuration, the fields provided include:
   |-------------|---------------|------------------------------ |------------|-------------|
   | text | Object        | The label for each section of visualization  |   | ✓          |
   | theta       | Object        | The quantitative value for each category    |  | ✓          |
-  | color      | Object        | The color for each slice   |  | ✓          |
+  | color      | Object        | The color for each slice. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values.    |  | ✓          |
   
   In each object, the library provide some properties:
   | Field    | Type          | Description                   | Value   |
@@ -175,14 +175,13 @@ In the encoding of Choropleth Map configuration, the fields provided include:
   |-------------|---------------|------------------------------ |------------|-------------|
   | id | Object        | The id that used for matching the data from geoJson file and SPARQL query's result  | Ex: "id":{<br>"field": "isoCode"<br>}  | ✓          |
   | label       | Object       | A human-readable name that describes the geographic feature represented by the id. This is typically shown in tooltips or legends to provide a meaningful name (e.g., country or region name) instead of a technical identifier.     | Ex: "label":{<br>"field": "countryName"<br>}  | ✓  |
-  | color       | Object       | This field will color the regions based on data from the SPARQL query's result    | Ex: "color":{<br>"field": "population"<br>}  | ✓          |
+  | color       | Object       | This field will color the regions based on data from the SPARQL query's result. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values. | Ex: "color":{<br>"field": "population"<br>}  | ✓          |
 
   In each object, the library provide some properties:
   | Field    | Type          |Description          | Value   |
   |-------------|---------------|---------------|------------------------------ |
   | id | "field":"..."  | The id is used for matching the data from geoJson file and SPARQL query's result. This attribute comes from the geoJson file.  | Ex: id: {"field": "isoCode"}   |
   | label | "field":"..."| The name of the label, which provides additional details for describing the id     | Ex: label: {field": "countryName"}   |
-  | color | "field":"..."<br>"scale":{"range":"..."<br>}| The field that "color" attribute will map to the data. The scale for color including range (color palette)| Ex: color: {"field":"population",<br>"scale":{"range":"Reds"<br>}}   |
 
   **The way to use the color part in the encoding of Geographic Map is similar to bar chart.**
 ```html
@@ -211,11 +210,46 @@ encoding={
 
 #### 3.4 Color Palettes
 The "color" property is an important property for most types of charts today. This module provides sequential, divergent, and categorical color schemes designed to work with color palettes from the D3.js library. Most of these schemes are derived from ColorBrewer by Cynthia A. Brewer.
-##### 3.4.1 Color Configuration
+
+**Improvements over D3.js library**
+To provide flexibility and ease of use when customizing chart colors, the library includes a powerful color palette parsing function. This feature allows users to define palettes using intuitive string inputs, which are automatically mapped to their corresponding color schemes in the D3.js library [D3 Color Palettes](https://d3js.org/d3-scale-chromatic)
+
+
+##### 3.4.1 Operation principle
+Users can apply color schemes by simply providing a string. The system automatically maps the string to the appropriate D3 color palette.
+
+***How to use***
+- "PaletteName" → Maps to d3.interpolatePaletteName (for continuous gradients) or d3.schemePaletteName (for discrete categories).
+- "PaletteName[k]" → Maps to d3.schemePaletteName[k], where k defines the number of colors (if supported)
+
+Below are examples for use with each type of color palette.
+###### 3.4.1.1 Categorical Palettes *(Discrete)*
+Used to differentiate distinct groups or categories.
+  - "Category10" → d3.schemeCategory10
+  ![Ex1-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/category10.jpg)
+  - "Pastel1" → d3.schemePastel1 
+  ![Ex2-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/pastel1.jpg)
+###### 3.4.1.2 Sequential Palettes *(Ordered)*
+Best for representing ranked or continuous data (e.g., values, density).
+  - "Reds[5] → d3.schemeReds[5] (5 shades of red), valid k ∈ [3, 11]
+  ![Ex3-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/schemeReds.png)
+  - "Blues" → d3.interpolateBlues (smooth blue gradient)
+  ![Ex4-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/interpolateBlues.png)
+###### 3.4.1.3 Diverging Palettes *(Centered Scales)*
+Ideal for data with a meaningful midpoint (e.g., gain vs. loss).
+  - "RdYlBu" → d3.interpolateRdYlBu (red → yellow → blue)
+  ![Ex5-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/RdYlBu.png)
+  - "Spectral[9]" → d3.schemeSpectral[9], valid k ∈ [3, 11]
+  ![Ex6-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/spectral.png)
+###### 3.4.1.4 Cyclical Palettes *(Repeating Patterns)*
+  - "Rainbow" → d3.interpolateRainbow
+  ![Ex7-Color Palettes](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/rainbow.png)
+  
+##### 3.4.2 Color Configuration
 | Property    | Type          | Description                      |
 |-------------|---------------|------------------------------|
 | field | String        | The field from "data" that will bind with "color"   |
-|  → domain      | Array        | List of distinct values ​​that exist in the data (for categorical data). Optional for continuous values.    |
+| → domain      | Array        | List of distinct values ​​that exist in the data (for categorical data). Optional for continuous values.    |
 | → range      | String        | The color palette name (e.g., "Reds", "Blues", "Viridis").|
 | title      | String        | 	(Optional) Title shown in the legend to describe what the colors represent.|
 
@@ -240,7 +274,3 @@ For categorical data, add domain:
   "title": "Language"
 }
 ```
-##### 3.4.2 Improvements over
-
-**Improvements over D3.js library**
-To provide flexibility and ease of use when customizing chart colors, the library includes a powerful color palette parsing function. This feature allows users to define palettes using intuitive string inputs like "Reds[5]", "Category10", or "Reds" — which are automatically mapped to their corresponding color schemes in the D3.js library [D3 Color Palettes](https://d3js.org/d3-scale-chromatic), such as d3.schemeReds[5], d3.schemeCategory10, or d3.interpolateReds.
