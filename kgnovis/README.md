@@ -208,3 +208,39 @@ encoding={
 ```
 
 ![Choropleth Map](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/choroplethMap.png)
+
+#### 3.4 Color Palettes
+The "color" property is an important property for most types of charts today. This module provides sequential, divergent, and categorical color schemes designed to work with color palettes from the D3.js library. Most of these schemes are derived from ColorBrewer by Cynthia A. Brewer.
+##### 3.4.1 Color Configuration
+| Property    | Type          | Description                      |
+|-------------|---------------|------------------------------|
+| field | String        | The field from "data" that will bind with "color"   |
+|  → domain      | Array        | List of distinct values ​​that exist in the data (for categorical data). Optional for continuous values.    |
+| → range      | String        | The color palette name (e.g., "Reds", "Blues", "Viridis").|
+| title      | String        | 	(Optional) Title shown in the legend to describe what the colors represent.|
+
+*Example*
+```javascript
+"color": {
+  "field": "population",
+  "scale": {
+    "range": "Reds"
+  },
+  "title": "Population"
+}
+```
+For categorical data, add domain:
+```javascript
+"color": {
+  "field": "language",
+  "scale": {
+    "domain": ["English", "Spanish", "French"],
+    "range": "Category10"
+  },
+  "title": "Language"
+}
+```
+##### 3.4.2 Improvements over
+
+**Improvements over D3.js library**
+To provide flexibility and ease of use when customizing chart colors, the library includes a powerful color palette parsing function. This feature allows users to define palettes using intuitive string inputs like "Reds[5]", "Category10", or "Reds" — which are automatically mapped to their corresponding color schemes in the D3.js library [D3 Color Palettes](https://d3js.org/d3-scale-chromatic), such as d3.schemeReds[5], d3.schemeCategory10, or d3.interpolateReds.
