@@ -38,23 +38,3 @@ async function fetchPieData() {
     `;
     return await fetchSPARQLData(query);
 }
-
-// Function to get SPARQLData
-async function fetchSPARQLData(query) {
-    const endpointUrl = "https://dbpedia.org/sparql";
-    const url = `${endpointUrl}?query=${encodeURIComponent(query)}`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'Accept': 'application/sparql-results+json' }
-        });
-
-        const jsonData = await response.json();
-
-        return jsonData.results ? jsonData.results.bindings : [];
-    } catch (error) {
-        console.error("Error fetching SPARQL data:", error);
-        return [];
-    }
-}

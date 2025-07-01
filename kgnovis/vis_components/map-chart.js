@@ -34,7 +34,7 @@ export default class MapChart extends HTMLElement {
      }
 
     static get observedAttributes() {
-		return ['data', 'width', 'height', 'description', 'encoding', 'legend', 'projection', 'mark', 'node', 'link'];
+		return ['data', 'width', 'height', 'description', 'encoding', 'legend', 'projection', 'mark', 'node', 'link', 'url'];
 	}
 
 	connectedCallback() {
@@ -58,13 +58,16 @@ export default class MapChart extends HTMLElement {
 					break;
 				case 'data':
                     const parsed = JSON.parse(newValue);
-                    this.#url = parsed.url
 					this.#data = dataParser(newValue);
+                    console.log("dataMap", this.#data)
 					this.removeAttribute(name);
                     if (this.#data && this.#encoding) {
                         this.drawChart();
                     }
 					break;
+                case 'url':
+                    this.#url = newValue;
+                    break;
                 case 'node':
                     const parsedNode = JSON.parse(newValue);
                     this.#node = parsedNode.url
@@ -590,10 +593,21 @@ export default class MapChart extends HTMLElement {
   
     drawGeoChart() {
         const tooltip = this.shadowRoot.querySelector(".tooltip");
-        const geoData = this.#url;
+        const geometryVariable = this.#encoding.geometry?.field;
+        const geoData = {
+            type: "FeatureCollection",
+            features: this.#data
+                .map(d => d[geometryVariable]) // ✅ dùng geometryVariable
+                .filter(d => d) // loại null
+        };
+        console.log("CCCC",this.#data[0])
+
+
+        console.log("geoData", geoData)
         const idVariable = this.#encoding.id?.field;
         const labelVariable = this.#encoding.label?.field;
         const labelData = new Map(this.#data.map(d => [d[idVariable], d[labelVariable]]));
+        console.log("labelaaa", labelData)
         const valueVariable = this.#encoding.value?.field;
         const colorField = this.#encoding.color?.field;
         const colorRange = this.#encoding.color?.scale?.range || d3.schemeBlues[6];
@@ -628,10 +642,8 @@ export default class MapChart extends HTMLElement {
             .range(colorRange);
         
         
-        d3.json(geoData)
         // d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
-            .then(geoData => {
-                const zoom = d3.zoom()
+            const zoom = d3.zoom()
                 .scaleExtent([1, 8])
                 .on("zoom", zoomed);
     
@@ -774,7 +786,7 @@ export default class MapChart extends HTMLElement {
                     d3.zoomTransform(this.#svg.node()).invert([this.width / 2, this.height / 2])
                 );
             });
-    
+            console.log("geodata", geoData.features)
             g.selectAll("path")
                 .data(geoData.features)
                 .enter()
@@ -799,7 +811,6 @@ export default class MapChart extends HTMLElement {
                 .on("mouseleave", mouseLeave)
                 // .on("click", clicked);
                 .on("click", (event, d) => clicked(event, d));
-        });
     }
 }
 customElements.define("map-chart", MapChart);
