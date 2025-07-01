@@ -7,10 +7,9 @@ function drawConnectionMap(data) {
     mapChart.setAttribute("height", "600");
 
     // Set data
-    mapChart.setAttribute("data", JSON.stringify({ 
-        "values": data,
-        "url": "https://vega.github.io/vega-datasets/data/us-10m.json",
-     }));
+    mapChart.setAttribute("data", JSON.stringify(data));
+    
+    mapChart.setAttribute("url", "https://vega.github.io/vega-datasets/data/us-10m.json");
 
     mapChart.setAttribute("node",JSON.stringify({
       "url": "https://vega.github.io/vega-datasets/data/airports.csv"

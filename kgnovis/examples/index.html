@@ -29,6 +29,7 @@
       <script src="data/bar_data.js"></script>
       <script src="data/stacked_bar_data.js"></script>
       <script src="data/map_data.js"></script>
+      <script src="data/choropleth_map_data.js"></script>
       <script src="data/node_link_data.js"></script>
 
       <link rel="stylesheet" href="index.css">
@@ -41,11 +42,11 @@
 
         
         <bar-chart id="verticalChart1"></bar-chart>
-        <bar-chart id="verticalChart2"></bar-chart>
+        <!-- <bar-chart id="verticalChart2"></bar-chart>
         <pie-chart id="pieChart"></pie-chart>
         <bar-chart id="stackedBarChart"></bar-chart>
         <bar-chart id="normalizedStackedBarChart"></bar-chart>
-        <bar-chart id="groupedVerticalChart"></bar-chart>
+        <bar-chart id="groupedVerticalChart"></bar-chart> -->
 
         <map-chart id="choroplethMapData"></map-chart>
         <map-chart id="connectionMapData"></map-chart>
@@ -58,34 +59,34 @@
         // Function to update Chart
         async function updateCharts() {
 
-            // Pie Chart
-            const pieChartData = await fetchPieData();
-            drawPieChart(pieChartData);
-            // console.log("Pie", JSON.stringify(pieChartData, null, 2));
+            // // Pie Chart
+            // const pieChartData = await fetchPieData();
+            // drawPieChart(pieChartData);
+            // // console.log("Pie", JSON.stringify(pieChartData, null, 2));
 
             // Single vertical bar chart
             const verticalChartData1 = await fetchBarData();
             drawVerticalChart1(verticalChartData1);
             // console.log("BAR-1", JSON.stringify(verticalChartData1, null, 2));
 
-            // Single vertical bar chart
-            const verticalChartData2 = await fetchBarData();
-            drawVerticalChart2(verticalChartData2);
+            // // Single vertical bar chart
+            // const verticalChartData2 = await fetchBarData();
+            // drawVerticalChart2(verticalChartData2);
 
-            // Stacked vertical bar chart
-            const stackedBarChartData = await fetchStackedBarData();
-            drawStackedBarChart(stackedBarChartData);
+            // // Stacked vertical bar chart
+            // const stackedBarChartData = await fetchStackedBarData();
+            // drawStackedBarChart(stackedBarChartData);
 
-            // Percentage Stacked bar chart
-            const normalizedStackedBarData = await fetchStackedBarData();
-            drawNormalizedStackedBarChart(normalizedStackedBarData);
+            // // Percentage Stacked bar chart
+            // const normalizedStackedBarData = await fetchStackedBarData();
+            // drawNormalizedStackedBarChart(normalizedStackedBarData);
             
-            //  Grouped Vertical Bar Chart
-            const groupedVerticalChartData = await fetchStackedBarData();
-            drawGroupedVerticalChart(groupedVerticalChartData);
+            // //  Grouped Vertical Bar Chart
+            // const groupedVerticalChartData = await fetchStackedBarData();
+            // drawGroupedVerticalChart(groupedVerticalChartData);
             
             // Choropleth Map
-            const choroplethMapData = await fetchMapData();
+            const choroplethMapData = await mergeMapData();
             drawChoroplethMap(choroplethMapData);
 
             // Connection Map

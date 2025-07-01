@@ -7,11 +7,10 @@ function drawChoroplethMap(data) {
     mapChart.setAttribute("height", "600");
 
     // Set data
-    mapChart.setAttribute("data", JSON.stringify({ 
-        "values": data,
-        "url": "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
-     }));
-
+    mapChart.setAttribute("data", JSON.stringify(data));
+    console.log("DATAAAAAAAAAAAA", data)
+    mapChart.setAttribute("url", "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
+    
     mapChart.setAttribute("projection", "mercator");
 
     mapChart.setAttribute("mark", "geoShape");
@@ -21,10 +20,13 @@ function drawChoroplethMap(data) {
             "field": "isoCode"
         },
         "label": {
-            "field": "countryLabel",
+            "field": "country",
         },
         "value": {
             "field": "population",
+        },
+        "geometry": {
+            "field": "geoJSON",
         },
         "color": {
             "field": "population",

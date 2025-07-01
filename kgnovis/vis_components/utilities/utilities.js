@@ -1,6 +1,7 @@
 function dataParser(newValue) {
 	try {
-		const parsed = JSON.parse(newValue);
+		// Nếu là chuỗi thì parse, nếu là object rồi thì giữ nguyên
+		const parsed = typeof newValue === 'string' ? JSON.parse(newValue) : newValue;
 
 		const normalize = (arr) => arr.map(d => {
 			const flat = {};
@@ -12,6 +13,12 @@ function dataParser(newValue) {
 			return flat;
 		});
 
+		// SPARQL case: get bindings from parsed.results
+		if (parsed?.results?.bindings && Array.isArray(parsed.results.bindings)) {
+			return normalize(parsed.results.bindings);
+		}
+
+		// Other fallback cases (optional, may not be needed)
 		if (Array.isArray(parsed)) {
 			return normalize(parsed);
 		}
@@ -31,6 +38,8 @@ function dataParser(newValue) {
 		return null;
 	}
 }
+
+
 
 
 function encodingParser(newValue) {
