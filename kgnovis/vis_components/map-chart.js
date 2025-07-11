@@ -34,7 +34,7 @@ export default class MapChart extends HTMLElement {
      }
 
     static get observedAttributes() {
-		return ['data', 'width', 'height', 'description', 'encoding', 'legend', 'projection', 'mark', 'node', 'link', 'url'];
+		return ['data', 'width', 'height', 'description', 'encoding', 'legend', 'projection', 'node', 'link', 'url'];
 	}
 
 	connectedCallback() {
@@ -59,7 +59,6 @@ export default class MapChart extends HTMLElement {
 				case 'data':
                     const parsed = JSON.parse(newValue);
 					this.#data = dataParser(newValue);
-                    console.log("dataMap", this.#data)
 					this.removeAttribute(name);
                     if (this.#data && this.#encoding) {
                         this.drawChart();
@@ -87,9 +86,9 @@ export default class MapChart extends HTMLElement {
                 case 'projection':
 					this.projection = newValue;
 					break;
-                case 'mark':
-                    this.mark = newValue;
-                    break;
+                // case 'mark':
+                //     this.mark = newValue;
+                //     break;
 				case 'encoding':
 					this.#encoding = encodingParser(newValue);
 					this.removeAttribute(name);
@@ -177,17 +176,17 @@ export default class MapChart extends HTMLElement {
         this.#svg = d3.select(svgElement)
             .attr("width", this.width)
             .attr("height", this.height);
-        if (this.mark === "geoShape") {
+        // if (this.mark === "geoShape") {
             this.drawGeoChart();
-        } else if (this.mark === "connective") {
-            this.drawConnectionMap();
-        } else if (this.mark === "point") {
-            this.drawBubbleMap();
-        } else if (this.mark === "hexbin") {
-            this.drawHexbinMap();
-        } else {
-            console.warn("Unable to determine chart type from metadata");
-        }
+        // } else if (this.mark === "connective") {
+        //     this.drawConnectionMap();
+        // } else if (this.mark === "point") {
+        //     this.drawBubbleMap();
+        // } else if (this.mark === "hexbin") {
+        //     this.drawHexbinMap();
+        // } else {
+        //     console.warn("Unable to determine chart type from metadata");
+        // }
     }
     
     
@@ -600,15 +599,12 @@ export default class MapChart extends HTMLElement {
                 .map(d => d[geometryVariable]) // ✅ dùng geometryVariable
                 .filter(d => d) // loại null
         };
-        console.log("CCCC",this.#data[0])
 
 
-        console.log("geoData", geoData)
         const idVariable = this.#encoding.id?.field;
         const labelVariable = this.#encoding.label?.field;
         const labelData = new Map(this.#data.map(d => [d[idVariable], d[labelVariable]]));
-        console.log("labelaaa", labelData)
-        const valueVariable = this.#encoding.value?.field;
+        // const valueVariable = this.#encoding.value?.field;
         const colorField = this.#encoding.color?.field;
         const colorRange = this.#encoding.color?.scale?.range || d3.schemeBlues[6];
         const colorValues = this.#data.map(d => d[colorField]);
@@ -624,7 +620,7 @@ export default class MapChart extends HTMLElement {
     
         const path = d3.geoPath().projection(projection);
         
-        const userData = new Map(this.#data.map(d => [d[idVariable], d[valueVariable]]));
+        const userData = new Map(this.#data.map(d => [d[idVariable], d[colorField]]));
 
         
         const minColor = d3.min(colorValues);
@@ -786,7 +782,6 @@ export default class MapChart extends HTMLElement {
                     d3.zoomTransform(this.#svg.node()).invert([this.width / 2, this.height / 2])
                 );
             });
-            console.log("geodata", geoData.features)
             g.selectAll("path")
                 .data(geoData.features)
                 .enter()

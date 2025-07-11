@@ -39,15 +39,15 @@
   |-------------|---------------|------------------------------ |------------|-------------|
   | x | Object        | The specification of x axis for Bar Chart  | | ✓          |
   | y       | Object        | The specification of y axis for Bar Chart    | | ✓          |
-  | color      | Object        | The specification color for each bar. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values.    |   | ✗          |
-  | direction        | String | The orientation of Bar Chart | "vertical" or "horizontal"  | ✗ (✓ Required for subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart)  |
+  | color      | Object        | The specification color for each bar. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values.    |   | ✗<br> (✓ Required for subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart)          |
+  | direction        | String | The orientation of Bar Chart | "vertical" or "horizontal"  | ✗   |
   | stack        | String & Boolean | This attribute is required to define subtypes of Bar Chart including Stacked, Normalized Stacked and Grouped Bar Chart. <br>  - When the stack is true, then draw Stacked Bar Chart. <br>  - Else if the stack is "normalize", then draw Normalized Stacked Bar Chart. <br>  - Else the stack is false, then draw Grouped Bar Chart | true/false or "normalize"  | ✗  |
 
   In each object, the library provide some properties:
   | Field    | Type          | Description                   | Value   |
   |-------------|---------------|------------------------------ |------------|
   | x | "field":"..."<br>"axis":{"labelAngle": ...}        | The details about the internal structure of object "x". Including:<br>- Attribute "field": The "data" field that the "x" axis maps to.<br>- Attribute "axis": "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis.   | Ex: x: {<br>"field": "name"<br> "axis":{"labelAngle":45}<br>}   |
-  | y | "field":"..."<br>"axis":{"labelAngle": ...<br>"scale":{<br> "type":...}<br>}        | The details about the internal structure of object "y". Including:<br>- Attribute "field": The "data" field that the "y" axis maps to<br>- Attribute "axis": <br>+ "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis. <br>+ "scale": inside axis property will permit user to change the scaleType through "type" (Linear, Power, Logarithmic) // Power Scale need one more attribute "exponent" to set     | Ex: y: {<br>"field": "population"<br> "axis":{"labelAngle":45}<br>"scale":{<br>"type":"pow",<br>"exponent":0.5<br>}<br>}   |
+  | y | "field":"..."<br>"axis":{"labelAngle": ...<br>"scale":{<br> "type":...}<br>}        | The details about the internal structure of object "y". Including:<br>- Attribute "field": The "data" field that the "y" axis maps to<br>- Attribute "axis": <br>  + "labelAngle" - inside axis property will allow user to adjust the rotation angle of labelAxis. <br>  + "scale": inside axis property will permit user to change the scaleType through "type" (Linear, Power, Logarithmic) // Power Scale need one more attribute "exponent" to set     | Ex: y: {<br>"field": "population"<br> "axis":{"labelAngle":45}<br>"scale":{<br>"type":"pow",<br>"exponent":0.5<br>}<br>}   |
 
   ##### 3.1.1 Regular Bar Chart
 
@@ -127,19 +127,18 @@ encoding={...,
 
 #### 3.2 Pie chart
 In the Pie Chart encoding configuration, the fields provided include:
-  | Field    | Type          | Description                   | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |------------|-------------|
-  | text | Object        | The label for each section of visualization  |   | ✓          |
-  | theta       | Object        | The quantitative value for each category    |  | ✓          |
-  | color      | Object        | The color for each slice. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values.    |  | ✓          |
+  | Field    | Type          | Description                   |  Mandatory   |
+  |-------------|---------------|------------------------------ |------------|
+  | text | Object        | The label for each section of visualization  | ✗          |
+  | theta       | Object        | The quantitative value for each category    | ✓          |
+  | color      | Object        | The color for each slice. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values.  | ✓          |
   
   In each object, the library provide some properties:
   | Field    | Type          | Description                   | Value   |
   |-------------|---------------|------------------------------ |------------|
-  | text | "field":"..."| The field from data that will map to the label of each section  | Ex: text: {"field": "name"}   |
-  | theta | "field":"..."| The field that is the quantitative value for each category  | Ex: theta: {field": "population"} |
+  | text | "field": "..."| The field from data that will map to the label of each section  | Ex: text: {"field": "name"}   |
+  | theta | "field": "..."| The field that is the quantitative value for each category  | Ex: theta: {field": "population"} |
 
-  **The way to use the color attribute in the encoding of Pie Chart is similar to Bar Chart.**
 ```html
 <pie-chart id="pieChart"
 description="..."
@@ -163,41 +162,36 @@ legend=true
 ```
 ![Pie Chart](https://raw.githubusercontent.com/dominhhuy1703/Data_Visualization/master/kgnovis/examples/assets/pieChart.png)
 
-#### 3.3 Geographic Map
-In the data of Geographic Map configuration, the fields provided include:
-  | Field    | Type          | Description                   | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |------------|-------------|
-  | values | SPARQL Json Object        | The input data to be visualized. It is an array of object that each object in the array represents one data point. The input data must conform to the [W3C SPARQL 1.1 Query Results JSON Format](https://www.w3.org/TR/sparql11-results-json/)  | Ex: [{...}, {...}]  | ✓          |
-  | url       | String        | The URL to a GeoJSON file that contains the geographic features (e.g., country boundaries, regions). This file is used to define the shapes and boundaries on the map. Each feature in the file will be matched with data points from the SPARQL results using the id field. [geoJson File Format](https://geojson.org/)    | Ex: "path/to/world_countries.geojson"  | ✓          |
-##### 3.3.1 Choropleth Map
+#### 3.3 Geographic Map (Choropleth Map)
 In the encoding of Choropleth Map configuration, the fields provided include:
-  | Field    | Type          | Description                   | Value   | Mandatory   |
-  |-------------|---------------|------------------------------ |------------|-------------|
-  | id | Object        | The id that used for matching the data from geoJson file and SPARQL query's result  | Ex: "id":{<br>"field": "isoCode"<br>}  | ✓          |
-  | label       | Object       | A human-readable name that describes the geographic feature represented by the id. This is typically shown in tooltips or legends to provide a meaningful name (e.g., country or region name) instead of a technical identifier.     | Ex: "label":{<br>"field": "countryName"<br>}  | ✓  |
-  | color       | Object       | This field will color the regions based on data from the SPARQL query's result. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values. | Ex: "color":{<br>"field": "population"<br>}  | ✓          |
+  | Field    | Type          | Description                   |  Mandatory   |
+  |-------------|---------------|------------------------------ |------------|
+  | id | Object        | The id that used for matching the data from geoJson file and SPARQL query's result  |  ✓          |
+  | label       | Object       | A human-readable name that describes the geographic feature represented by the id. This is typically shown in tooltips or legends to provide a meaningful name (e.g., country or region name) instead of a technical identifier.     |  ✗  |
+  | geometry       | Object       | Data from the geoJSON file, must be processed during querying to retrieve GeoJSON geometry data for each entity.     |  ✓  |
+  | color       | Object       | This field will color the regions based on data from the SPARQL query's result. See [3.4 - Color Palettes](#34-color-palettes) for full usage and supported values. |  ✓          |
 
   In each object, the library provide some properties:
   | Field    | Type          |Description          | Value   |
   |-------------|---------------|---------------|------------------------------ |
-  | id | "field":"..."  | The id is used for matching the data from geoJson file and SPARQL query's result. This attribute comes from the geoJson file.  | Ex: id: {"field": "isoCode"}   |
-  | label | "field":"..."| The name of the label, which provides additional details for describing the id     | Ex: label: {field": "countryName"}   |
+  | id | "field":"..."  | The id is used for matching the data from geoJSON file and SPARQL query's result. This attribute comes from the geoJSON file.  | Ex: id: {"field": "isoCode"}   |
+  | label | "field":"..."| The field from data that map to name of the label, which provides additional details for describing the id     | Ex: label: {field": "countryName"}   |
+  | geometry | "field":"..."| The field from data that contains GeoJSON geometry data for each entity (polygon, contour line…). Used for map display.    | Ex: geometry: {field": "geoJSON"}   |
 
-  **The way to use the color part in the encoding of Geographic Map is similar to bar chart.**
 ```html
 <map-chart id="choroplethMap"
 description="..."
 width=500
 height=500
-data={
-  values=[{
+data=[{
     isoCode: "USA",
     population: 340110988,
-    countryLabel: "United States"}, {...}],
-  url="..."
+    countryLabel: "United States"
+    geoJSON: {...}}, {...}],
 encoding={
   id: {"field": "isoCode"},
   label: {"field": "countryLabel"},
+  geometry: {"field": "geoJSON"},
   color: {
     "field": "population",
     "scale": {"range": ...},
@@ -221,7 +215,10 @@ Users can apply color schemes by simply providing a string. The system automatic
 ***How to use***
 - "PaletteName" → Maps to d3.interpolatePaletteName (for continuous gradients) or d3.schemePaletteName (for discrete categories).
 - "PaletteName[k]" → Maps to d3.schemePaletteName[k], where k defines the number of colors (if supported)
-
+- You can also directly specify an array of color codes as a custom palette:
+    ```javascript
+    "range": ["#ff0000", "#00ff00", "#0000ff"]
+    ```
 Below are examples for use with each type of color palette.
 ###### 3.4.1.1 Categorical Palettes *(Discrete)*
 Used to differentiate distinct groups or categories.
@@ -250,10 +247,11 @@ Ideal for data with a meaningful midpoint (e.g., gain vs. loss).
 |-------------|---------------|------------------------------|
 | field | String        | The field from "data" that will bind with "color"   |
 | → domain      | Array        | List of distinct values ​​that exist in the data (for categorical data). Optional for continuous values.    |
-| → range      | String        | The color palette name (e.g., "Reds", "Blues", "Viridis").|
+| → range      | String or Array       | The color palette name (e.g., "Reds", "Blues", "Viridis"). Or a custom array of color codes (e.g., ["#ff0000", "#00ff00", "#0000ff"]). |
 | title      | String        | 	(Optional) Title shown in the legend to describe what the colors represent.|
 
-*Example*
+***Example***
+- For predefined palette:
 ```javascript
 "color": {
   "field": "population",
@@ -263,7 +261,7 @@ Ideal for data with a meaningful midpoint (e.g., gain vs. loss).
   "title": "Population"
 }
 ```
-For categorical data, add domain:
+- For categorical with domain:
 ```javascript
 "color": {
   "field": "language",
@@ -272,5 +270,16 @@ For categorical data, add domain:
     "range": "Category10"
   },
   "title": "Language"
+}
+```
+- For custom array of color codes:
+```javascript
+"color": {
+  "field": "region",
+  "scale": {
+    "domain": ["North", "Central", "South"],
+    "range": ["#f94144", "#f3722c", "#90be6d"]
+  },
+  "title": "Region"
 }
 ```
