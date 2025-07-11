@@ -49,9 +49,9 @@
         <bar-chart id="groupedVerticalChart"></bar-chart> -->
 
         <map-chart id="choroplethMapData"></map-chart>
-        <map-chart id="connectionMapData"></map-chart>
+        <!-- <map-chart id="connectionMapData"></map-chart>
         <map-chart id="bubbleMapData"></map-chart>
-        <map-chart id="hexbinMapData"></map-chart>
+        <map-chart id="hexbinMapData"></map-chart> -->
 
     </div>
     <script>
@@ -89,17 +89,17 @@
             const choroplethMapData = await mergeMapData();
             drawChoroplethMap(choroplethMapData);
 
-            // Connection Map
-            const connectionMapData = await fetchMapData();
-            drawConnectionMap(connectionMapData);
+            // // Connection Map
+            // const connectionMapData = await fetchMapData();
+            // drawConnectionMap(connectionMapData);
 
-            // Bubble Map
-            const bubbleMapData = await fetchMapData();
-            drawBubbleMap(bubbleMapData);
+            // // Bubble Map
+            // const bubbleMapData = await fetchMapData();
+            // drawBubbleMap(bubbleMapData);
 
-            // Hexbin Map
-            const hexbinMapData = await fetchMapData();
-            drawHexbinMap(hexbinMapData);
+            // // Hexbin Map
+            // const hexbinMapData = await fetchMapData();
+            // drawHexbinMap(hexbinMapData);
         }
         // Call updateCharts() when the page is loaded
         document.addEventListener('DOMContentLoaded', updateCharts);

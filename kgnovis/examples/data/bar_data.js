@@ -37,7 +37,6 @@ async function fetchBarData() {
         GROUP BY ?name ?population
         LIMIT 10
     `;
-    console.log("AAAAAAAAA")
     return await fetchSPARQLData(query);
 }
 

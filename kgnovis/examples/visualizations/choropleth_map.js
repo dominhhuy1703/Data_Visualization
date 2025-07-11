@@ -4,16 +4,13 @@ function drawChoroplethMap(data) {
     // Set configuration
     mapChart.setAttribute("description", "Map Chart - Population of Countries");
     mapChart.setAttribute("width", "600");
-    mapChart.setAttribute("height", "600");
+    mapChart.setAttribute("height", "500");
 
     // Set data
     mapChart.setAttribute("data", JSON.stringify(data));
-    console.log("DATAAAAAAAAAAAA", data)
-    mapChart.setAttribute("url", "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
-    
+    console.log("data", data)
     mapChart.setAttribute("projection", "mercator");
 
-    mapChart.setAttribute("mark", "geoShape");
     // Set encoding
     mapChart.setAttribute("encoding", JSON.stringify({
         "id": {
@@ -21,9 +18,6 @@ function drawChoroplethMap(data) {
         },
         "label": {
             "field": "country",
-        },
-        "value": {
-            "field": "population",
         },
         "geometry": {
             "field": "geoJSON",

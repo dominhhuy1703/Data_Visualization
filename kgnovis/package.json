@@ -1,6 +1,6 @@
 {
   "name": "kgnovis",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "main": "dist/kgnovis.bundle.js",
   "module": "dist/kgnovis.bundle.js",
   "type": "module",
